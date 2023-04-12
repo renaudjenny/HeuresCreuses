@@ -4,13 +4,17 @@ import SwiftUI
 
 public struct App: ReducerProtocol {
     public struct State: Equatable {
-        let startHour = 7
-        let startMinute = 24
-        let endHour = 23
-        let endMinute = 24
+        let periods: [Period] = [
+            Period(start: DateComponents(hour: 23, minute: 24), end: DateComponents(hour: 7, minute: 24))
+        ]
 
         var date: Date = .distantPast
-        var peakStatus: PeakStatus = .unavailable
+        var currentPeakStatus: PeakStatus = .unavailable
+    }
+
+    public struct Period: Equatable {
+        let start: DateComponents
+        let end: DateComponents
     }
 
     public enum Action: Equatable {
@@ -36,7 +40,7 @@ public struct App: ReducerProtocol {
         case .task:
             state.date = date()
             return .merge(
-                updatePeakStatus(state: &state),
+                updateCurrentPeakStatus(state: &state),
                 .run { send in
                     for await _ in clock.timer(interval: .seconds(1)) {
                         await send(.timeChanged(date()))
@@ -46,40 +50,47 @@ public struct App: ReducerProtocol {
             .cancellable(id: TimerTaskID.self)
         case let .timeChanged(date):
             state.date = date
-            return updatePeakStatus(state: &state)
+            return updateCurrentPeakStatus(state: &state)
         case .cancel:
             return .cancel(id: TimerTaskID.self)
         }
     }
 
-    private func updatePeakStatus(state: inout State) -> EffectTask<Action> {
-        guard
-            let todayPeakStartDate = calendar.date(
-                bySettingHour: state.startHour,
-                minute: state.startMinute,
-                second: 0, of: state.date
-            ),
-            let todayPeakEndDate = calendar.date(
-                bySettingHour: state.endHour,
-                minute: state.endMinute,
-                second: 0, of: state.date
-            )
-        else { return .none }
-        let isPeakHour = (todayPeakStartDate...todayPeakEndDate).contains(state.date)
-        switch (isPeakHour, now: date()) {
-        case let (true, now) where now > todayPeakEndDate:
-            let tomorrowPeakEndDate = todayPeakEndDate.addingTimeInterval(60 * 60 * 24)
-            state.peakStatus = .peak(until: .seconds(now.distance(to: tomorrowPeakEndDate)))
+    private func updateCurrentPeakStatus(state: inout State) -> EffectTask<Action> {
+        // TODO: Should be determined directly after editing the periods, not here.
+        var todayDates: [(start: Date, end: Date)] = []
+        for period in state.periods {
+            for day in -1...1 {
+                let day = TimeInterval(day)
+                var start = period.start
+                start.year = calendar.component(.year, from: date())
+                start.month = calendar.component(.month, from: date())
+                start.day = calendar.component(.day, from: date().addingTimeInterval(day * 60 * 60 * 24))
+                var end = period.end
+                end.year = calendar.component(.year, from: date())
+                end.month = calendar.component(.month, from: date())
+                end.day = calendar.component(.day, from: date().addingTimeInterval(day * 60 * 60 * 24))
+
+                guard let offPeakStartDate = calendar.date(from: start),
+                      let offPeakEndDate = calendar.date(from: end)
+                else { continue }
+                if offPeakEndDate > offPeakStartDate {
+                    todayDates.append((start: offPeakStartDate, end: offPeakEndDate))
+                } else {
+                    todayDates.append((start: offPeakStartDate, end: offPeakEndDate.addingTimeInterval(60 * 60 * 24)))
+                }
+            }
+        }
+        print(date(), todayDates)
+        // Move the code above to be executed less times
+
+        if let currentDate = todayDates.first(where: { ($0...$1).contains(state.date) }) {
+            state.currentPeakStatus = .offPeak(until: .seconds(date().distance(to: currentDate.end)))
             return .none
-        case let (true, now):
-            state.peakStatus = .peak(until: .seconds(now.distance(to: todayPeakEndDate)))
-            return .none
-        case let (false, now) where now > todayPeakStartDate:
-            let tomorrowPeakStartDate = todayPeakStartDate.addingTimeInterval(60 * 60 * 24)
-            state.peakStatus = .offPeak(until: .seconds(now.distance(to: tomorrowPeakStartDate)))
-            return .none
-        case let (false, now):
-            state.peakStatus = .offPeak(until: .seconds(now.distance(to: todayPeakStartDate)))
+        } else {
+            guard let closestOffPeak = todayDates.first(where: { date().distance(to: $0.start) > 0 })
+            else { return .none }
+            state.currentPeakStatus = .peak(until: .seconds(date().distance(to: closestOffPeak.start)))
             return .none
         }
     }
@@ -97,8 +108,8 @@ public struct AppView: View {
         let formattedDuration: String
 
         init(_ state: App.State) {
-            self.peakStatus = state.peakStatus
-            switch state.peakStatus {
+            self.peakStatus = state.currentPeakStatus
+            switch state.currentPeakStatus {
             case .unavailable:
                 self.formattedDuration = ""
             case let .offPeak(until: duration):
