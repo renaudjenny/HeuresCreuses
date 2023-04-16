@@ -5,7 +5,8 @@ import SwiftUI
 public struct App: ReducerProtocol {
     public struct State: Equatable {
         let periods: [Period] = [
-            Period(start: DateComponents(hour: 23, minute: 24), end: DateComponents(hour: 7, minute: 24))
+            Period(start: DateComponents(hour: 2, minute: 2), end: DateComponents(hour: 8, minute: 2)),
+            Period(start: DateComponents(hour: 15, minute: 2), end: DateComponents(hour: 17, minute: 2)),
         ]
 
         var date: Date = .distantPast
@@ -80,12 +81,13 @@ public struct App: ReducerProtocol {
                     todayDates.append((start: offPeakStartDate, end: offPeakEndDate.addingTimeInterval(60 * 60 * 24)))
                 }
             }
+            todayDates.sort(by: <)
         }
-        print(date(), todayDates)
+//        print(date(), todayDates)
         // Move the code above to be executed less times
 
-        if let currentDate = todayDates.first(where: { ($0...$1).contains(state.date) }) {
-            state.currentPeakStatus = .offPeak(until: .seconds(date().distance(to: currentDate.end)))
+        if let currentOffPeak = todayDates.first(where: { ($0...$1).contains(state.date) }) {
+            state.currentPeakStatus = .offPeak(until: .seconds(date().distance(to: currentOffPeak.end)))
             return .none
         } else {
             guard let closestOffPeak = todayDates.first(where: { date().distance(to: $0.start) > 0 })
@@ -166,24 +168,44 @@ public extension Store where State == App.State, Action == App.Action {
 #if DEBUG
 struct AppView_Previews: PreviewProvider {
     static var previews: some View {
-        AppView(store: Store(initialState: App.State(), reducer: App()))
-        AppView(store: Store(
+        Preview(store: Store(initialState: App.State(), reducer: App()))
+        Preview(store: Store(
             initialState: App.State(),
-            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T23:25:00+02:00", strategy: .iso8601) })
+            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T23:50:00+02:00", strategy: .iso8601) })
         ))
-        .previewDisplayName("Off peak before midnight")
+        .previewDisplayName("At 23:50")
 
-        AppView(store: Store(
+        Preview(store: Store(
             initialState: App.State(),
-            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T02:25:00+02:00", strategy: .iso8601) })
+            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T00:10:00+02:00", strategy: .iso8601) })
         ))
-        .previewDisplayName("Off peak after midnight")
+        .previewDisplayName("At 00:10")
 
-        AppView(store: Store(
+        Preview(store: Store(
             initialState: App.State(),
-            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T20:25:00+02:00", strategy: .iso8601) })
+            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T02:10:00+02:00", strategy: .iso8601) })
         ))
-        .previewDisplayName("Peak")
+        .previewDisplayName("At 02:10")
+
+        Preview(store: Store(
+            initialState: App.State(),
+            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T16:00:00+02:00", strategy: .iso8601) })
+        ))
+        .previewDisplayName("At 16:00")
+    }
+
+    private struct Preview: View {
+        let store: StoreOf<App>
+
+        var body: some View {
+            WithViewStore(store, observe: { $0 }) { viewStore in
+                VStack {
+                    AppView(store: store)
+//                    Divider()
+//                    Text("Current time: \(viewStore.date.formatted())")
+                }
+            }
+        }
     }
 }
 #endif
