@@ -3,14 +3,14 @@ import SwiftUI
 
 public struct Devices: ReducerProtocol {
     public struct State: Equatable {
-        var devices: IdentifiedArrayOf<EditDevice.State> = []
+        public var devices: IdentifiedArrayOf<EditDevice.State> = []
     }
 
     public enum Action: Equatable {
-    case editDevice(EditDevice.Action)
+        case editDevice(id: EditDevice.State.ID, action: EditDevice.Action)
     }
 
-    public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+    public var body: some ReducerProtocol<State, Action> {
         EmptyReducer()
             .forEach(\.devices, action: /Devices.Action.editDevice) {
                 EditDevice()
@@ -21,7 +21,33 @@ public struct Devices: ReducerProtocol {
 public struct DevicesView: View {
     let store: StoreOf<Devices>
 
+    public init(store: StoreOf<Devices>) {
+        self.store = store
+    }
+
     public var body: some View {
-        ForEachStore(store.scope(state: \.devices, action: Devices.Action.editDevice, content: EditDeviceView.init))
+        NavigationView {
+            List {
+                ForEachStore(store.scope(state: \.devices, action: Devices.Action.editDevice)) { store in
+                    WithViewStore(store, observe: { $0.device.name }) { viewStore in
+                        NavigationLink(viewStore.state) { EditDeviceView(store: store) }
+                    }
+                }
+            }
+        }
     }
 }
+
+#if DEBUG
+struct DevicesView_Previews: PreviewProvider {
+    static var previews: some View {
+        DevicesView(store: Store(
+            initialState: Devices.State(devices: [
+                EditDevice.State(device: .dishwasher),
+                EditDevice.State(device: .washingMachine),
+            ]),
+            reducer: Devices()
+        ))
+    }
+}
+#endif

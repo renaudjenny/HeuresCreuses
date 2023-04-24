@@ -2,9 +2,13 @@ import ComposableArchitecture
 import SwiftUI
 
 public struct EditDevice: ReducerProtocol {
-    public struct State: Equatable, Identifiable {
+    public struct State: Equatable, Identifiable, Hashable {
         public var id: Device.ID { device.id }
         public var device: Device
+
+        public func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
+        }
     }
 
     public enum Action: Equatable {
