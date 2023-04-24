@@ -3,14 +3,25 @@ import SwiftUI
 
 public struct Devices: ReducerProtocol {
     public struct State: Equatable {
-        var devices: IdentifiedArrayOf<Device> = []
+        var devices: IdentifiedArrayOf<EditDevice.State> = []
     }
 
-    public struct Action: Equatable {
-
+    public enum Action: Equatable {
+    case editDevice(EditDevice.Action)
     }
 
     public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-        return .none
+        EmptyReducer()
+            .forEach(\.devices, action: /Devices.Action.editDevice) {
+                EditDevice()
+            }
+    }
+}
+
+public struct DevicesView: View {
+    let store: StoreOf<Devices>
+
+    public var body: some View {
+        ForEachStore(store.scope(state: \.devices, action: Devices.Action.editDevice, content: EditDeviceView.init))
     }
 }
