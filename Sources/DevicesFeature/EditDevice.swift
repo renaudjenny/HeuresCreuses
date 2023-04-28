@@ -1,24 +1,18 @@
 import ComposableArchitecture
 import SwiftUI
 
-public struct EditDevice: ReducerProtocol {
-    public struct State: Equatable, Identifiable, Hashable {
+public struct EditDevice: Reducer {
+    public struct State: Equatable, Identifiable {
         public var id: Device.ID { device.id }
-        public var device: Device
-
-        public func hash(into hasher: inout Hasher) {
-            hasher.combine(id)
-        }
+        @BindingState public var device: Device
     }
 
-    public enum Action: Equatable {
-
+    public enum Action: Equatable, BindableAction {
+        case binding(BindingAction<State>)
     }
 
-    public func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-        switch action {
-        }
-        return .none
+    public var body: some ReducerOf<Self> {
+        BindingReducer()
     }
 }
 
@@ -31,7 +25,36 @@ public struct EditDeviceView: View {
 
     public var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
-            Text("Edit Device: \(viewStore.device.name)")
+            Form {
+                Section("Device") {
+                    TextField("Name", text: viewStore.binding(\.$device.name))
+                    Picker(selection: viewStore.binding(\.$device.type)) {
+                        ForEach(DeviceType.allCases, id: \.self) { deviceType in
+                            switch deviceType {
+                            case .washingMachine: Text("Washing Machine").tag(DeviceType.washingMachine)
+                            case .dishWasher: Text("Dishwasher").tag(DeviceType.dishWasher)
+                            }
+                        }
+                    } label: {
+                        Text("Device Type")
+                    }
+
+                }
+
+                Section("Program") {
+                    Picker(selection: viewStore.binding(\.$device.delay)) {
+                        ForEach(Delay.allCases, id: \.self) { delay in
+                            switch delay {
+                            case .none: Text("None").tag(Delay.none)
+                            case .schedule: Text("Schedule").tag(Delay.schedule)
+                            case .timers: Text("Timers").tag(Delay.timers([]))
+                            }
+                        }
+                    } label: {
+                        Text("Delay Type")
+                    }
+                }
+            }
         }
     }
 }

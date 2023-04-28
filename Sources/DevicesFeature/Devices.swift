@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import SwiftUI
 
-public struct Devices: ReducerProtocol {
+public struct Devices: Reducer {
     public struct State: Equatable {
         public var devices: IdentifiedArrayOf<EditDevice.State> = []
     }
@@ -10,7 +10,7 @@ public struct Devices: ReducerProtocol {
         case editDevice(id: EditDevice.State.ID, action: EditDevice.Action)
     }
 
-    public var body: some ReducerProtocol<State, Action> {
+    public var body: some ReducerOf<Self> {
         EmptyReducer()
             .forEach(\.devices, action: /Devices.Action.editDevice) {
                 EditDevice()
@@ -26,12 +26,10 @@ public struct DevicesView: View {
     }
 
     public var body: some View {
-        NavigationView {
-            List {
-                ForEachStore(store.scope(state: \.devices, action: Devices.Action.editDevice)) { store in
-                    WithViewStore(store, observe: { $0.device.name }) { viewStore in
-                        NavigationLink(viewStore.state) { EditDeviceView(store: store) }
-                    }
+        List {
+            ForEachStore(store.scope(state: \.devices, action: Devices.Action.editDevice)) { store in
+                WithViewStore(store, observe: { $0.device.name }) { viewStore in
+                    Text(viewStore.state)
                 }
             }
         }
