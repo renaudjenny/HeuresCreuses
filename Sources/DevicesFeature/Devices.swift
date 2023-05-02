@@ -3,7 +3,16 @@ import SwiftUI
 
 public struct Devices: Reducer {
     public struct State: Equatable {
-        public var devices: IdentifiedArrayOf<EditDevice.State> = []
+        public var devices: IdentifiedArrayOf<EditDevice.State>
+
+        public init(
+            devices: IdentifiedArrayOf<EditDevice.State> = [
+                EditDevice.State(device: .dishwasher),
+                EditDevice.State(device: .washingMachine)
+            ]
+        ) {
+            self.devices = devices
+        }
     }
 
     public enum Action: Equatable {

@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import DevicesFeature
 import Foundation
 import SwiftUI
 
@@ -11,6 +12,8 @@ public struct App: ReducerProtocol {
 
         var date: Date = .distantPast
         var currentPeakStatus: PeakStatus = .unavailable
+
+        var devices = Devices.State()
     }
 
     public struct Period: Equatable {
@@ -61,19 +64,20 @@ public struct App: ReducerProtocol {
         // TODO: Should be determined directly after editing the periods, not here.
         var todayDates: [(start: Date, end: Date)] = []
         for period in state.periods {
+
+            var start = period.start
+            start.year = calendar.component(.year, from: date())
+            start.month = calendar.component(.month, from: date())
+            start.day = calendar.component(.day, from: date())
+            var end = period.end
+            end.year = calendar.component(.year, from: date())
+            end.month = calendar.component(.month, from: date())
+            end.day = calendar.component(.day, from: date())
+
             for day in -1...1 {
                 let day = TimeInterval(day)
-                var start = period.start
-                start.year = calendar.component(.year, from: date())
-                start.month = calendar.component(.month, from: date())
-                start.day = calendar.component(.day, from: date().addingTimeInterval(day * 60 * 60 * 24))
-                var end = period.end
-                end.year = calendar.component(.year, from: date())
-                end.month = calendar.component(.month, from: date())
-                end.day = calendar.component(.day, from: date().addingTimeInterval(day * 60 * 60 * 24))
-
-                guard let offPeakStartDate = calendar.date(from: start),
-                      let offPeakEndDate = calendar.date(from: end)
+                guard let offPeakStartDate = calendar.date(from: start)?.addingTimeInterval(day * 60 * 60 * 24),
+                      let offPeakEndDate = calendar.date(from: end)?.addingTimeInterval(day * 60 * 60 * 24)
                 else { continue }
                 if offPeakEndDate > offPeakStartDate {
                     todayDates.append((start: offPeakStartDate, end: offPeakEndDate))
@@ -81,9 +85,9 @@ public struct App: ReducerProtocol {
                     todayDates.append((start: offPeakStartDate, end: offPeakEndDate.addingTimeInterval(60 * 60 * 24)))
                 }
             }
-            todayDates.sort(by: <)
         }
-//        print(date(), todayDates)
+        todayDates.sort(by: <)
+        //  print(date(), todayDates)
         // Move the code above to be executed less times
 
         if let currentOffPeak = todayDates.first(where: { ($0...$1).contains(state.date) }) {
@@ -109,6 +113,9 @@ public struct AppView: View {
         let peakStatus: App.PeakStatus
         let formattedDuration: String
 
+        // TODO: Move this one into its own Feature
+        let devices: IdentifiedArrayOf<EditDevice.State>
+
         init(_ state: App.State) {
             self.peakStatus = state.currentPeakStatus
             switch state.currentPeakStatus {
@@ -119,6 +126,7 @@ public struct AppView: View {
             case let .peak(until: duration):
                 self.formattedDuration = duration.formatted(.units(allowed: [.hours, .minutes], width: .wide))
             }
+            self.devices = state.devices.devices
         }
     }
 
@@ -155,13 +163,32 @@ public struct AppView: View {
                 }
             }
             .task { viewStore.send(.task) }
+
+            // TODO: Move that into its own Feature
+            Divider()
+
+            ScrollView {
+                ForEach(viewStore.devices) { device in
+                    Text(device.device.name).font(.title)
+
+                    VStack {
+                        ForEach(device.device.programs) { program in
+                            VStack {
+                                Text("Program - \(program.name)").font(.headline)
+                                Text("\(program.duration.formatted())")
+                            }
+                            .padding()
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 public extension Store where State == App.State, Action == App.Action {
     static var live: StoreOf<App> {
-        Store(initialState: State(), reducer: App())
+        Store(initialState: State(), reducer: App()._printChanges())
     }
 }
 

@@ -17,22 +17,43 @@ public enum DeviceType: CaseIterable {
     case dishWasher
 }
 
-public enum Delay: CaseIterable, Hashable {
+public enum Delay: CaseIterable, Equatable, Hashable {
     case none
-    case timers([(hour: Int, minute: Int)])
+    case timers([Timer])
     case schedule
 
     static public var allCases: [Delay] { [.none, .timers([]), .schedule] }
     public func hash(into hasher: inout Hasher) {
         switch self {
         case .none: hasher.combine(0)
-        case let .timers(timers): hasher.combine(1)
+        case .timers: hasher.combine(1)
         case .schedule: hasher.combine(2)
+        }
+    }
+    public static func ==(lhs: Self, rhs: Self) -> Bool {
+        switch (lhs, rhs) {
+        case (.none, .none): return true
+        case let (.timers(lhsTimers), .timers(rhsTimers)): return lhsTimers == rhsTimers
+        case (.schedule, .schedule): return true
+        default: return false
         }
     }
 }
 
-public struct Program {
-    var name: String
-    var duration: Duration
+public extension Delay {
+    struct Timer: Equatable {
+        public let hour: Int
+        public let minute: Int
+
+        public init(hour: Int, minute: Int) {
+            self.hour = hour
+            self.minute = minute
+        }
+    }
+}
+
+public struct Program: Equatable, Identifiable {
+    public let id: UUID
+    public var name: String
+    public var duration: Duration
 }

@@ -5,6 +5,10 @@ public struct EditDevice: Reducer {
     public struct State: Equatable, Identifiable {
         public var id: Device.ID { device.id }
         @BindingState public var device: Device
+
+        public init(device: Device) {
+            self.device = device
+        }
     }
 
     public enum Action: Equatable, BindableAction {
