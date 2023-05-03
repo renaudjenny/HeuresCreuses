@@ -24,24 +24,25 @@ public struct DeviceProgramPeriods: Reducer {
     }
 
     public enum Action: Equatable {
-        case computeButtonTapped
+        case task
     }
 
     @Dependency(\.date) var date
 
     public func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
-        case .computeButtonTapped:
+        case .task:
             state.deviceProgramPeriods = IdentifiedArray(uniqueElements: state.periods.map { period in
                 state.devices.map { device in
                     device.programs.compactMap { program -> DeviceProgramPeriod? in
                         let start = date()
                         let end = start.addingTimeInterval(program.duration)
 
-                        guard (period.start...period.end).overlaps(start...end) else { return nil }
+                        guard start.distance(to: end) > 0, (period.start...period.end).overlaps(start...end)
+                        else { return nil }
 
                         let distanceToOffPeakStart = start.distance(to: period.start)
-                        let distanceFromOffPeakEnd = end.distance(to: period.end)
+                        let distanceFromOffPeakEnd = period.end.distance(to: end)
 
                         let peakDuration = max(distanceToOffPeakStart, 0) + max(distanceFromOffPeakEnd, 0)
 
@@ -50,7 +51,7 @@ public struct DeviceProgramPeriods: Reducer {
                             program: program,
                             start: start,
                             end: end,
-                            offPeakRatio: peakDuration > 0 ? (start.distance(to: end) / peakDuration) : 1
+                            offPeakRatio: 1 - (peakDuration / start.distance(to: end))
                         )
                     }
                 }
@@ -69,11 +70,18 @@ public struct DeviceProgramPeriodsView: View {
 
     public var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
-            VStack {
+            ScrollView {
                 ForEach(viewStore.deviceProgramPeriods) { deviceProgramPeriod in
-                    Text(deviceProgramPeriod.device.name)
+                    VStack {
+                        Text("\(deviceProgramPeriod.device.name) - \(deviceProgramPeriod.program.name)").font(.headline)
+                        Text("Duration: \((deviceProgramPeriod.start.distance(to: deviceProgramPeriod.end)/(60)).formatted()) minutes")
+                        Text("\(deviceProgramPeriod.start.formatted(date: .omitted, time: .shortened)) - \(deviceProgramPeriod.end.formatted(date: .omitted, time: .shortened))")
+                        Text("\(deviceProgramPeriod.offPeakRatio.formatted(.percent))")
+                    }
+                    .padding()
                 }
             }
+            .task { viewStore.send(.task) }
         }
     }
 }
@@ -85,7 +93,9 @@ struct DeviceProgramPeriodsView_Previews: PreviewProvider {
             store: Store(
                 initialState: DeviceProgramPeriods.State(
                     periods: [
-                        OffPeakPeriod(start: Date().addingTimeInterval(-60 * 60 * 1), end: Date().addingTimeInterval(60 * 60 * 4))
+                        OffPeakPeriod(start: Date().addingTimeInterval(-60 * 60 * 10), end: Date().addingTimeInterval(-60 * 60 * 8)),
+                        OffPeakPeriod(start: Date().addingTimeInterval(60 * 60 * 2), end: Date().addingTimeInterval(60 * 60 * 4)),
+                        OffPeakPeriod(start: Date().addingTimeInterval(60 * 60 * 10), end: Date().addingTimeInterval(60 * 60 * 12)),
                     ],
                     devices: [.dishwasher, .washingMachine]
                 ),
