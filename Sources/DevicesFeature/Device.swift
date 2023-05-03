@@ -55,5 +55,5 @@ public extension Delay {
 public struct Program: Equatable, Identifiable {
     public let id: UUID
     public var name: String
-    public var duration: Duration
+    public var duration: TimeInterval
 }

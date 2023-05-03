@@ -14,7 +14,7 @@ public extension Device {
             Program(
                 id: UUID(uuidString: "3E1C48C3-6FBC-4731-8A73-B1378827747C")!,
                 name: "Eco",
-                duration: .seconds(240 * 60)
+                duration: 240 * 60
             ),
         ]
     )
@@ -32,22 +32,22 @@ public extension Device {
             Program(
                 id: UUID(uuidString: "63C16AB1-5700-4178-9DB3-415F3475EBD8")!,
                 name: "Eco 20º",
-                duration: .seconds(98 * 60)
+                duration: 98 * 60
             ),
             Program(
                 id: UUID(uuidString: "5177EB41-7CD3-4FD7-B5BA-CE7568AEDC2F")!,
                 name: "Cotton 40º",
-                duration: .seconds(190 * 60)
+                duration: 190 * 60
             ),
             Program(
                 id: UUID(uuidString: "904701A5-78E1-4065-801B-C54CDC2A9FFF")!,
                 name: "Hand wash",
-                duration: .seconds(91 * 60)
+                duration: 91 * 60
             ),
             Program(
                 id: UUID(uuidString: "08C1B039-C444-4DBB-B81C-C6B1F88AC373")!,
                 name: "Mixed",
-                duration: .seconds(87 * 60)
+                duration: 87 * 60
             ),
         ]
     )

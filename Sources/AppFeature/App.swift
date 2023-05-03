@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import DevicesFeature
 import Foundation
+import Models
 import SwiftUI
 
 public struct App: ReducerProtocol {
@@ -13,12 +14,8 @@ public struct App: ReducerProtocol {
         var date: Date = .distantPast
         var currentPeakStatus: PeakStatus = .unavailable
 
+        var offPeakPeriods: [OffPeakPeriod] = []
         var devices = Devices.State()
-    }
-
-    public struct Period: Equatable {
-        let start: DateComponents
-        let end: DateComponents
     }
 
     public enum Action: Equatable {
@@ -44,7 +41,7 @@ public struct App: ReducerProtocol {
         case .task:
             state.date = date()
             return .merge(
-                updateCurrentPeakStatus(state: &state),
+                updateOffPeakPeriods(state: &state),
                 .run { send in
                     for await _ in clock.timer(interval: .seconds(1)) {
                         await send(.timeChanged(date()))
@@ -54,17 +51,22 @@ public struct App: ReducerProtocol {
             .cancellable(id: TimerTaskID.self)
         case let .timeChanged(date):
             state.date = date
-            return updateCurrentPeakStatus(state: &state)
+            if let currentOffPeak = state.offPeakPeriods.first(where: { ($0.start...$0.end).contains(state.date) }) {
+                state.currentPeakStatus = .offPeak(until: .seconds(date.distance(to: currentOffPeak.end)))
+                return .none
+            } else {
+                guard let closestOffPeak = state.offPeakPeriods.first(where: { date.distance(to: $0.start) > 0 })
+                else { return .none }
+                state.currentPeakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.start)))
+                return .none
+            }
         case .cancel:
             return .cancel(id: TimerTaskID.self)
         }
     }
 
-    private func updateCurrentPeakStatus(state: inout State) -> EffectTask<Action> {
-        // TODO: Should be determined directly after editing the periods, not here.
-        var todayDates: [(start: Date, end: Date)] = []
+    private func updateOffPeakPeriods(state: inout State) -> EffectTask<Action> {
         for period in state.periods {
-
             var start = period.start
             start.year = calendar.component(.year, from: date())
             start.month = calendar.component(.month, from: date())
@@ -80,25 +82,14 @@ public struct App: ReducerProtocol {
                       let offPeakEndDate = calendar.date(from: end)?.addingTimeInterval(day * 60 * 60 * 24)
                 else { continue }
                 if offPeakEndDate > offPeakStartDate {
-                    todayDates.append((start: offPeakStartDate, end: offPeakEndDate))
+                    state.offPeakPeriods.append(OffPeakPeriod(start: offPeakStartDate, end: offPeakEndDate))
                 } else {
-                    todayDates.append((start: offPeakStartDate, end: offPeakEndDate.addingTimeInterval(60 * 60 * 24)))
+                    let offPeakEndDate = offPeakEndDate.addingTimeInterval(60 * 60 * 24)
+                    state.offPeakPeriods.append(OffPeakPeriod(start: offPeakStartDate, end: offPeakEndDate))
                 }
             }
         }
-        todayDates.sort(by: <)
-        //  print(date(), todayDates)
-        // Move the code above to be executed less times
-
-        if let currentOffPeak = todayDates.first(where: { ($0...$1).contains(state.date) }) {
-            state.currentPeakStatus = .offPeak(until: .seconds(date().distance(to: currentOffPeak.end)))
-            return .none
-        } else {
-            guard let closestOffPeak = todayDates.first(where: { date().distance(to: $0.start) > 0 })
-            else { return .none }
-            state.currentPeakStatus = .peak(until: .seconds(date().distance(to: closestOffPeak.start)))
-            return .none
-        }
+        return .none
     }
 }
 
