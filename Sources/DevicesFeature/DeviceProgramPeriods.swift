@@ -4,6 +4,7 @@ import SwiftUI
 
 public struct DeviceProgramPeriods: Reducer {
     public struct State: Equatable {
+        @BindingState var date: Date
         var periods: [OffPeakPeriod]
         var devices: IdentifiedArrayOf<Device>
         var deviceProgramPeriods: IdentifiedArrayOf<DeviceProgramPeriod> = []
@@ -11,6 +12,8 @@ public struct DeviceProgramPeriods: Reducer {
         public init(periods: [OffPeakPeriod], devices: IdentifiedArrayOf<Device>) {
             self.periods = periods
             self.devices = devices
+            @Dependency(\.date) var date
+            self.date = date()
         }
     }
 
@@ -23,41 +26,53 @@ public struct DeviceProgramPeriods: Reducer {
         var offPeakRatio: Double
     }
 
-    public enum Action: Equatable {
+    public enum Action: Equatable, BindableAction {
+        case binding(BindingAction<State>)
         case task
     }
 
     @Dependency(\.date) var date
 
-    public func reduce(into state: inout State, action: Action) -> Effect<Action> {
-        switch action {
-        case .task:
-            state.deviceProgramPeriods = IdentifiedArray(uniqueElements: state.periods.map { period in
-                state.devices.map { device in
-                    device.programs.compactMap { program -> DeviceProgramPeriod? in
-                        let start = date()
-                        let end = start.addingTimeInterval(program.duration)
-
-                        guard start.distance(to: end) > 0, (period.start...period.end).overlaps(start...end)
-                        else { return nil }
-
-                        let distanceToOffPeakStart = start.distance(to: period.start)
-                        let distanceFromOffPeakEnd = period.end.distance(to: end)
-
-                        let peakDuration = max(distanceToOffPeakStart, 0) + max(distanceFromOffPeakEnd, 0)
-
-                        return DeviceProgramPeriod(
-                            device: device,
-                            program: program,
-                            start: start,
-                            end: end,
-                            offPeakRatio: 1 - (peakDuration / start.distance(to: end))
-                        )
-                    }
-                }
-            }.flatMap { $0 }.flatMap { $0 })
-            return .none
+    public var body: some ReducerOf<Self> {
+        BindingReducer()
+        Reduce { state, action in
+            switch action {
+            case let .binding(action) where action.keyPath == \.$date:
+                return updateDeviceProgramPeriods(state: &state)
+            case .binding:
+                return .none
+            case .task:
+                return updateDeviceProgramPeriods(state: &state)
+            }
         }
+    }
+
+    private func updateDeviceProgramPeriods(state: inout State) -> Effect<Action> {
+        state.deviceProgramPeriods = IdentifiedArray(uniqueElements: state.periods.map { period in
+            state.devices.map { device in
+                device.programs.compactMap { program -> DeviceProgramPeriod? in
+                    let start = state.date
+                    let end = start.addingTimeInterval(program.duration)
+
+                    guard start.distance(to: end) > 0, (period.start...period.end).overlaps(start...end)
+                    else { return nil }
+
+                    let distanceToOffPeakStart = start.distance(to: period.start)
+                    let distanceFromOffPeakEnd = period.end.distance(to: end)
+
+                    let peakDuration = max(distanceToOffPeakStart, 0) + max(distanceFromOffPeakEnd, 0)
+
+                    return DeviceProgramPeriod(
+                        device: device,
+                        program: program,
+                        start: start,
+                        end: end,
+                        offPeakRatio: 1 - (peakDuration / start.distance(to: end))
+                    )
+                }
+            }
+        }.flatMap { $0 }.flatMap { $0 })
+        return .none
     }
 }
 
@@ -71,6 +86,11 @@ public struct DeviceProgramPeriodsView: View {
     public var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             ScrollView {
+                DatePicker(selection: viewStore.binding(\.$date), displayedComponents: [.hourAndMinute]) {
+                    Text("Starting date")
+                }
+                .padding()
+
                 ForEach(viewStore.deviceProgramPeriods) { deviceProgramPeriod in
                     VStack {
                         Text("\(deviceProgramPeriod.device.name) - \(deviceProgramPeriod.program.name)").font(.headline)
