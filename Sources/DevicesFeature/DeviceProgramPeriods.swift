@@ -5,6 +5,8 @@ import SwiftUI
 public struct DeviceProgramPeriods: Reducer {
     public struct State: Equatable {
         @BindingState var date: Date
+        @BindingState var extraMinutesFromNow = 0.0
+        var dateRange: ClosedRange<Date>
         var periods: [OffPeakPeriod]
         var devices: IdentifiedArrayOf<Device>
         var deviceProgramPeriods: IdentifiedArrayOf<DeviceProgramPeriod> = []
@@ -14,6 +16,7 @@ public struct DeviceProgramPeriods: Reducer {
             self.devices = devices
             @Dependency(\.date) var date
             self.date = date()
+            dateRange = date()...date().addingTimeInterval(60 * 60 * 24)
         }
     }
 
@@ -39,6 +42,9 @@ public struct DeviceProgramPeriods: Reducer {
             switch action {
             case let .binding(action) where action.keyPath == \.$date:
                 return updateDeviceProgramPeriods(state: &state)
+            case let .binding(action) where action.keyPath == \.$extraMinutesFromNow:
+                state.date = date().addingTimeInterval(state.extraMinutesFromNow * 60)
+                return updateDeviceProgramPeriods(state: &state)
             case .binding:
                 return .none
             case .task:
@@ -48,6 +54,7 @@ public struct DeviceProgramPeriods: Reducer {
     }
 
     private func updateDeviceProgramPeriods(state: inout State) -> Effect<Action> {
+        state.extraMinutesFromNow = date().distance(to: state.date) / 60
         state.deviceProgramPeriods = IdentifiedArray(uniqueElements: state.periods.map { period in
             state.devices.map { device in
                 device.programs.compactMap { program -> DeviceProgramPeriod? in
@@ -85,20 +92,30 @@ public struct DeviceProgramPeriodsView: View {
 
     public var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
-            ScrollView {
-                DatePicker(selection: viewStore.binding(\.$date), displayedComponents: [.hourAndMinute]) {
-                    Text("Starting date")
-                }
-                .padding()
-
-                ForEach(viewStore.deviceProgramPeriods) { deviceProgramPeriod in
-                    VStack {
-                        Text("\(deviceProgramPeriod.device.name) - \(deviceProgramPeriod.program.name)").font(.headline)
-                        Text("Duration: \((deviceProgramPeriod.start.distance(to: deviceProgramPeriod.end)/(60)).formatted()) minutes")
-                        Text("\(deviceProgramPeriod.start.formatted(date: .omitted, time: .shortened)) - \(deviceProgramPeriod.end.formatted(date: .omitted, time: .shortened))")
-                        Text("\(deviceProgramPeriod.offPeakRatio.formatted(.percent))")
+            Form {
+                Section("Dates") {
+                    DatePicker(
+                        selection: viewStore.binding(\.$date),
+                        in: viewStore.dateRange,
+                        displayedComponents: [.hourAndMinute]
+                    ) {
+                        Text("Starting date")
                     }
-                    .padding()
+                    Slider(value: viewStore.binding(\.$extraMinutesFromNow), in: 0...1440) {
+                        Text("Extra minutes")
+                    }
+                }
+
+                Section("") {
+                    ForEach(viewStore.deviceProgramPeriods) { deviceProgramPeriod in
+                        VStack(alignment: .leading) {
+                            Text("\(deviceProgramPeriod.device.name) - \(deviceProgramPeriod.program.name)").font(.headline)
+                            Text("Duration: \((deviceProgramPeriod.start.distance(to: deviceProgramPeriod.end)/(60)).formatted()) minutes").font(.caption)
+                            Text("\(deviceProgramPeriod.start.formatted(date: .omitted, time: .shortened)) - \(deviceProgramPeriod.end.formatted(date: .omitted, time: .shortened))")
+                            Text("**Offpeak ratio**: \(deviceProgramPeriod.offPeakRatio.formatted(.percent))")
+                        }
+                        .padding()
+                    }
                 }
             }
             .task { viewStore.send(.task) }
