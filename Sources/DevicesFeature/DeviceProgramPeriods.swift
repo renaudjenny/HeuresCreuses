@@ -36,6 +36,8 @@ public struct DeviceProgramPeriods: Reducer {
 
     @Dependency(\.date) var date
 
+    public init() {}
+
     public var body: some ReducerOf<Self> {
         BindingReducer()
         Reduce { state, action in
