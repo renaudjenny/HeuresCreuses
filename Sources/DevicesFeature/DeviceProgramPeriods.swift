@@ -16,7 +16,7 @@ public struct DeviceProgramPeriods: Reducer {
             self.devices = devices
             @Dependency(\.date) var date
             self.date = date()
-            dateRange = date()...date().addingTimeInterval(60 * 60 * 24)
+            dateRange = date()...date().addingTimeInterval(60 * 60 * 24 * 2)
         }
     }
 
