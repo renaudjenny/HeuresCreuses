@@ -6,6 +6,7 @@ public struct DeviceProgramPeriods: Reducer {
     public struct State: Equatable {
         @BindingState var date: Date
         @BindingState var extraMinutesFromNow = 0.0
+        @BindingState var mode: Mode
         var dateRange: ClosedRange<Date>
         var periods: [OffPeakPeriod]
         var devices: IdentifiedArrayOf<Device>
@@ -17,6 +18,7 @@ public struct DeviceProgramPeriods: Reducer {
             @Dependency(\.date) var date
             self.date = date()
             dateRange = date()...date().addingTimeInterval(60 * 60 * 24 * 2)
+            mode = .startDate
         }
     }
 
@@ -27,6 +29,11 @@ public struct DeviceProgramPeriods: Reducer {
         var start: Date
         var end: Date
         var offPeakRatio: Double
+    }
+
+    enum Mode {
+        case startDate
+        case endDate
     }
 
     public enum Action: Equatable, BindableAction {
@@ -42,7 +49,7 @@ public struct DeviceProgramPeriods: Reducer {
         BindingReducer()
         Reduce { state, action in
             switch action {
-            case let .binding(action) where action.keyPath == \.$date:
+            case let .binding(action) where action.keyPath == \.$date || action.keyPath == \.$mode:
                 return updateDeviceProgramPeriods(state: &state)
             case let .binding(action) where action.keyPath == \.$extraMinutesFromNow:
                 state.date = date().addingTimeInterval(state.extraMinutesFromNow * 60)
@@ -60,8 +67,16 @@ public struct DeviceProgramPeriods: Reducer {
         state.deviceProgramPeriods = IdentifiedArray(uniqueElements: state.periods.map { period in
             state.devices.map { device in
                 device.programs.compactMap { program -> DeviceProgramPeriod? in
-                    let start = state.date
-                    let end = start.addingTimeInterval(program.duration)
+                    let start: Date
+                    let end: Date
+                    switch state.mode {
+                    case .startDate:
+                        start = state.date
+                        end = start.addingTimeInterval(program.duration)
+                    case .endDate:
+                        end = state.date
+                        start = end.addingTimeInterval(-program.duration)
+                    }
 
                     guard start.distance(to: end) > 0, (period.start...period.end).overlaps(start...end)
                     else { return nil }
@@ -96,19 +111,24 @@ public struct DeviceProgramPeriodsView: View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             Form {
                 Section("Dates") {
+                    Picker("Mode", selection: viewStore.binding(\.$mode)) {
+                        Text("Start").tag(DeviceProgramPeriods.Mode.startDate)
+                        Text("End").tag(DeviceProgramPeriods.Mode.endDate)
+                    }
+                    .pickerStyle(.segmented)
                     DatePicker(
                         selection: viewStore.binding(\.$date),
                         in: viewStore.dateRange,
-                        displayedComponents: [.hourAndMinute]
+                        displayedComponents: [.date, .hourAndMinute]
                     ) {
-                        Text("Starting date")
+                        Text("Date & time")
                     }
-                    Slider(value: viewStore.binding(\.$extraMinutesFromNow), in: 0...1440) {
+                    Slider(value: viewStore.binding(\.$extraMinutesFromNow), in: 0...2880) {
                         Text("Extra minutes")
                     }
                 }
 
-                Section("") {
+                Section("Off peak available programs") {
                     ForEach(viewStore.deviceProgramPeriods) { deviceProgramPeriod in
                         VStack(alignment: .leading) {
                             Text("\(deviceProgramPeriod.device.name) - \(deviceProgramPeriod.program.name)").font(.headline)

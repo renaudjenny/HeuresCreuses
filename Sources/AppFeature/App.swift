@@ -110,6 +110,6 @@ public struct App: ReducerProtocol {
 
 public extension Store where State == App.State, Action == App.Action {
     static var live: StoreOf<App> {
-        Store(initialState: State(), reducer: App()._printChanges())
+        Store(initialState: State(), reducer: App())
     }
 }
