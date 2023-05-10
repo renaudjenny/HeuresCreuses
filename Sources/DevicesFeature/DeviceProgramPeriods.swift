@@ -135,6 +135,12 @@ public struct DeviceProgramPeriodsView: View {
                             Text("Duration: \((deviceProgramPeriod.start.distance(to: deviceProgramPeriod.end)/(60)).formatted()) minutes").font(.caption)
                             Text("\(deviceProgramPeriod.start.formatted(date: .omitted, time: .shortened)) - \(deviceProgramPeriod.end.formatted(date: .omitted, time: .shortened))")
                             Text("**Offpeak ratio**: \(deviceProgramPeriod.offPeakRatio.formatted(.percent))")
+
+                            Divider()
+
+                            if case let .timers(timers) = deviceProgramPeriod.device.delay {
+                                deviceTimers(timers)
+                            }
                         }
                         .padding()
                     }
@@ -142,6 +148,15 @@ public struct DeviceProgramPeriodsView: View {
             }
             .task { viewStore.send(.task) }
         }
+    }
+
+    public func deviceTimers(_ timers: [Delay.Timer]) -> some View {
+            VStack {
+                Text("Timers")
+                ForEach(timers) { timer in
+                    Text("\(timer.hour) hours\(timer.minute > 0 ? "\(timer.minute) minutes" : "")")
+                }
+            }
     }
 }
 

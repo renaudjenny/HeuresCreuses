@@ -41,9 +41,11 @@ public enum Delay: CaseIterable, Equatable, Hashable {
 }
 
 public extension Delay {
-    struct Timer: Equatable {
+    struct Timer: Hashable, Identifiable {
         public let hour: Int
         public let minute: Int
+
+        public var id: Int { hashValue }
 
         public init(hour: Int, minute: Int) {
             self.hour = hour
