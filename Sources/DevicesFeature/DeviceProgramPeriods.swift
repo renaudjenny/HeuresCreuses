@@ -11,12 +11,14 @@ public struct DeviceProgramPeriods: Reducer {
         var periods: [OffPeakPeriod]
         var devices: IdentifiedArrayOf<Device>
         var deviceProgramPeriods: IdentifiedArrayOf<DeviceProgramPeriod> = []
+        var now: Date
 
         public init(periods: [OffPeakPeriod], devices: IdentifiedArrayOf<Device>) {
             self.periods = periods
             self.devices = devices
             @Dependency(\.date) var date
             self.date = date()
+            now = date()
             dateRange = date()...date().addingTimeInterval(60 * 60 * 24 * 2)
             mode = .startDate
         }
@@ -151,12 +153,25 @@ public struct DeviceProgramPeriodsView: View {
     }
 
     public func deviceTimers(_ timers: [Delay.Timer]) -> some View {
+        WithViewStore(store, observe: { $0 }) { viewStore in
             VStack {
                 Text("Timers")
+                    .font(.headline)
                 ForEach(timers) { timer in
                     Text("\(timer.hour) hours\(timer.minute > 0 ? "\(timer.minute) minutes" : "")")
+                    + Text(" - ")
+                    + Text("\(viewStore.now.addingDelayTimer(timer).formatted(date: .omitted, time: .shortened))")
                 }
             }
+        }
+    }
+}
+
+private extension Date {
+    func addingDelayTimer(_ timer: Delay.Timer) -> Date {
+        let hoursInSeconds = Double(timer.hour) * 60 * 60
+        let minutesInSeconds = Double(timer.minute * 60)
+        return addingTimeInterval(hoursInSeconds + minutesInSeconds)
     }
 }
 

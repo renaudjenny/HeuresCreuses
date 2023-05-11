@@ -24,9 +24,10 @@ public extension Device {
         name: "Washing Machine Example",
         type: .washingMachine,
         delay: .timers([
-            Delay.Timer(hour: 2, minute: 0),
-            Delay.Timer(hour: 4, minute: 0),
-            Delay.Timer(hour: 8, minute: 0),
+            Delay.Timer(hour: 3, minute: 0),
+            Delay.Timer(hour: 6, minute: 0),
+            Delay.Timer(hour: 9, minute: 0),
+            Delay.Timer(hour: 12, minute: 0),
         ]),
         programs: [
             Program(
