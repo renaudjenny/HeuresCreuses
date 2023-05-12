@@ -10,7 +10,7 @@ public struct DeviceProgramPeriods: Reducer {
         var dateRange: ClosedRange<Date>
         var periods: [OffPeakPeriod]
         var devices: IdentifiedArrayOf<Device>
-        var deviceProgramPeriods: IdentifiedArrayOf<DeviceProgramPeriod> = []
+        var deviceProgramPeriods: IdentifiedArrayOf<DeviceProgramPeriod.State> = []
         var now: Date
 
         public init(periods: [OffPeakPeriod], devices: IdentifiedArrayOf<Device>) {
@@ -24,15 +24,6 @@ public struct DeviceProgramPeriods: Reducer {
         }
     }
 
-    struct DeviceProgramPeriod: Identifiable, Equatable {
-        var id: String { device.id.uuidString + program.id.uuidString }
-        let device: Device
-        let program: Program
-        var start: Date
-        var end: Date
-        var offPeakRatio: Double
-    }
-
     enum Mode {
         case startDate
         case endDate
@@ -41,6 +32,7 @@ public struct DeviceProgramPeriods: Reducer {
     public enum Action: Equatable, BindableAction {
         case binding(BindingAction<State>)
         case task
+        case deviceProgramPeriod(id: DeviceProgramPeriod.State.ID, action: DeviceProgramPeriod.Action)
     }
 
     @Dependency(\.date) var date
@@ -60,7 +52,12 @@ public struct DeviceProgramPeriods: Reducer {
                 return .none
             case .task:
                 return updateDeviceProgramPeriods(state: &state)
+            case .deviceProgramPeriod:
+                return .none
             }
+        }
+        .forEach(\.deviceProgramPeriods, action: /Action.deviceProgramPeriod) {
+            DeviceProgramPeriod()
         }
     }
 
@@ -68,7 +65,7 @@ public struct DeviceProgramPeriods: Reducer {
         state.extraMinutesFromNow = date().distance(to: state.date) / 60
         state.deviceProgramPeriods = IdentifiedArray(uniqueElements: state.periods.map { period in
             state.devices.map { device in
-                device.programs.compactMap { program -> DeviceProgramPeriod? in
+                device.programs.compactMap { program -> DeviceProgramPeriod.State? in
                     let start: Date
                     let end: Date
                     switch state.mode {
@@ -88,7 +85,7 @@ public struct DeviceProgramPeriods: Reducer {
 
                     let peakDuration = max(distanceToOffPeakStart, 0) + max(distanceFromOffPeakEnd, 0)
 
-                    return DeviceProgramPeriod(
+                    return DeviceProgramPeriod.State(
                         device: device,
                         program: program,
                         start: start,
@@ -131,20 +128,27 @@ public struct DeviceProgramPeriodsView: View {
                 }
 
                 Section("Off peak available programs") {
-                    ForEach(viewStore.deviceProgramPeriods) { deviceProgramPeriod in
-                        VStack(alignment: .leading) {
-                            Text("\(deviceProgramPeriod.device.name) - \(deviceProgramPeriod.program.name)").font(.headline)
-                            Text("Duration: \((deviceProgramPeriod.start.distance(to: deviceProgramPeriod.end)/(60)).formatted()) minutes").font(.caption)
-                            Text("\(deviceProgramPeriod.start.formatted(date: .omitted, time: .shortened)) - \(deviceProgramPeriod.end.formatted(date: .omitted, time: .shortened))")
-                            Text("**Offpeak ratio**: \(deviceProgramPeriod.offPeakRatio.formatted(.percent))")
+                    ForEachStore(store.scope(state: \.deviceProgramPeriods, action: DeviceProgramPeriods.Action.deviceProgramPeriod)) { store in
+                        // Move this UI code to `DeviceProgramPeriod`
+                        WithViewStore(store, observe: { $0 }) { viewStore in
+                            VStack(alignment: .leading) {
+                                Text("\(viewStore.device.name) - \(viewStore.program.name)").font(.headline)
+                                Text("Duration: \((viewStore.start.distance(to: viewStore.end)/(60)).formatted()) minutes").font(.caption)
+                                Text("\(viewStore.start.formatted(date: .omitted, time: .shortened)) - \(viewStore.end.formatted(date: .omitted, time: .shortened))")
+                                Text("**Offpeak ratio**: \(viewStore.offPeakRatio.formatted(.percent))")
 
-                            Divider()
+                                Toggle("Show Timers", isOn: viewStore.binding(\.$isTimersShown))
 
-                            if case let .timers(timers) = deviceProgramPeriod.device.delay {
-                                deviceTimers(timers)
+                                if viewStore.isTimersShown {
+                                    Divider()
+
+                                    if case let .timers(timers) = viewStore.device.delay {
+                                        deviceTimers(timers)
+                                    }
+                                }
                             }
+                            .padding()
                         }
-                        .padding()
                     }
                 }
             }
@@ -155,7 +159,7 @@ public struct DeviceProgramPeriodsView: View {
     public func deviceTimers(_ timers: [Delay.Timer]) -> some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             VStack {
-                Text("Timers")
+                Text("Timers from now")
                     .font(.headline)
                 ForEach(timers) { timer in
                     Text("\(timer.hour) hours\(timer.minute > 0 ? "\(timer.minute) minutes" : "")")
