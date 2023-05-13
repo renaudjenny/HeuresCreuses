@@ -24,7 +24,7 @@ public struct DeviceProgramPeriods: Reducer {
         }
     }
 
-    enum Mode {
+    public enum Mode {
         case startDate
         case endDate
     }
@@ -52,6 +52,13 @@ public struct DeviceProgramPeriods: Reducer {
                 return .none
             case .task:
                 return updateDeviceProgramPeriods(state: &state)
+            case let .deviceProgramPeriod(_, action: .delegate(action)):
+                switch action {
+                case let .setDate(date, mode):
+                    state.date = date
+                    state.mode = mode
+                    return updateDeviceProgramPeriods(state: &state)
+                }
             case .deviceProgramPeriod:
                 return .none
             }
@@ -85,12 +92,14 @@ public struct DeviceProgramPeriods: Reducer {
 
                     let peakDuration = max(distanceToOffPeakStart, 0) + max(distanceFromOffPeakEnd, 0)
 
+                    let id = device.id.uuidString + program.id.uuidString
                     return DeviceProgramPeriod.State(
                         device: device,
                         program: program,
                         start: start,
                         end: end,
-                        offPeakRatio: 1 - (peakDuration / start.distance(to: end))
+                        offPeakRatio: 1 - (peakDuration / start.distance(to: end)),
+                        isTimersShown: state.deviceProgramPeriods[id: id]?.isTimersShown ?? false
                     )
                 }
             }
@@ -128,54 +137,17 @@ public struct DeviceProgramPeriodsView: View {
                 }
 
                 Section("Off peak available programs") {
-                    ForEachStore(store.scope(state: \.deviceProgramPeriods, action: DeviceProgramPeriods.Action.deviceProgramPeriod)) { store in
-                        // Move this UI code to `DeviceProgramPeriod`
-                        WithViewStore(store, observe: { $0 }) { viewStore in
-                            VStack(alignment: .leading) {
-                                Text("\(viewStore.device.name) - \(viewStore.program.name)").font(.headline)
-                                Text("Duration: \((viewStore.start.distance(to: viewStore.end)/(60)).formatted()) minutes").font(.caption)
-                                Text("\(viewStore.start.formatted(date: .omitted, time: .shortened)) - \(viewStore.end.formatted(date: .omitted, time: .shortened))")
-                                Text("**Offpeak ratio**: \(viewStore.offPeakRatio.formatted(.percent))")
-
-                                Toggle("Show Timers", isOn: viewStore.binding(\.$isTimersShown))
-
-                                if viewStore.isTimersShown {
-                                    Divider()
-
-                                    if case let .timers(timers) = viewStore.device.delay {
-                                        deviceTimers(timers)
-                                    }
-                                }
-                            }
-                            .padding()
-                        }
-                    }
+                    ForEachStore(
+                        store.scope(
+                            state: \.deviceProgramPeriods,
+                            action: DeviceProgramPeriods.Action.deviceProgramPeriod
+                        ),
+                        content: DeviceProgramPeriodView.init
+                    )
                 }
             }
             .task { viewStore.send(.task) }
         }
-    }
-
-    public func deviceTimers(_ timers: [Delay.Timer]) -> some View {
-        WithViewStore(store, observe: { $0 }) { viewStore in
-            VStack {
-                Text("Timers from now")
-                    .font(.headline)
-                ForEach(timers) { timer in
-                    Text("\(timer.hour) hours\(timer.minute > 0 ? "\(timer.minute) minutes" : "")")
-                    + Text(" - ")
-                    + Text("\(viewStore.now.addingDelayTimer(timer).formatted(date: .omitted, time: .shortened))")
-                }
-            }
-        }
-    }
-}
-
-private extension Date {
-    func addingDelayTimer(_ timer: Delay.Timer) -> Date {
-        let hoursInSeconds = Double(timer.hour) * 60 * 60
-        let minutesInSeconds = Double(timer.minute * 60)
-        return addingTimeInterval(hoursInSeconds + minutesInSeconds)
     }
 }
 
