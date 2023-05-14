@@ -36,7 +36,7 @@ public struct App: ReducerProtocol {
     @Dependency(\.calendar) var calendar
     @Dependency(\.continuousClock) var clock
 
-    private enum TimerTaskID {}
+    private enum CancelID { case timer }
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -51,7 +51,7 @@ public struct App: ReducerProtocol {
                         }
                     }
                 )
-                .cancellable(id: TimerTaskID.self)
+                .cancellable(id: CancelID.timer)
             case let .timeChanged(date):
                 state.date = date
                 if let currentOffPeak = state.offPeakPeriods.first(where: { ($0.start...$0.end).contains(state.date) }) {
@@ -64,7 +64,7 @@ public struct App: ReducerProtocol {
                     return .none
                 }
             case .cancel:
-                return .cancel(id: TimerTaskID.self)
+                return .cancel(id: CancelID.timer)
             case .devicesButtonTapped:
                 state.destination = DeviceProgramPeriods.State(
                     periods: state.offPeakPeriods,

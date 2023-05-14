@@ -27,15 +27,20 @@ public struct AppView: View {
     }
 
     public var body: some View {
-        currentOffPeakStatusView
-            .sheet(store: store.scope(state: \.$destination, action: App.Action.destination), content: DeviceProgramPeriodsView.init)
+        NavigationStack {
+            currentOffPeakStatusView
+                .navigationDestination(
+                    store: store.scope(state: \.$destination, action: App.Action.destination),
+                    destination: DeviceProgramPeriodsView.init
+                )
+        }
     }
 
     private var currentOffPeakStatusView: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
             VStack {
                 Spacer()
-                
+
                 switch viewStore.peakStatus {
                 case .unavailable:
                     Text("Wait a sec...")
