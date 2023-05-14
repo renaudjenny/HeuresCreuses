@@ -43,9 +43,9 @@ public struct DeviceProgramPeriods: Reducer {
         BindingReducer()
         Reduce { state, action in
             switch action {
-            case let .binding(action) where action.keyPath == \.$date || action.keyPath == \.$mode:
+            case .binding(\.$date), .binding(\.$mode):
                 return updateDeviceProgramPeriods(state: &state)
-            case let .binding(action) where action.keyPath == \.$extraMinutesFromNow:
+            case .binding(\.$extraMinutesFromNow):
                 state.date = date().addingTimeInterval(state.extraMinutesFromNow * 60)
                 return updateDeviceProgramPeriods(state: &state)
             case .binding:
