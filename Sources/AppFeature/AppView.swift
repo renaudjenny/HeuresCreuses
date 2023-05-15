@@ -108,13 +108,13 @@ struct AppView_Previews: PreviewProvider {
         let store: StoreOf<App>
 
         var body: some View {
-            WithViewStore(store, observe: { $0 }) { viewStore in
-                VStack {
+//            WithViewStore(store, observe: { $0 }) { viewStore in
+//                VStack {
                     AppView(store: store)
 //                    Divider()
 //                    Text("Current time: \(viewStore.date.formatted())")
-                }
-            }
+//                }
+//            }
         }
     }
 }

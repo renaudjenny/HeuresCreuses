@@ -10,6 +10,7 @@ public struct DeviceProgramPeriods: Reducer {
         var dateRange: ClosedRange<Date>
         var periods: [OffPeakPeriod]
         var devices: IdentifiedArrayOf<Device>
+        var selectedDevices: IdentifiedArrayOf<Device>
         var deviceProgramPeriods: IdentifiedArrayOf<DeviceProgramPeriod.State> = []
         var now: Date
 
@@ -21,6 +22,7 @@ public struct DeviceProgramPeriods: Reducer {
             now = date()
             dateRange = date()...date().addingTimeInterval(60 * 60 * 24 * 2)
             mode = .startDate
+            selectedDevices = devices
         }
     }
 
@@ -32,6 +34,7 @@ public struct DeviceProgramPeriods: Reducer {
     public enum Action: Equatable, BindableAction {
         case binding(BindingAction<State>)
         case task
+        case selectDeviceTapped(Device)
         case deviceProgramPeriod(id: DeviceProgramPeriod.State.ID, action: DeviceProgramPeriod.Action)
     }
 
@@ -52,6 +55,13 @@ public struct DeviceProgramPeriods: Reducer {
                 return .none
             case .task:
                 return updateDeviceProgramPeriods(state: &state)
+            case let .selectDeviceTapped(device):
+                if state.selectedDevices.contains(device) {
+                    state.selectedDevices.remove(device)
+                } else {
+                    state.selectedDevices.append(device)
+                }
+                return .none
             case let .deviceProgramPeriod(_, action: .delegate(action)):
                 switch action {
                 case let .setDate(date, mode):
@@ -71,7 +81,7 @@ public struct DeviceProgramPeriods: Reducer {
     private func updateDeviceProgramPeriods(state: inout State) -> Effect<Action> {
         state.extraMinutesFromNow = date().distance(to: state.date) / 60
         state.deviceProgramPeriods = IdentifiedArray(uniqueElements: state.periods.map { period in
-            state.devices.map { device in
+            state.selectedDevices.map { device in
                 device.programs.compactMap { program -> DeviceProgramPeriod.State? in
                     let start: Date
                     let end: Date
@@ -133,6 +143,15 @@ public struct DeviceProgramPeriodsView: View {
                     }
                     Slider(value: viewStore.binding(\.$extraMinutesFromNow), in: 0...2880) {
                         Text("Extra minutes")
+                    }
+                }
+
+                Section("Devices") {
+                    ForEach(viewStore.devices) { device in
+                        Button { viewStore.send(.selectDeviceTapped(device)) } label: {
+                            Text("\(device.name)").strikethrough(!viewStore.selectedDevices.contains(device))
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
 
