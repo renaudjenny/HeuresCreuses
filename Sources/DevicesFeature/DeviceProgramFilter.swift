@@ -29,7 +29,7 @@ struct DeviceProgramFilter: Reducer {
             case .binding:
                 return .none
             case let .deviceProgramTapped(id, program):
-                if let selection = state.selections[id: program.id] {
+                if state.selections[id: program.id] != nil {
                     state.selections.remove(id: program.id)
                 } else {
                     state.selections.append(Selection(deviceID: id, program: program))
@@ -49,12 +49,37 @@ struct DeviceProgramFilterView: View {
                 List {
                     ForEach(viewStore.devices) { device in
                         Section(device.name) {
-                            Text("")
+                            List {
+                                ForEach(device.programs, id: \.id) { program in
+                                    HStack {
+                                        Button {
+                                            viewStore.send(.deviceProgramTapped(id: device.id, program: program))
+                                        } label: {
+                                            Text(program.name)
+                                        }
+                                        .buttonStyle(.plain)
+
+                                        Spacer()
+
+                                        Image(
+                                            systemName: viewStore.state.isProgramSelected(program)
+                                            ? "checkmark.circle"
+                                            : "circle"
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+private extension DeviceProgramFilter.State {
+    func isProgramSelected(_ program: Program) -> Bool {
+        selections.contains(where: { $0.program.id == program.id })
     }
 }
 
