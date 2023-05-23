@@ -146,7 +146,13 @@ public struct DeviceProgramPeriodsView: View {
                     }
                 }
 
-                Section("Devices") {
+                Section("Filter") {
+                    NavigationLink(destination: Text("TODO")) {
+                        Text("TODO: add nice filters overview")
+                    }
+
+                    Text("Legacy")
+
                     ForEach(viewStore.devices) { device in
                         Button { viewStore.send(.selectDeviceTapped(device)) } label: {
                             Text("\(device.name)").strikethrough(!viewStore.selectedDevices.contains(device))
@@ -173,19 +179,21 @@ public struct DeviceProgramPeriodsView: View {
 #if DEBUG
 struct DeviceProgramPeriodsView_Previews: PreviewProvider {
     static var previews: some View {
-        DeviceProgramPeriodsView(
-            store: Store(
-                initialState: DeviceProgramPeriods.State(
-                    periods: [
-                        OffPeakPeriod(start: Date().addingTimeInterval(-60 * 60 * 10), end: Date().addingTimeInterval(-60 * 60 * 8)),
-                        OffPeakPeriod(start: Date().addingTimeInterval(60 * 60 * 2), end: Date().addingTimeInterval(60 * 60 * 4)),
-                        OffPeakPeriod(start: Date().addingTimeInterval(60 * 60 * 10), end: Date().addingTimeInterval(60 * 60 * 12)),
-                    ],
-                    devices: [.dishwasher, .washingMachine]
-                ),
-                reducer: DeviceProgramPeriods()
+        NavigationStack {
+            DeviceProgramPeriodsView(
+                store: Store(
+                    initialState: DeviceProgramPeriods.State(
+                        periods: [
+                            OffPeakPeriod(start: Date().addingTimeInterval(-60 * 60 * 10), end: Date().addingTimeInterval(-60 * 60 * 8)),
+                            OffPeakPeriod(start: Date().addingTimeInterval(60 * 60 * 2), end: Date().addingTimeInterval(60 * 60 * 4)),
+                            OffPeakPeriod(start: Date().addingTimeInterval(60 * 60 * 10), end: Date().addingTimeInterval(60 * 60 * 12)),
+                        ],
+                        devices: [.dishwasher, .washingMachine]
+                    ),
+                    reducer: DeviceProgramPeriods()
+                )
             )
-        )
+        }
     }
 }
 #endif

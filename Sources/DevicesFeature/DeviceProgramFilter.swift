@@ -4,7 +4,7 @@ import SwiftUI
 struct DeviceProgramFilter: Reducer {
     struct State: Equatable {
         let devices: IdentifiedArrayOf<Device>
-        @BindingState var selections: IdentifiedArrayOf<Selection>
+        var selections: IdentifiedArrayOf<Selection>
     }
 
     struct Selection: Equatable, Identifiable, Hashable {
