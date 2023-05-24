@@ -1,29 +1,29 @@
 import ComposableArchitecture
 import SwiftUI
 
-struct DeviceProgramFilter: Reducer {
-    struct State: Equatable {
+public struct DeviceProgramFilter: Reducer {
+    public struct State: Equatable {
         let devices: IdentifiedArrayOf<Device>
         var selections: IdentifiedArrayOf<Selection>
     }
 
-    struct Selection: Equatable, Identifiable, Hashable {
+    public struct Selection: Equatable, Identifiable, Hashable {
         let deviceID: Device.ID
         let program: Program
 
-        var id: Program.ID { program.id }
-        func hash(into hasher: inout Hasher) {
+        public var id: Program.ID { program.id }
+        public func hash(into hasher: inout Hasher) {
             hasher.combine(deviceID)
             hasher.combine(program.id)
         }
     }
 
-    enum Action: Equatable, BindableAction {
+    public enum Action: Equatable, BindableAction {
         case binding(BindingAction<State>)
         case deviceProgramTapped(id: Device.ID, program: Program)
     }
 
-    var body: some ReducerOf<Self> {
+    public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .binding:

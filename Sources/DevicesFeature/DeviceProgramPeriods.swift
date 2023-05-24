@@ -10,9 +10,10 @@ public struct DeviceProgramPeriods: Reducer {
         var dateRange: ClosedRange<Date>
         var periods: [OffPeakPeriod]
         var devices: IdentifiedArrayOf<Device>
-        var selectedDevices: IdentifiedArrayOf<Device>
+        var filteredDevicePrograms: IdentifiedArrayOf<DeviceProgramFilter.Selection>
         var deviceProgramPeriods: IdentifiedArrayOf<DeviceProgramPeriod.State> = []
         var now: Date
+        @PresentationState var filterDestination: DeviceProgramFilter.State?
 
         public init(periods: [OffPeakPeriod], devices: IdentifiedArrayOf<Device>) {
             self.periods = periods
@@ -22,7 +23,13 @@ public struct DeviceProgramPeriods: Reducer {
             now = date()
             dateRange = date()...date().addingTimeInterval(60 * 60 * 24 * 2)
             mode = .startDate
-            selectedDevices = devices
+            filteredDevicePrograms = IdentifiedArrayOf(
+                uniqueElements: devices
+                    .map { ($0.id, $0.programs) }
+                    .flatMap { id, programs in
+                        programs.map { DeviceProgramFilter.Selection(deviceID: id, program: $0) }
+                    }
+            )
         }
     }
 
@@ -33,8 +40,9 @@ public struct DeviceProgramPeriods: Reducer {
 
     public enum Action: Equatable, BindableAction {
         case binding(BindingAction<State>)
+        case filterDestination(PresentationAction<DeviceProgramFilter.Action>)
         case task
-        case selectDeviceTapped(Device)
+        case filterButtonTapped
         case deviceProgramPeriod(id: DeviceProgramPeriod.State.ID, action: DeviceProgramPeriod.Action)
     }
 
@@ -53,15 +61,19 @@ public struct DeviceProgramPeriods: Reducer {
                 return updateDeviceProgramPeriods(state: &state)
             case .binding:
                 return .none
+            case .filterDestination(.dismiss):
+                state.filteredDevicePrograms = state.filterDestination?.selections ?? state.filteredDevicePrograms
+                return updateDeviceProgramPeriods(state: &state)
+            case .filterDestination:
+                return .none
+            case .filterButtonTapped:
+                state.filterDestination = DeviceProgramFilter.State(
+                    devices: state.devices,
+                    selections: state.filteredDevicePrograms
+                )
+                return .none
             case .task:
                 return updateDeviceProgramPeriods(state: &state)
-            case let .selectDeviceTapped(device):
-                if state.selectedDevices.contains(device) {
-                    state.selectedDevices.remove(device)
-                } else {
-                    state.selectedDevices.append(device)
-                }
-                return .none
             case let .deviceProgramPeriod(_, action: .delegate(action)):
                 switch action {
                 case let .setDate(date, mode):
@@ -76,44 +88,46 @@ public struct DeviceProgramPeriods: Reducer {
         .forEach(\.deviceProgramPeriods, action: /Action.deviceProgramPeriod) {
             DeviceProgramPeriod()
         }
+        .ifLet(\.$filterDestination, action: /DeviceProgramPeriods.Action.filterDestination) {
+            DeviceProgramFilter()
+        }
     }
 
     private func updateDeviceProgramPeriods(state: inout State) -> Effect<Action> {
         state.extraMinutesFromNow = date().distance(to: state.date) / 60
         state.deviceProgramPeriods = IdentifiedArray(uniqueElements: state.periods.map { period in
-            state.selectedDevices.map { device in
-                device.programs.compactMap { program -> DeviceProgramPeriod.State? in
-                    let start: Date
-                    let end: Date
-                    switch state.mode {
-                    case .startDate:
-                        start = state.date
-                        end = start.addingTimeInterval(program.duration)
-                    case .endDate:
-                        end = state.date
-                        start = end.addingTimeInterval(-program.duration)
-                    }
-
-                    guard start.distance(to: end) > 0, (period.start...period.end).overlaps(start...end)
-                    else { return nil }
-
-                    let distanceToOffPeakStart = start.distance(to: period.start)
-                    let distanceFromOffPeakEnd = period.end.distance(to: end)
-
-                    let peakDuration = max(distanceToOffPeakStart, 0) + max(distanceFromOffPeakEnd, 0)
-
-                    let id = device.id.uuidString + program.id.uuidString
-                    return DeviceProgramPeriod.State(
-                        device: device,
-                        program: program,
-                        start: start,
-                        end: end,
-                        offPeakRatio: 1 - (peakDuration / start.distance(to: end)),
-                        isTimersShown: state.deviceProgramPeriods[id: id]?.isTimersShown ?? false
-                    )
+            state.filteredDevicePrograms.compactMap { selection in
+                let start: Date
+                let end: Date
+                switch state.mode {
+                case .startDate:
+                    start = state.date
+                    end = start.addingTimeInterval(selection.program.duration)
+                case .endDate:
+                    end = state.date
+                    start = end.addingTimeInterval(-selection.program.duration)
                 }
+
+                guard start.distance(to: end) > 0, (period.start...period.end).overlaps(start...end),
+                      let device = state.devices[id: selection.deviceID]
+                else { return nil }
+
+                let distanceToOffPeakStart = start.distance(to: period.start)
+                let distanceFromOffPeakEnd = period.end.distance(to: end)
+
+                let peakDuration = max(distanceToOffPeakStart, 0) + max(distanceFromOffPeakEnd, 0)
+
+                let id = selection.deviceID.uuidString + selection.program.id.uuidString
+                return DeviceProgramPeriod.State(
+                    device: device,
+                    program: selection.program,
+                    start: start,
+                    end: end,
+                    offPeakRatio: 1 - (peakDuration / start.distance(to: end)),
+                    isTimersShown: state.deviceProgramPeriods[id: id]?.isTimersShown ?? false
+                )
             }
-        }.flatMap { $0 }.flatMap { $0 })
+        }.flatMap { $0 })
         return .none
     }
 }
@@ -147,18 +161,16 @@ public struct DeviceProgramPeriodsView: View {
                 }
 
                 Section("Filter") {
-                    NavigationLink(destination: Text("TODO")) {
-                        Text("TODO: add nice filters overview")
+                    Button { viewStore.send(.filterButtonTapped) } label: {
+                        Text("Filters")
                     }
-
-                    Text("Legacy")
-
-                    ForEach(viewStore.devices) { device in
-                        Button { viewStore.send(.selectDeviceTapped(device)) } label: {
-                            Text("\(device.name)").strikethrough(!viewStore.selectedDevices.contains(device))
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    .navigationDestination(
+                        store: store.scope(
+                            state: \.$filterDestination,
+                            action: DeviceProgramPeriods.Action.filterDestination
+                        ),
+                        destination: DeviceProgramFilterView.init
+                    )
                 }
 
                 Section("Off peak available programs") {
