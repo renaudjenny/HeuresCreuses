@@ -62,6 +62,7 @@ public struct DeviceProgramPeriodView: View {
                 Text("Duration: \((viewStore.start.distance(to: viewStore.end)/(60)).formatted()) minutes").font(.caption)
                 Text("\(viewStore.start.formatted(date: .omitted, time: .shortened)) - \(viewStore.end.formatted(date: .omitted, time: .shortened))")
                 Text("**Offpeak ratio**: \(viewStore.offPeakRatio.formatted(.percent))")
+                ProgressView(value: viewStore.offPeakRatio) { Text("**Offpeak ratio**") }
 
                 Toggle("Show Timers", isOn: viewStore.binding(\.$isTimersShown))
 
