@@ -161,8 +161,14 @@ public struct DeviceProgramPeriodsView: View {
                 }
 
                 Section("Filter") {
+
                     Button { viewStore.send(.filterButtonTapped) } label: {
-                        Text("Filters")
+                        VStack(alignment: .leading) {
+                            Text("Filters").padding(.bottom, 4)
+                            if let filterCaption = viewStore.state.filterCaption {
+                                Text(.init(filterCaption)).font(.caption)
+                            }
+                        }
                     }
                     .navigationDestination(
                         store: store.scope(
@@ -185,6 +191,18 @@ public struct DeviceProgramPeriodsView: View {
             }
             .task { viewStore.send(.task) }
         }
+    }
+}
+
+private extension DeviceProgramPeriods.State {
+    var filterCaption: String? {
+        guard filteredDevicePrograms.map(\.program) != devices.flatMap(\.programs)
+        else { return nil }
+        return filteredDevicePrograms.compactMap { selection in
+            guard let device = devices[id: selection.deviceID] else { return nil }
+            return "**\(device.name)** \(selection.program.name)"
+        }
+        .joined(separator: "\n")
     }
 }
 
