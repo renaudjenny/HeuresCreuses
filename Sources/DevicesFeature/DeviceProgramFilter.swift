@@ -55,17 +55,18 @@ struct DeviceProgramFilterView: View {
                                         Button {
                                             viewStore.send(.deviceProgramTapped(id: device.id, program: program))
                                         } label: {
-                                            Text(program.name)
+                                            HStack {
+                                                Text(program.name)
+
+                                                Spacer()
+
+                                                Image(
+                                                    systemName: viewStore.state.isProgramSelected(program)
+                                                    ? "checkmark.circle"
+                                                    : "circle"
+                                                )
+                                            }
                                         }
-                                        .buttonStyle(.plain)
-
-                                        Spacer()
-
-                                        Image(
-                                            systemName: viewStore.state.isProgramSelected(program)
-                                            ? "checkmark.circle"
-                                            : "circle"
-                                        )
                                     }
                                 }
                             }
