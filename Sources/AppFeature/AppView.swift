@@ -70,7 +70,7 @@ public struct AppView: View {
                     Color.green.opacity(20/100).ignoresSafeArea(.all)
                 }
             }
-            .task { viewStore.send(.task) }
+            .task { @MainActor in viewStore.send(.task) }
         }
     }
 }

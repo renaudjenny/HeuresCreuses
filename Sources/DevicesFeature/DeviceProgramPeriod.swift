@@ -57,12 +57,12 @@ public struct DeviceProgramPeriodView: View {
 
     public var body: some View {
         WithViewStore(store, observe: { $0 }) { viewStore in
-            VStack(alignment: .leading) {
-                Text("\(viewStore.device.name) - \(viewStore.program.name)").font(.headline)
-                Text("Duration: \((viewStore.start.distance(to: viewStore.end)/(60)).formatted()) minutes").font(.caption)
+            VStack(alignment: .leading, spacing: 8) {
+                let duration = Text("\((viewStore.start.distance(to: viewStore.end)/(60)).formatted()) minutes").font(.caption)
+                Text(viewStore.device.name).font(.subheadline)
+                Text("\(viewStore.program.name) - \(duration)").font(.headline)
                 Text("\(viewStore.start.formatted(date: .omitted, time: .shortened)) - \(viewStore.end.formatted(date: .omitted, time: .shortened))")
-                Text("**Offpeak ratio**: \(viewStore.offPeakRatio.formatted(.percent))")
-                ProgressView(value: viewStore.offPeakRatio) { Text("**Offpeak ratio**") }
+                ProgressView(value: viewStore.offPeakRatio) { Text("**Offpeak ratio** - \(viewStore.offPeakRatio.formatted(.percent))") }
 
                 Toggle("Show Timers", isOn: viewStore.binding(\.$isTimersShown))
 
@@ -129,19 +129,21 @@ private extension Date {
 struct DeviceProgramPeriodView_Previews: PreviewProvider {
     static var previews: some View {
         Form {
-            DeviceProgramPeriodView(
-                store: Store(
-                    initialState: DeviceProgramPeriod.State(
-                        device: .dishwasher,
-                        program: Device.dishwasher.programs.first!,
-                        start: Date(),
-                        end: Date().addingTimeInterval(Device.dishwasher.programs.first!.duration),
-                        offPeakRatio: 50/100,
-                        isTimersShown: false
-                    ),
-                    reducer: DeviceProgramPeriod()
+            Section("\(Device.dishwasher.name)") {
+                DeviceProgramPeriodView(
+                    store: Store(
+                        initialState: DeviceProgramPeriod.State(
+                            device: .dishwasher,
+                            program: Device.dishwasher.programs.first!,
+                            start: Date(),
+                            end: Date().addingTimeInterval(Device.dishwasher.programs.first!.duration),
+                            offPeakRatio: 50/100,
+                            isTimersShown: false
+                        ),
+                        reducer: DeviceProgramPeriod()
+                    )
                 )
-            )
+            }
         }
     }
 }

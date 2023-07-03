@@ -54,7 +54,7 @@ public extension Delay {
     }
 }
 
-public struct Program: Equatable, Identifiable {
+public struct Program: Equatable, Identifiable, Hashable {
     public let id: UUID
     public var name: String
     public var duration: TimeInterval
