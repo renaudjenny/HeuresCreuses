@@ -143,11 +143,19 @@ public struct DeviceProgramPeriodsView: View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             Form {
                 Section("Dates") {
+                    #if os(watchOS)
+                    Picker("Mode", selection: viewStore.binding(\.$mode)) {
+                        Text("Start").tag(DeviceProgramPeriods.Mode.startDate)
+                        Text("End").tag(DeviceProgramPeriods.Mode.endDate)
+                    }
+                    Text("Date: \(viewStore.date, format: .dateTime)")
+                    #else
                     Picker("Mode", selection: viewStore.binding(\.$mode)) {
                         Text("Start").tag(DeviceProgramPeriods.Mode.startDate)
                         Text("End").tag(DeviceProgramPeriods.Mode.endDate)
                     }
                     .pickerStyle(.segmented)
+
                     DatePicker(
                         selection: viewStore.binding(\.$date),
                         in: viewStore.dateRange,
@@ -155,6 +163,7 @@ public struct DeviceProgramPeriodsView: View {
                     ) {
                         Text("Date & time")
                     }
+                    #endif
                     Slider(value: viewStore.binding(\.$extraMinutesFromNow), in: 0...2880) {
                         Text("Extra minutes")
                     }

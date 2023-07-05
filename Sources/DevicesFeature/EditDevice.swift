@@ -31,7 +31,7 @@ public struct EditDeviceView: View {
         WithViewStore(store, observe: { $0 }) { viewStore in
             Form {
                 Section("Device") {
-                    TextField("Name", text: viewStore.binding(\.$device.name))
+                    TextField("Name", text: viewStore.$device.name)
                     Picker(selection: viewStore.binding(\.$device.type)) {
                         ForEach(DeviceType.allCases, id: \.self) { deviceType in
                             switch deviceType {
@@ -46,7 +46,7 @@ public struct EditDeviceView: View {
                 }
 
                 Section("Program") {
-                    Picker(selection: viewStore.binding(\.$device.delay)) {
+                    Picker(selection: viewStore.$device.delay) {
                         ForEach(Delay.allCases, id: \.self) { delay in
                             switch delay {
                             case .none: Text("None").tag(Delay.none)
