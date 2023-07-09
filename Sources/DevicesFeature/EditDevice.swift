@@ -32,7 +32,7 @@ public struct EditDeviceView: View {
             Form {
                 Section("Device") {
                     TextField("Name", text: viewStore.$device.name)
-                    Picker(selection: viewStore.binding(\.$device.type)) {
+                    Picker(selection: viewStore.$device.type) {
                         ForEach(DeviceType.allCases, id: \.self) { deviceType in
                             switch deviceType {
                             case .washingMachine: Text("Washing Machine").tag(DeviceType.washingMachine)
