@@ -7,6 +7,7 @@ let package = Package(
     name: "heures-creuses",
     platforms: [.iOS(.v16), .macOS(.v13)],
     products: [
+        .library(name: "ApplianceFeature", targets: ["ApplianceFeature"]),
         .library(name: "AppFeature", targets: ["AppFeature"]),
         .library(name: "DevicesFeature", targets: ["DevicesFeature"]),
         .library(name: "Models", targets: ["Models"]),
@@ -15,6 +16,12 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", branch: "prerelease/1.0"),
     ],
     targets: [
+        .target(
+            name: "ApplianceFeature",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+            ]
+        ),
         .target(
             name: "AppFeature",
             dependencies: [
