@@ -19,14 +19,14 @@ public struct ApplianceSelectionView: View {
                     Button { viewState.send(.applianceTapped(appliance)) } label: {
                         Label(appliance.name, systemImage: appliance.systemImage)
                     }
-                    .navigationDestination(
-                        store: store.scope(
-                            state: \.$programSelectionDestination,
-                            action: ApplianceSelection.Action.programSelectionDestination
-                        ),
-                        destination: ProgramSelectionView.init
-                    )
                 }
+                .navigationDestination(
+                    store: store.scope(
+                        state: \.$programSelectionDestination,
+                        action: ApplianceSelection.Action.programSelectionDestination
+                    ),
+                    destination: ProgramSelectionView.init
+                )
             }
             .navigationTitle("Choose your appliance")
         }
@@ -45,7 +45,7 @@ extension Appliance {
 #if DEBUG
 struct ApplianceSelectionView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
+        NavigationStack {
             ApplianceSelectionView(
                 store: Store(
                     initialState: ApplianceSelection.State(

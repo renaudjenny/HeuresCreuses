@@ -18,3 +18,15 @@ public struct ProgramSelectionView: View {
         }
     }
 }
+
+#if DEBUG
+struct ProgramSelectionView_Previews: PreviewProvider {
+    static var previews: some View {
+        ProgramSelectionView(
+            store: Store(
+                initialState: ProgramSelection.State(appliance: .dishwasher),
+                reducer: ProgramSelection()
+            ))
+    }
+}
+#endif
