@@ -14,12 +14,22 @@ public struct ProgramSelectionView: View {
 
     public var body: some View {
         WithViewStore(store, observe: ViewState.init) { viewState in
-            VStack {
-                Text(viewState.appliance.name).font(.title)
-                Spacer()
+            ScrollView {
+                Text(viewState.appliance.name)
+                    .font(.title)
+                    .padding(.bottom, 20)
                 ForEach(viewState.appliance.programs) { program in
-                    Text("\(Text(program.name)) - \(Text((program.duration/60).formatted())) minutes")
+                    Button { viewState.send(.programTapped(program)) } label: {
+                        Text("\(Text(program.name)) - \(Text((program.duration/60).formatted())) minutes")
+                    }
                 }
+                .navigationDestination(
+                    store: store.scope(
+                        state: \.$delaysDestination,
+                        action: ProgramSelection.Action.delaysDestination
+                    ),
+                    destination: DelaysView.init
+                )
                 Spacer()
             }
         }
