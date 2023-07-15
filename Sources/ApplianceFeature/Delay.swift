@@ -1,4 +1,4 @@
-public struct Delay: Identifiable {
+public struct Delay: Identifiable, Equatable {
     public let hour: Int
     public let minute: Int
 

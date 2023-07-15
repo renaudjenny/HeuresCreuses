@@ -14,7 +14,7 @@ public struct ProgramSelection: Reducer {
         Reduce { state, action in
             switch action {
             case let .programTapped(program):
-                state.delaysDestination = Delays.State(program: program)
+                state.delaysDestination = Delays.State(program: program, appliance: state.appliance)
                 return .none
             case .delaysDestination:
                 return .none

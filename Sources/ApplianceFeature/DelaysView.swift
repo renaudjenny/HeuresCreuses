@@ -6,9 +6,11 @@ public struct DelaysView: View {
 
     struct ViewState: Equatable {
         var program: Program
+        var items: [Delays.State.Item]
 
         init(_ state: Delays.State) {
             program = state.program
+            items = state.items
         }
     }
 
@@ -18,6 +20,16 @@ public struct DelaysView: View {
                 Text(viewState.program.name)
                     .font(.title)
                     .padding(.bottom, 20)
+
+                ForEach(viewState.items) { item in
+                    VStack(alignment: .leading) {
+                        Text("\(item.delay.hour) hours\(item.delay.minute > 0 ? "\(item.delay.minute) minutes" : "")")
+                            .font(.title2)
+                        Text("**\(item.minutesInPeak.formatted()) minutes** in peak")
+                        Text("**\(item.minutesOffPeak.formatted()) minutes** off peak")
+                    }
+                    .padding(.bottom, 12)
+                }
             }
             .navigationTitle("Delays")
         }
@@ -28,8 +40,9 @@ public struct DelaysView: View {
 struct DelaysView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
+            let appliance: Appliance = .dishwasher
             DelaysView(
-                store: Store(initialState: Delays.State(program: Appliance.dishwasher.programs.first!)) {
+                store: Store(initialState: Delays.State(program: appliance.programs.first!, appliance: appliance)) {
                     Delays()
                 }
             )
