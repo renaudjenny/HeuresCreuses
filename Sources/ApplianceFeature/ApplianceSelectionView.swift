@@ -12,6 +12,10 @@ public struct ApplianceSelectionView: View {
         }
     }
 
+    public init(store: StoreOf<ApplianceSelection>) {
+        self.store = store
+    }
+
     public var body: some View {
         WithViewStore(store, observe: ViewState.init) { viewState in
             List {
