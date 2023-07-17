@@ -46,6 +46,9 @@ let package = Package(
             name: "DevicesFeatureTests",
             dependencies: ["DevicesFeature"]
         ),
-        .target(name: "Models"),
+        .target(
+            name: "Models",
+            dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]
+        ),
     ]
 )
