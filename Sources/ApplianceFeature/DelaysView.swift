@@ -32,6 +32,7 @@ public struct DelaysView: View {
                 }
             }
             .navigationTitle("Delays")
+            .task { @MainActor in viewState.send(.task) }
         }
     }
 }
