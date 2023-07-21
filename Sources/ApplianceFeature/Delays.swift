@@ -36,25 +36,15 @@ public struct Delays: Reducer {
                     let start = date().addingTimeInterval(hour * 60 * 60 + minute * 60)
                     let end = start.addingTimeInterval(state.program.duration)
 
-                    // TODO: refactor, add an extension ClosedRange<Date> to return minutesOffPeak
                     let bestOffPeakPeriod = offPeakPeriods.max { a, b in
-                        let distanceToOffPeakStartA = start.distance(to: a.start)
-                        let distanceFromOffPeakEndA = a.end.distance(to: end)
-                        let peakDurationA = max(distanceToOffPeakStartA, 0) + max(distanceFromOffPeakEndA, 0)
-                        let offPeakDurationA = start.distance(to: end) - peakDurationA
-
-                        let distanceToOffPeakStartB = start.distance(to: b.start)
-                        let distanceFromOffPeakEndB = b.end.distance(to: end)
-                        let peakDurationB = max(distanceToOffPeakStartB, 0) + max(distanceFromOffPeakEndB, 0)
-                        let offPeakDurationB = start.distance(to: end) - peakDurationB
-
-                        return offPeakDurationA < offPeakDurationB
+                        let peakDurationA = (a.start...a.end).peakDuration(betweenStart: start, end: end)
+                        let peakDurationB = (b.start...b.end).peakDuration(betweenStart: start, end: end)
+                        return peakDurationA > peakDurationB
                     }
 
                     if let bestOffPeakPeriod {
-                        let distanceToOffPeakStart = start.distance(to: bestOffPeakPeriod.start)
-                        let distanceFromOffPeakEnd = bestOffPeakPeriod.end.distance(to: end)
-                        let peakDuration = max(distanceToOffPeakStart, 0) + max(distanceFromOffPeakEnd, 0)
+                        let peakDuration = (bestOffPeakPeriod.start...bestOffPeakPeriod.end)
+                            .peakDuration(betweenStart: start, end: end)
                         let offPeakDuration = state.program.duration - peakDuration
 
                         item.minutesInPeak = Int(min(peakDuration, state.program.duration) / 60)
@@ -104,5 +94,13 @@ extension Delays.State {
         var minutesInPeak: Int
 
         var id: Delay.ID { delay.id }
+    }
+}
+
+private extension ClosedRange<Date> {
+    func peakDuration(betweenStart start: Date, end: Date) -> TimeInterval {
+        let distanceToOffPeakStart = start.distance(to: lowerBound)
+        let distanceFromOffPeakEnd = upperBound.distance(to: end)
+        return Swift.max(distanceToOffPeakStart, 0) + Swift.max(distanceFromOffPeakEnd, 0)
     }
 }
