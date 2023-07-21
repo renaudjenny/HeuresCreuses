@@ -6,14 +6,11 @@ public struct Delays: Reducer {
     public struct State: Equatable {
         var program: Program
         var appliance: Appliance
-        var items: [Item]
+        var items: [Item] = []
 
         public init(program: Program, appliance: Appliance) {
             self.program = program
             self.appliance = appliance
-            self.items = ([Delay(hour: 0, minute: 0)] + appliance.delays).map {
-                Item(delay: $0, minutesOffPeak: 0, minutesInPeak: 0)
-            }
         }
     }
     public enum Action: Equatable {
@@ -29,38 +26,27 @@ public struct Delays: Reducer {
             switch action {
             case .task:
                 let offPeakPeriods = offPeakPeriods
-                state.items = state.items.map {
-                    var item = $0
-                    let hour = TimeInterval($0.delay.hour)
-                    let minute = TimeInterval($0.delay.minute)
+                state.items = state.appliance.delays.map {
+                    let hour = TimeInterval($0.hour)
+                    let minute = TimeInterval($0.minute)
                     let start = date().addingTimeInterval(hour * 60 * 60 + minute * 60)
                     let end = start.addingTimeInterval(state.program.duration)
+                    let startEnd = start...end
 
                     let bestOffPeakPeriod = offPeakPeriods.max { a, b in
-                        let peakDurationA = (a.start...a.end).peakDuration(betweenStart: start, end: end)
-                        let peakDurationB = (b.start...b.end).peakDuration(betweenStart: start, end: end)
+                        let peakDurationA = a.peakDuration(between: startEnd)
+                        let peakDurationB = b.peakDuration(between: startEnd)
                         return peakDurationA > peakDurationB
                     }
 
-                    if let bestOffPeakPeriod {
-                        let peakDuration = (bestOffPeakPeriod.start...bestOffPeakPeriod.end)
-                            .peakDuration(betweenStart: start, end: end)
-                        let offPeakDuration = state.program.duration - peakDuration
-
-                        item.minutesInPeak = Int(min(peakDuration, state.program.duration) / 60)
-                        item.minutesOffPeak = Int(max(offPeakDuration, 0) / 60)
-                    } else {
-                        item.minutesInPeak = 0
-                        item.minutesOffPeak = 0
-                    }
-                    return item
+                    return State.Item(delay: $0, startEnd: startEnd, offPeakPeriod: bestOffPeakPeriod)
                 }
                 return .none
             }
         }
     }
 
-    private var offPeakPeriods: [(start: Date, end: Date)] {
+    private var offPeakPeriods: [ClosedRange<Date>] {
         periodProvider.get().flatMap { period in
             var start = period.start
             start.year = calendar.component(.year, from: date())
@@ -71,16 +57,16 @@ public struct Delays: Reducer {
             end.month = calendar.component(.month, from: date())
             end.day = calendar.component(.day, from: date())
 
-            return (-1...1).compactMap { day -> (start: Date, end: Date)? in
+            return (-1...1).compactMap { day -> ClosedRange<Date>? in
                 let day = TimeInterval(day)
                 guard let offPeakStartDate = calendar.date(from: start)?.addingTimeInterval(day * 60 * 60 * 24),
                       let offPeakEndDate = calendar.date(from: end)?.addingTimeInterval(day * 60 * 60 * 24)
                 else { return nil }
                 if offPeakEndDate > offPeakStartDate {
-                    return (start: offPeakStartDate, end: offPeakEndDate)
+                    return offPeakStartDate...offPeakEndDate
                 } else {
                     let offPeakEndDate = offPeakEndDate.addingTimeInterval(60 * 60 * 24)
-                    return (start: offPeakStartDate, end: offPeakEndDate)
+                    return offPeakStartDate...offPeakEndDate
                 }
             }
         }
@@ -90,17 +76,38 @@ public struct Delays: Reducer {
 extension Delays.State {
     struct Item: Identifiable, Equatable {
         let delay: Delay
-        var minutesOffPeak: Int
-        var minutesInPeak: Int
+        let startEnd: ClosedRange<Date>
+        let offPeakPeriod: ClosedRange<Date>?
+
+        var duration: TimeInterval { startEnd.lowerBound.distance(to: startEnd.upperBound) }
+
+        var peakDuration: TimeInterval {
+            guard let offPeakPeriod else { return 0 }
+            return offPeakPeriod.peakDuration(between: startEnd)
+        }
+
+        var minutesOffPeak: Int { Int(max(duration - peakDuration, 0) / 60) }
+        var minutesInPeak: Int { Int(min(peakDuration, duration) / 60) }
+
+        var offPeakRangeRatio: ClosedRange<Double> {
+            guard let offPeakPeriod else { return 0...0 }
+            let startDistance = max(startEnd.lowerBound.distance(to: offPeakPeriod.lowerBound), 0)
+            let startRatio = startDistance / duration
+
+            let endDistance = max(offPeakPeriod.upperBound.distance(to: startEnd.upperBound), 0)
+            let endRatio = 1 - endDistance / duration
+
+            return startRatio...endRatio
+        }
 
         var id: Delay.ID { delay.id }
     }
 }
 
 private extension ClosedRange<Date> {
-    func peakDuration(betweenStart start: Date, end: Date) -> TimeInterval {
-        let distanceToOffPeakStart = start.distance(to: lowerBound)
-        let distanceFromOffPeakEnd = upperBound.distance(to: end)
+    func peakDuration(between range: ClosedRange<Date>) -> TimeInterval {
+        let distanceToOffPeakStart = range.lowerBound.distance(to: lowerBound)
+        let distanceFromOffPeakEnd = upperBound.distance(to: range.upperBound)
         return Swift.max(distanceToOffPeakStart, 0) + Swift.max(distanceFromOffPeakEnd, 0)
     }
 }

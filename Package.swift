@@ -20,6 +20,7 @@ let package = Package(
             name: "ApplianceFeature",
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "Models",
             ]
         ),
         .target(
