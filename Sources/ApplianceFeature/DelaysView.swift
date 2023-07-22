@@ -23,10 +23,22 @@ public struct DelaysView: View {
 
                 ForEach(viewState.items) { item in
                     VStack(alignment: .leading) {
-                        Text("\(item.delay.hour) hours\(item.delay.minute > 0 ? "\(item.delay.minute) minutes" : "")")
-                            .font(.title2)
-                        Text("**\(item.minutesInPeak.formatted()) minutes** in peak")
-                        Text("**\(item.minutesOffPeak.formatted()) minutes** off peak")
+                        HStack(alignment: .lastTextBaseline) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                if item.delay.hour == 0 && item.delay.minute == 0 {
+                                    Text("Starting immediately").font(.title2)
+                                } else {
+                                    Text("\(item.delay.hour) hours\(item.delay.minute > 0 ? "\(item.delay.minute) minutes" : "")")
+                                        .font(.title2)
+                                }
+                                Text("Finishing at \(item.startEnd.upperBound.formatted(date: .omitted, time: .shortened))")
+                            }
+                            Spacer()
+                            VStack(alignment: .trailing) {
+                                Text("**\(item.minutesInPeak.formatted()) minutes** in peak").font(.footnote)
+                                Text("**\(item.minutesOffPeak.formatted()) minutes** off peak").font(.footnote)
+                            }
+                        }
                         ZStack {
                             GeometryReader { proxy in
                                 Color.blue

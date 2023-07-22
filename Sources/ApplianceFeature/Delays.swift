@@ -26,7 +26,7 @@ public struct Delays: Reducer {
             switch action {
             case .task:
                 let offPeakPeriods = offPeakPeriods
-                state.items = state.appliance.delays.map {
+                state.items = ([Delay(hour: 0, minute: 0)] + state.appliance.delays).map {
                     let hour = TimeInterval($0.hour)
                     let minute = TimeInterval($0.minute)
                     let start = date().addingTimeInterval(hour * 60 * 60 + minute * 60)
