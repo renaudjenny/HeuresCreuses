@@ -7,10 +7,14 @@ public struct DelaysView: View {
     struct ViewState: Equatable {
         var program: Program
         var items: [Delays.State.Item]
+        var isOffPeakOnlyFilterOn: Bool
+        var delaysCount: Int
 
         init(_ state: Delays.State) {
             program = state.program
             items = state.items
+            isOffPeakOnlyFilterOn = state.isOffPeakOnlyFilterOn
+            delaysCount = state.appliance.delays.count + 1
         }
     }
 
@@ -20,6 +24,11 @@ public struct DelaysView: View {
                 Text(viewState.program.name)
                     .font(.title)
                     .padding(.bottom, 20)
+
+                if viewState.isOffPeakOnlyFilterOn && viewState.items.count < viewState.delaysCount {
+                    Text("^[\(viewState.delaysCount - viewState.items.count) items](inflect: true) hidden as no off peak")
+                        .font(.caption)
+                }
 
                 ForEach(viewState.items) { item in
                     VStack(alignment: .leading) {
@@ -58,6 +67,17 @@ public struct DelaysView: View {
                 }
             }
             .navigationTitle("Delays")
+            .toolbar {
+                ToolbarItem {
+                    Button { viewState.send(.onlyShowOffPeakTapped, animation: .easeInOut) } label: {
+                        if viewState.isOffPeakOnlyFilterOn {
+                            Label("Show all", systemImage: "eye.slash")
+                        } else {
+                            Label("Only show off peak", systemImage: "eye")
+                        }
+                    }
+                }
+            }
             .task { @MainActor in viewState.send(.task) }
         }
     }

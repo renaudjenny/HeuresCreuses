@@ -7,6 +7,7 @@ public struct Delays: Reducer {
         var program: Program
         var appliance: Appliance
         var items: [Item] = []
+        var isOffPeakOnlyFilterOn = false
 
         public init(program: Program, appliance: Appliance) {
             self.program = program
@@ -15,6 +16,7 @@ public struct Delays: Reducer {
     }
     public enum Action: Equatable {
         case task
+        case onlyShowOffPeakTapped
     }
 
     @Dependency(\.date) var date
@@ -25,25 +27,36 @@ public struct Delays: Reducer {
         Reduce { state, action in
             switch action {
             case .task:
-                let offPeakPeriods = offPeakPeriods
-                state.items = ([Delay(hour: 0, minute: 0)] + state.appliance.delays).map {
-                    let hour = TimeInterval($0.hour)
-                    let minute = TimeInterval($0.minute)
-                    let start = date().addingTimeInterval(hour * 60 * 60 + minute * 60)
-                    let end = start.addingTimeInterval(state.program.duration)
-                    let startEnd = start...end
-
-                    let bestOffPeakPeriod = offPeakPeriods.max { a, b in
-                        let peakDurationA = a.peakDuration(between: startEnd)
-                        let peakDurationB = b.peakDuration(between: startEnd)
-                        return peakDurationA > peakDurationB
-                    }
-
-                    return State.Item(delay: $0, startEnd: startEnd, offPeakPeriod: bestOffPeakPeriod)
-                }
-                return .none
+                return refreshItems(&state)
+            case .onlyShowOffPeakTapped:
+                state.isOffPeakOnlyFilterOn.toggle()
+                return refreshItems(&state)
             }
         }
+    }
+
+    private func refreshItems(_ state: inout State) -> Effect<Action> {
+        let offPeakPeriods = offPeakPeriods
+        state.items = ([Delay(hour: 0, minute: 0)] + state.appliance.delays).map {
+            let hour = TimeInterval($0.hour)
+            let minute = TimeInterval($0.minute)
+            let start = date().addingTimeInterval(hour * 60 * 60 + minute * 60)
+            let end = start.addingTimeInterval(state.program.duration)
+            let startEnd = start...end
+
+            let bestOffPeakPeriod = offPeakPeriods.max { a, b in
+                let peakDurationA = a.peakDuration(between: startEnd)
+                let peakDurationB = b.peakDuration(between: startEnd)
+                return peakDurationA > peakDurationB
+            }
+
+            return State.Item(delay: $0, startEnd: startEnd, offPeakPeriod: bestOffPeakPeriod)
+        }
+        .filter {
+            guard state.isOffPeakOnlyFilterOn else { return true }
+            return $0.minutesOffPeak > 0
+        }
+        return .none
     }
 
     private var offPeakPeriods: [ClosedRange<Date>] {
