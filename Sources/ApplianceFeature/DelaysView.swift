@@ -44,8 +44,7 @@ public struct DelaysView: View {
                             }
                             Spacer()
                             VStack(alignment: .trailing) {
-                                Text("**\(item.minutesInPeak.formatted()) minutes** in peak").font(.footnote)
-                                Text("**\(item.minutesOffPeak.formatted()) minutes** off peak").font(.footnote)
+                                Text("\(item.offPeakRatio.formatted(.percent.precision(.significantDigits(3)))) off peak")
                             }
                         }
                         ZStack {
@@ -58,6 +57,9 @@ public struct DelaysView: View {
                                         .offset(x: item.offPeakRangeRatio.lowerBound * proxy.size.width)
                                 }
                             }
+                            .accessibility(
+                                label: Text("\(item.minutesInPeak.formatted()) minutes in peak and \(item.minutesOffPeak.formatted()) minutes off peak")
+                            )
                         }
                         .frame(height: 12)
                         .clipShape(RoundedRectangle(cornerRadius: 6))

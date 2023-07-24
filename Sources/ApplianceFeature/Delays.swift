@@ -101,6 +101,7 @@ extension Delays.State {
 
         var minutesOffPeak: Int { Int(max(duration - peakDuration, 0) / 60) }
         var minutesInPeak: Int { Int(min(peakDuration, duration) / 60) }
+        var offPeakRatio: Double { max(duration - peakDuration, 0)/duration }
 
         var offPeakRangeRatio: ClosedRange<Double> {
             guard let offPeakPeriod else { return 0...0 }
