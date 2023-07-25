@@ -18,19 +18,24 @@ public struct ProgramSelectionView: View {
                 Text(viewState.appliance.name)
                     .font(.title)
                     .padding(.bottom, 20)
-                ForEach(viewState.appliance.programs) { program in
-                    Button { viewState.send(.programTapped(program)) } label: {
-                        Text("\(Text(program.name)) - \(Text((program.duration/60).formatted())) minutes")
+                VStack(alignment: .leading) {
+                    ForEach(viewState.appliance.programs) { program in
+                        Button { viewState.send(.programTapped(program)) } label: {
+                            VStack(alignment: .leading) {
+                                Text(program.name).font(.title3)
+                                Label("\((program.duration/60).formatted()) minutes", systemImage: "timer")
+                            }
+                        }
+                        .padding()
                     }
+                    .navigationDestination(
+                        store: store.scope(
+                            state: \.$delaysDestination,
+                            action: ProgramSelection.Action.delaysDestination
+                        ),
+                        destination: DelaysView.init
+                    )
                 }
-                .navigationDestination(
-                    store: store.scope(
-                        state: \.$delaysDestination,
-                        action: ProgramSelection.Action.delaysDestination
-                    ),
-                    destination: DelaysView.init
-                )
-                Spacer()
             }
         }
         .navigationTitle("Choose your program")
