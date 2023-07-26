@@ -28,17 +28,45 @@ public struct ProgramSelectionView: View {
                         }
                         .padding()
                     }
+                    .sheet(
+                        store: store.scope(
+                            state: \.$bottomSheet,
+                            action: ProgramSelection.Action.bottomSheet
+                        ),
+                        content: BottomSheetView.init
+                    )
                     .navigationDestination(
                         store: store.scope(
-                            state: \.$delaysDestination,
-                            action: ProgramSelection.Action.delaysDestination
+                            state: \.$destination,
+                            action: ProgramSelection.Action.destination
                         ),
+                        state: /ProgramSelection.Destination.State.delays,
+                        action: ProgramSelection.Destination.Action.delays,
                         destination: DelaysView.init
                     )
                 }
             }
         }
         .navigationTitle("Choose your program")
+    }
+}
+
+struct BottomSheetView: View {
+    let store: StoreOf<ProgramSelection.BottomSheet>
+
+    var body: some View {
+        // TODO: add a ViewState instead of the observe { $0 }
+        WithViewStore(store, observe: { $0 }) { viewState in
+            VStack {
+                Button { viewState.send(.delaysTapped(viewState.program)) } label: {
+                    Text("Delays")
+                }
+                Button { viewState.send(.optimumTapped(viewState.program)) } label: {
+                    Text("Optimum")
+                }
+            }
+            .presentationDetents([.medium])
+        }
     }
 }
 
