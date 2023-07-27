@@ -52,6 +52,7 @@ public struct ProgramSelection: Reducer {
                 state.bottomSheet = BottomSheet.State(program: program, appliance: state.appliance)
                 return .none
             case let .bottomSheet(.presented(.delaysTapped(program))):
+                state.bottomSheet = nil
                 state.destination = .delays(Delays.State(program: program, appliance: state.appliance))
                 return .none
             case .bottomSheet:

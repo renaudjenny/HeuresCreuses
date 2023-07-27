@@ -54,18 +54,29 @@ public struct ProgramSelectionView: View {
 struct BottomSheetView: View {
     let store: StoreOf<ProgramSelection.BottomSheet>
 
+    struct ViewState: Equatable {
+        let program: Program
+
+        init(_ state: ProgramSelection.BottomSheet.State) {
+            program = state.program
+        }
+    }
+
     var body: some View {
-        // TODO: add a ViewState instead of the observe { $0 }
-        WithViewStore(store, observe: { $0 }) { viewState in
-            VStack {
+        WithViewStore(store, observe: ViewState.init) { viewState in
+            VStack(alignment: .leading) {
+                Spacer()
                 Button { viewState.send(.delaysTapped(viewState.program)) } label: {
-                    Text("Delays")
+                    Label("Delays", systemImage: "arrowshape.turn.up.backward.badge.clock.rtl")
                 }
+                Spacer()
                 Button { viewState.send(.optimumTapped(viewState.program)) } label: {
-                    Text("Optimum")
+                    Label("Optimum", systemImage: "wand.and.stars")
                 }
+                Spacer()
             }
-            .presentationDetents([.medium])
+            .padding()
+            .presentationDetents([.fraction(1/4)])
         }
     }
 }
