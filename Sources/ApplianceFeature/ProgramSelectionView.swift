@@ -30,10 +30,12 @@ public struct ProgramSelectionView: View {
                     }
                     .sheet(
                         store: store.scope(
-                            state: \.$bottomSheet,
-                            action: ProgramSelection.Action.bottomSheet
+                            state: \.$destination,
+                            action: ProgramSelection.Action.destination
                         ),
-                        content: BottomSheetView.init
+                        state: /ProgramSelection.Destination.State.optimum,
+                        action: ProgramSelection.Destination.Action.optimum,
+                        content: OptimumView.init
                     )
                     .navigationDestination(
                         store: store.scope(
@@ -48,36 +50,6 @@ public struct ProgramSelectionView: View {
             }
         }
         .navigationTitle("Choose your program")
-    }
-}
-
-struct BottomSheetView: View {
-    let store: StoreOf<ProgramSelection.BottomSheet>
-
-    struct ViewState: Equatable {
-        let program: Program
-
-        init(_ state: ProgramSelection.BottomSheet.State) {
-            program = state.program
-        }
-    }
-
-    var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewState in
-            VStack(alignment: .leading) {
-                Spacer()
-                Button { viewState.send(.delaysTapped(viewState.program)) } label: {
-                    Label("Delays", systemImage: "arrowshape.turn.up.backward.badge.clock.rtl")
-                }
-                Spacer()
-                Button { viewState.send(.optimumTapped(viewState.program)) } label: {
-                    Label("Optimum", systemImage: "wand.and.stars")
-                }
-                Spacer()
-            }
-            .padding()
-            .presentationDetents([.fraction(1/4)])
-        }
     }
 }
 
