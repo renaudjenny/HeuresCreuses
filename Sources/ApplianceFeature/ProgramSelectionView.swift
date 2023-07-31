@@ -57,11 +57,9 @@ public struct ProgramSelectionView: View {
 struct ProgramSelectionView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            ProgramSelectionView(
-                store: Store(
-                    initialState: ProgramSelection.State(appliance: .dishwasher),
-                    reducer: ProgramSelection()
-                ))
+            ProgramSelectionView(store: Store(initialState: ProgramSelection.State(appliance: .dishwasher)) {
+                ProgramSelection()
+            })
         }
     }
 }

@@ -4,7 +4,7 @@ import DevicesFeature
 import Foundation
 import Models
 
-public struct App: ReducerProtocol {
+public struct App: Reducer {
     public struct State: Equatable {
         let periods: [Period] = [
             Period(start: DateComponents(hour: 2, minute: 2), end: DateComponents(hour: 8, minute: 2)),
@@ -106,7 +106,7 @@ public struct App: ReducerProtocol {
         }
     }
 
-    private func updateOffPeakPeriods(state: inout State) -> EffectTask<Action> {
+    private func updateOffPeakPeriods(state: inout State) -> Effect<Action> {
         for period in state.periods {
             var start = period.start
             start.year = calendar.component(.year, from: date())
@@ -136,6 +136,6 @@ public struct App: ReducerProtocol {
 
 public extension Store where State == App.State, Action == App.Action {
     static var live: StoreOf<App> {
-        Store(initialState: State(), reducer: App())
+        Store(initialState: State()) { App() }
     }
 }

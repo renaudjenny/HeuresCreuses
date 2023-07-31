@@ -66,7 +66,7 @@ public struct EditDeviceView: View {
 #if DEBUG
 struct EditDeviceView_Previews: PreviewProvider {
     static var previews: some View {
-        EditDeviceView(store: Store(initialState: EditDevice.State(device: .washingMachine), reducer: EditDevice()))
+        EditDeviceView(store: Store(initialState: EditDevice.State(device: .washingMachine)) { EditDevice() })
     }
 }
 #endif

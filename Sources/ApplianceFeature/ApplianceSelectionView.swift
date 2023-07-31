@@ -51,12 +51,9 @@ struct ApplianceSelectionView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             ApplianceSelectionView(
-                store: Store(
-                    initialState: ApplianceSelection.State(
-                        appliances: [.dishwasher, .washingMachine]
-                    ),
-                    reducer: ApplianceSelection()
-                )
+                store: Store(initialState: ApplianceSelection.State(appliances: [.dishwasher, .washingMachine])) {
+                    ApplianceSelection()
+                }
             )
         }
     }

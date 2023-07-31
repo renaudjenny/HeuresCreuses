@@ -48,13 +48,16 @@ public struct DevicesView: View {
 #if DEBUG
 struct DevicesView_Previews: PreviewProvider {
     static var previews: some View {
-        DevicesView(store: Store(
-            initialState: Devices.State(devices: [
-                EditDevice.State(device: .dishwasher),
-                EditDevice.State(device: .washingMachine),
-            ]),
-            reducer: Devices()
-        ))
+        DevicesView(
+            store: Store(
+                initialState: Devices.State(devices: [
+                    EditDevice.State(device: .dishwasher),
+                    EditDevice.State(device: .washingMachine),
+                ])
+            ) {
+                Devices()
+            }
+        )
     }
 }
 #endif

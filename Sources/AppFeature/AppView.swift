@@ -91,29 +91,25 @@ public struct AppView: View {
 #if DEBUG
 struct AppView_Previews: PreviewProvider {
     static var previews: some View {
-        Preview(store: Store(initialState: App.State(), reducer: App()))
-        Preview(store: Store(
-            initialState: App.State(),
-            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T23:50:00+02:00", strategy: .iso8601) })
-        ))
+        Preview(store: Store(initialState: App.State()) { App() })
+        Preview(store: Store(initialState: App.State()) {
+            App().dependency(\.date, DateGenerator { try! Date("2023-04-10T23:50:00+02:00", strategy: .iso8601) })
+        })
         .previewDisplayName("At 23:50")
 
-        Preview(store: Store(
-            initialState: App.State(),
-            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T00:10:00+02:00", strategy: .iso8601) })
-        ))
+        Preview(store: Store(initialState: App.State()) {
+            App().dependency(\.date, DateGenerator { try! Date("2023-04-10T00:10:00+02:00", strategy: .iso8601) })
+        })
         .previewDisplayName("At 00:10")
 
-        Preview(store: Store(
-            initialState: App.State(),
-            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T02:10:00+02:00", strategy: .iso8601) })
-        ))
+        Preview(store: Store(initialState: App.State()) {
+            App().dependency(\.date, DateGenerator { try! Date("2023-04-10T02:10:00+02:00", strategy: .iso8601) })
+        })
         .previewDisplayName("At 02:10")
 
-        Preview(store: Store(
-            initialState: App.State(),
-            reducer: App().dependency(\.date, DateGenerator { try! Date("2023-04-10T16:00:00+02:00", strategy: .iso8601) })
-        ))
+        Preview(store: Store(initialState: App.State()) {
+            App().dependency(\.date, DateGenerator { try! Date("2023-04-10T16:00:00+02:00", strategy: .iso8601) })
+        })
         .previewDisplayName("At 16:00")
     }
 

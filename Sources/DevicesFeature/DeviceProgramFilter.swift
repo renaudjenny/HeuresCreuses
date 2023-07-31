@@ -87,18 +87,21 @@ private extension DeviceProgramFilter.State {
 #if DEBUG
 struct DeviceProgramFilersView_Previews: PreviewProvider {
     static var previews: some View {
-        DeviceProgramFilterView(store: Store(
-            initialState: DeviceProgramFilter.State(
-                devices: [.dishwasher, .washingMachine],
-                selections: [
-                    DeviceProgramFilter.Selection(
-                        deviceID: Device.dishwasher.id,
-                        program: Device.dishwasher.programs.first!
-                    )
-                ]
-            ),
-            reducer: DeviceProgramFilter()
-        ))
+        DeviceProgramFilterView(
+            store: Store(
+                initialState: DeviceProgramFilter.State(
+                    devices: [.dishwasher, .washingMachine],
+                    selections: [
+                        DeviceProgramFilter.Selection(
+                            deviceID: Device.dishwasher.id,
+                            program: Device.dishwasher.programs.first!
+                        )
+                    ]
+                )
+            ) {
+                DeviceProgramFilter()
+            }
+        )
     }
 }
 #endif

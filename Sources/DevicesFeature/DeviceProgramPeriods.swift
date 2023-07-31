@@ -144,27 +144,27 @@ public struct DeviceProgramPeriodsView: View {
             Form {
                 Section("Dates") {
                     #if os(watchOS)
-                    Picker("Mode", selection: viewStore.binding(\.$mode)) {
+                    Picker("Mode", selection: viewStore.$mode) {
                         Text("Start").tag(DeviceProgramPeriods.Mode.startDate)
                         Text("End").tag(DeviceProgramPeriods.Mode.endDate)
                     }
                     Text("Date: \(viewStore.date, format: .dateTime)")
                     #else
-                    Picker("Mode", selection: viewStore.binding(\.$mode)) {
+                    Picker("Mode", selection: viewStore.$mode) {
                         Text("Start").tag(DeviceProgramPeriods.Mode.startDate)
                         Text("End").tag(DeviceProgramPeriods.Mode.endDate)
                     }
                     .pickerStyle(.segmented)
 
                     DatePicker(
-                        selection: viewStore.binding(\.$date),
+                        selection: viewStore.$date,
                         in: viewStore.dateRange,
                         displayedComponents: [.date, .hourAndMinute]
                     ) {
                         Text("Date & time")
                     }
                     #endif
-                    Slider(value: viewStore.binding(\.$extraMinutesFromNow), in: 0...2880) {
+                    Slider(value: viewStore.$extraMinutesFromNow, in: 0...2880) {
                         Text("Extra minutes")
                     }
                 }
@@ -229,9 +229,10 @@ struct DeviceProgramPeriodsView_Previews: PreviewProvider {
                             OffPeakPeriod(start: Date().addingTimeInterval(60 * 60 * 10), end: Date().addingTimeInterval(60 * 60 * 12)),
                         ],
                         devices: [.dishwasher, .washingMachine]
-                    ),
-                    reducer: DeviceProgramPeriods()
-                )
+                    )
+                ) {
+                    DeviceProgramPeriods()
+                }
             )
         }
     }
