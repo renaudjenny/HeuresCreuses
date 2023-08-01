@@ -7,9 +7,15 @@ struct OptimumView: View {
 
     struct ViewState: Equatable {
         let program: Program
+        let delay: String
+        let durationBeforeStart: String
+        let ratio: String
 
         init(_ state: Optimum.State) {
             program = state.program
+            delay = state.delay.formatted
+            durationBeforeStart = "\((state.durationBeforeStart / 60).formatted()) minutes"
+            ratio = state.ratio.formatted(.percent)
         }
     }
 
@@ -22,11 +28,14 @@ struct OptimumView: View {
                     .font(.subheadline)
                     .padding([.horizontal, .bottom])
 
-                Text("Wait **23 minutes** before starting your appliance with the **2 hours delay** to be **100%** off peak")
-                    .padding(.horizontal)
+                Text("""
+                Wait **\(viewStore.durationBeforeStart)** before starting your appliance \
+                with the **\(viewStore.delay) delay** to be **\(viewStore.ratio)** off peak
+                """)
+                .padding(.horizontal)
 
                 Button { } label: {
-                    Label("Send me a notification in 23 minutes", systemImage: "bell.badge")
+                    Label("Send me a notification in \(viewStore.durationBeforeStart)", systemImage: "bell.badge")
                 }
                 .padding()
 
@@ -37,6 +46,7 @@ struct OptimumView: View {
             }
             .padding()
             .presentationDetents([.medium])
+            .task { await viewStore.send(.task).finish() }
         }
     }
 }
