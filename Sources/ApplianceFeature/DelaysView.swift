@@ -19,18 +19,18 @@ public struct DelaysView: View {
     }
 
     public var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewState in
+        WithViewStore(store, observe: ViewState.init) { viewStore in
             ScrollView {
-                Text(viewState.program.name)
+                Text(viewStore.program.name)
                     .font(.title)
                     .padding(.bottom, 20)
 
-                if viewState.isOffPeakOnlyFilterOn && viewState.items.count < viewState.delaysCount {
-                    Text("^[\(viewState.delaysCount - viewState.items.count) items](inflect: true) hidden as no off peak")
+                if viewStore.isOffPeakOnlyFilterOn && viewStore.items.count < viewStore.delaysCount {
+                    Text("^[\(viewStore.delaysCount - viewStore.items.count) items](inflect: true) hidden as no off peak")
                         .font(.caption)
                 }
 
-                ForEach(viewState.items) { item in
+                ForEach(viewStore.items) { item in
                     VStack(alignment: .leading) {
                         HStack(alignment: .lastTextBaseline) {
                             VStack(alignment: .leading, spacing: 8) {
@@ -71,8 +71,8 @@ public struct DelaysView: View {
             .navigationTitle("Delays")
             .toolbar {
                 ToolbarItem {
-                    Button { viewState.send(.onlyShowOffPeakTapped, animation: .easeInOut) } label: {
-                        if viewState.isOffPeakOnlyFilterOn {
+                    Button { viewStore.send(.onlyShowOffPeakTapped, animation: .easeInOut) } label: {
+                        if viewStore.isOffPeakOnlyFilterOn {
                             Label("Show all", systemImage: "eye.slash")
                         } else {
                             Label("Only show off peak", systemImage: "eye")
@@ -80,7 +80,7 @@ public struct DelaysView: View {
                     }
                 }
             }
-            .task { @MainActor in viewState.send(.task) }
+            .task { @MainActor in viewStore.send(.task) }
         }
     }
 }

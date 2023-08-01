@@ -14,7 +14,7 @@ struct OptimumView: View {
     }
 
     var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewState in
+        WithViewStore(store, observe: ViewState.init) { viewStore in
             VStack {
                 Text("Optimum").font(.title).padding()
 
@@ -31,7 +31,7 @@ struct OptimumView: View {
                 .padding()
 
                 Spacer()
-                Button { viewState.send(.delaysTapped(viewState.program)) } label: {
+                Button { viewStore.send(.delaysTapped(viewStore.program)) } label: {
                     Label("All delays", systemImage: "arrowshape.turn.up.backward.badge.clock.rtl")
                 }
             }

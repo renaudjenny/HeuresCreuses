@@ -17,10 +17,10 @@ public struct ApplianceSelectionView: View {
     }
 
     public var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewState in
+        WithViewStore(store, observe: ViewState.init) { viewStore in
             List {
-                ForEach(viewState.appliances) { appliance in
-                    Button { viewState.send(.applianceTapped(appliance)) } label: {
+                ForEach(viewStore.appliances) { appliance in
+                    Button { viewStore.send(.applianceTapped(appliance)) } label: {
                         Label(appliance.name, systemImage: appliance.systemImage)
                     }
                 }

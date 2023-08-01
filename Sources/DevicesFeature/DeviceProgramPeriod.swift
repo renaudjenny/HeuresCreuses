@@ -56,20 +56,20 @@ public struct DeviceProgramPeriodView: View {
     }
 
     public var body: some View {
-        WithViewStore(store, observe: { $0 }) { viewState in
+        WithViewStore(store, observe: { $0 }) { viewStore in
             VStack(alignment: .leading, spacing: 8) {
-                let duration = Text("\((viewState.start.distance(to: viewState.end)/(60)).formatted()) minutes").font(.caption)
-                Text(viewState.device.name).font(.subheadline)
-                Text("\(viewState.program.name) - \(duration)").font(.headline)
-                Text("\(viewState.start.formatted(date: .omitted, time: .shortened)) - \(viewState.end.formatted(date: .omitted, time: .shortened))")
-                ProgressView(value: viewState.offPeakRatio) { Text("**Offpeak ratio** - \(viewState.offPeakRatio.formatted(.percent))") }
+                let duration = Text("\((viewStore.start.distance(to: viewStore.end)/(60)).formatted()) minutes").font(.caption)
+                Text(viewStore.device.name).font(.subheadline)
+                Text("\(viewStore.program.name) - \(duration)").font(.headline)
+                Text("\(viewStore.start.formatted(date: .omitted, time: .shortened)) - \(viewStore.end.formatted(date: .omitted, time: .shortened))")
+                ProgressView(value: viewStore.offPeakRatio) { Text("**Offpeak ratio** - \(viewStore.offPeakRatio.formatted(.percent))") }
 
-                Toggle("Show Timers", isOn: viewState.$isTimersShown)
+                Toggle("Show Timers", isOn: viewStore.$isTimersShown)
 
-                if viewState.isTimersShown {
+                if viewStore.isTimersShown {
                     Divider()
 
-                    if case let .timers(timers) = viewState.device.delay {
+                    if case let .timers(timers) = viewStore.device.delay {
                         deviceTimers(timers)
                     }
                 }

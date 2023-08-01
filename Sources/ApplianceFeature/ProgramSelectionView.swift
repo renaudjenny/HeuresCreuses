@@ -13,14 +13,14 @@ public struct ProgramSelectionView: View {
     }
 
     public var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewState in
+        WithViewStore(store, observe: ViewState.init) { viewStore in
             ScrollView {
-                Text(viewState.appliance.name)
+                Text(viewStore.appliance.name)
                     .font(.title)
                     .padding(.bottom, 20)
                 VStack(alignment: .leading) {
-                    ForEach(viewState.appliance.programs) { program in
-                        Button { viewState.send(.programTapped(program)) } label: {
+                    ForEach(viewStore.appliance.programs) { program in
+                        Button { viewStore.send(.programTapped(program)) } label: {
                             VStack(alignment: .leading) {
                                 Text(program.name).font(.title3)
                                 Label("\((program.duration/60).formatted()) minutes", systemImage: "timer")
