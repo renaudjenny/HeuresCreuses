@@ -36,7 +36,7 @@ public struct Delays: Reducer {
     }
 
     private func refreshItems(_ state: inout State) -> Effect<Action> {
-        let offPeakPeriods = offPeakPeriods
+        let offPeakPeriods = Offpeak.dateRanges(periodProvider.get(), now: date(), calendar: calendar)
         state.items = ([Delay(hour: 0, minute: 0)] + state.appliance.delays).map {
             let hour = TimeInterval($0.hour)
             let minute = TimeInterval($0.minute)
@@ -57,32 +57,6 @@ public struct Delays: Reducer {
             return $0.minutesOffPeak > 0
         }
         return .none
-    }
-
-    private var offPeakPeriods: [ClosedRange<Date>] {
-        periodProvider.get().flatMap { period in
-            var start = period.start
-            start.year = calendar.component(.year, from: date())
-            start.month = calendar.component(.month, from: date())
-            start.day = calendar.component(.day, from: date())
-            var end = period.end
-            end.year = calendar.component(.year, from: date())
-            end.month = calendar.component(.month, from: date())
-            end.day = calendar.component(.day, from: date())
-
-            return (-1...1).compactMap { day -> ClosedRange<Date>? in
-                let day = TimeInterval(day)
-                guard let offPeakStartDate = calendar.date(from: start)?.addingTimeInterval(day * 60 * 60 * 24),
-                      let offPeakEndDate = calendar.date(from: end)?.addingTimeInterval(day * 60 * 60 * 24)
-                else { return nil }
-                if offPeakEndDate > offPeakStartDate {
-                    return offPeakStartDate...offPeakEndDate
-                } else {
-                    let offPeakEndDate = offPeakEndDate.addingTimeInterval(60 * 60 * 24)
-                    return offPeakStartDate...offPeakEndDate
-                }
-            }
-        }
     }
 }
 
