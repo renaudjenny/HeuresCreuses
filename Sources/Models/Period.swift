@@ -11,6 +11,7 @@ public struct Period: Equatable {
     }
 }
 
+// TODO: check if this could eventually be removed at some point
 public struct OffPeakPeriod: Equatable {
     public let start: Date
     public let end: Date

@@ -6,13 +6,13 @@ public struct DelaysView: View {
 
     struct ViewState: Equatable {
         var program: Program
-        var items: [Delays.State.Item]
+        var operations: [Operation]
         var isOffPeakOnlyFilterOn: Bool
         var delaysCount: Int
 
         init(_ state: Delays.State) {
             program = state.program
-            items = state.items
+            operations = state.operations
             isOffPeakOnlyFilterOn = state.isOffPeakOnlyFilterOn
             delaysCount = state.appliance.delays.count + 1
         }
@@ -25,40 +25,45 @@ public struct DelaysView: View {
                     .font(.title)
                     .padding(.bottom, 20)
 
-                if viewStore.isOffPeakOnlyFilterOn && viewStore.items.count < viewStore.delaysCount {
-                    Text("^[\(viewStore.delaysCount - viewStore.items.count) items](inflect: true) hidden as no off peak")
-                        .font(.caption)
+                if viewStore.isOffPeakOnlyFilterOn && viewStore.operations.count < viewStore.delaysCount {
+                    Text("""
+                    ^[\(viewStore.delaysCount - viewStore.operations.count) operations](inflect: true) \
+                    hidden as no off peak
+                    """)
+                    .font(.caption)
                 }
 
-                ForEach(viewStore.items) { item in
+                ForEach(viewStore.operations) { operation in
                     VStack(alignment: .leading) {
                         HStack(alignment: .lastTextBaseline) {
                             VStack(alignment: .leading, spacing: 8) {
-                                if item.delay.hour == 0 && item.delay.minute == 0 {
+                                if operation.delay.hour == 0 && operation.delay.minute == 0 {
                                     Text("Starting immediately").font(.title2)
                                 } else {
-                                    Text("\(item.delay.hour) hours\(item.delay.minute > 0 ? "\(item.delay.minute) minutes" : "")")
-                                        .font(.title2)
+                                    Text("""
+                                    \(operation.delay.hour) hours\(operation.delay.minute > 0 ? "\(operation.delay.minute) minutes" : "")
+                                    """)
+                                    .font(.title2)
                                 }
-                                Text("Finishing at \(item.startEnd.upperBound.formatted(date: .omitted, time: .shortened))")
+                                Text("Finishing at \(operation.startEnd.upperBound.formatted(date: .omitted, time: .shortened))")
                             }
                             Spacer()
                             VStack(alignment: .trailing) {
-                                Text("\(item.offPeakRatio.formatted(.percent.precision(.significantDigits(3)))) off peak")
+                                Text("\(operation.offPeakRatio.formatted(.percent.precision(.significantDigits(3)))) off peak")
                             }
                         }
                         ZStack {
                             GeometryReader { proxy in
                                 Color.blue
-                                if item.minutesOffPeak > 0 {
+                                if operation.minutesOffPeak > 0 {
                                     Color.green
-                                        .frame(width: proxy.size.width * item.offPeakRangeRatio.upperBound)
+                                        .frame(width: proxy.size.width * operation.offPeakRangeRatio.upperBound)
                                         .clipShape(RoundedRectangle(cornerRadius: 6))
-                                        .offset(x: item.offPeakRangeRatio.lowerBound * proxy.size.width)
+                                        .offset(x: operation.offPeakRangeRatio.lowerBound * proxy.size.width)
                                 }
                             }
                             .accessibility(
-                                label: Text("\(item.minutesInPeak.formatted()) minutes in peak and \(item.minutesOffPeak.formatted()) minutes off peak")
+                                label: Text("\(operation.minutesInPeak.formatted()) minutes in peak and \(operation.minutesOffPeak.formatted()) minutes off peak")
                             )
                         }
                         .frame(height: 12)
