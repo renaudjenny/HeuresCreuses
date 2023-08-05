@@ -20,6 +20,10 @@ public struct Optimum: Reducer {
         case task
     }
 
+    @Dependency(\.calendar) var calendar
+    @Dependency(\.date) var date
+    @Dependency(\.periodProvider) var periodProvider
+
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
@@ -31,13 +35,36 @@ public struct Optimum: Reducer {
                 state.durationBeforeStart = durationBeforeStart
                 return .none
             case .task:
-                return .run { send in
-                    let delay = Delay(hour: 2, minute: 0)
-                    let ratio = 1.0
-                    let durationBeforeStart = 23.0 * 60
+                return .run { [state] send in
+                    let operation = [Operation].nextOperations(
+                        periods: periodProvider(),
+                        program: state.program,
+                        delays: state.appliance.delays,
+                        now: date(),
+                        calendar: calendar
+                    ).max {
+                        if $0.delay.hour == 2 && $1.delay.hour == 4 {
+                            print($0.offPeakRangeRatio.upperBound == 1 && $1.offPeakRangeRatio.upperBound < 1)
+                            print($0.offPeakRatio < $1.offPeakRatio)
+                        }
+                        if $0.offPeakRangeRatio.upperBound == 1 && $1.offPeakRangeRatio.upperBound < 1 {
+                            return false
+                        }
+                        return $0.offPeakRatio < $1.offPeakRatio
+                    }
+                    guard let operation, let offPeakPeriodStart = operation.offPeakPeriod?.lowerBound else { return }
+                    let durationBeforeStart = operation.startEnd.lowerBound.distance(to: offPeakPeriodStart)
+
+                    let bestOperation: Operation
+                    if durationBeforeStart > 0,
+                       let operation = [Operation].nextOperations(periods: periodProvider(), program: state.program, delays: state.appliance.delays, now: date().addingTimeInterval(durationBeforeStart), calendar: calendar).first(where: { $0.delay == operation.delay }) {
+                        bestOperation = operation
+                    } else {
+                        bestOperation = operation
+                    }
                     await send(.computationFinished(
-                        delay: delay,
-                        ratio: ratio,
+                        delay: bestOperation.delay,
+                        ratio: bestOperation.offPeakRatio,
                         durationBeforeStart: durationBeforeStart
                     ))
                 }

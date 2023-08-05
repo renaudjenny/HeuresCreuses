@@ -8,14 +8,16 @@ struct OptimumView: View {
     struct ViewState: Equatable {
         let program: Program
         let delay: String
+        let shouldWaitBeforeStart: Bool
         let durationBeforeStart: String
         let ratio: String
 
         init(_ state: Optimum.State) {
             program = state.program
             delay = state.delay.formatted
-            durationBeforeStart = "\((state.durationBeforeStart / 60).formatted()) minutes"
-            ratio = state.ratio.formatted(.percent)
+            shouldWaitBeforeStart = state.durationBeforeStart > 0
+            durationBeforeStart = "\((state.durationBeforeStart / 60).formatted(.number.precision(.integerAndFractionLength(integer: 2, fraction: 0)))) minutes"
+            ratio = state.ratio.formatted(.percent.precision(.significantDigits(3)))
         }
     }
 
@@ -28,16 +30,23 @@ struct OptimumView: View {
                     .font(.subheadline)
                     .padding([.horizontal, .bottom])
 
-                Text("""
-                Wait **\(viewStore.durationBeforeStart)** before starting your appliance \
-                with the **\(viewStore.delay) delay** to be **\(viewStore.ratio)** off peak
-                """)
-                .padding(.horizontal)
+                if viewStore.shouldWaitBeforeStart {
+                    Text("""
+                    Wait **\(viewStore.durationBeforeStart)** before starting your appliance \
+                    with the **\(viewStore.delay) delay** to be **\(viewStore.ratio)** off peak
+                    """)
+                    .padding(.horizontal)
 
-                Button { } label: {
-                    Label("Send me a notification in \(viewStore.durationBeforeStart)", systemImage: "bell.badge")
+                    Button { } label: {
+                        Label("Send me a notification in \(viewStore.durationBeforeStart)", systemImage: "bell.badge")
+                    }
+                    .padding()
+                } else {
+                    Text("""
+                    You can start your appliance with the **\(viewStore.delay)** now and have an off peak of \
+                    \(viewStore.ratio)
+                    """)
                 }
-                .padding()
 
                 Spacer()
                 Button { viewStore.send(.delaysTapped(viewStore.program)) } label: {

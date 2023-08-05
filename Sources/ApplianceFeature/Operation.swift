@@ -20,10 +20,10 @@ struct Operation: Identifiable, Equatable {
     var offPeakRangeRatio: ClosedRange<Double> {
         guard let offPeakPeriod else { return 0...0 }
         let startDistance = max(startEnd.lowerBound.distance(to: offPeakPeriod.lowerBound), 0)
-        let startRatio = startDistance / duration
+        let startRatio = min(startDistance / duration, 1)
 
         let endDistance = max(offPeakPeriod.upperBound.distance(to: startEnd.upperBound), 0)
-        let endRatio = 1 - endDistance / duration
+        let endRatio = max(1 - endDistance / duration, 0)
 
         return startRatio...endRatio
     }
