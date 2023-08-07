@@ -45,6 +45,26 @@ public extension Appliance {
                 name: "Eco",
                 duration: 240 * 60
             ),
+            Program(
+                id: UUID(uuidString: "E1467751-BBD9-4E9C-8FF0-579E9F13A149")!,
+                name: "Prewash",
+                duration: 15 * 60
+            ),
+            Program(
+                id: UUID(uuidString: "A4800539-B772-4DD9-9651-3A1C31F78D8E")!,
+                name: "Fragile",
+                duration: 114 * 60
+            ),
+            Program(
+                id: UUID(uuidString: "08CA212D-B49C-4D71-A770-1D280A38D7CF")!,
+                name: "Quick",
+                duration: 50 * 60
+            ),
+            Program(
+                id: UUID(uuidString: "6E4CDDB3-E5BC-4975-A272-0C7EEA851948")!,
+                name: "Intense",
+                duration: 175 * 60
+            ),
         ],
         delays: [
             Delay(hour: 2, minute: 0),
