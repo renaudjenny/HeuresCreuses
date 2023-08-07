@@ -39,7 +39,7 @@ public struct Delays: Reducer {
         state.operations = .nextOperations(
             periods: periodProvider.get(),
             program: state.program,
-            delays: [Delay(hour: 0, minute: 0)] + state.appliance.delays,
+            delays: [Duration.zero] + state.appliance.delays,
             now: date(),
             calendar: calendar
         )

@@ -37,13 +37,10 @@ public struct DelaysView: View {
                     VStack(alignment: .leading) {
                         HStack(alignment: .lastTextBaseline) {
                             VStack(alignment: .leading, spacing: 8) {
-                                if operation.delay.hour == 0 && operation.delay.minute == 0 {
+                                if operation.delay == .zero {
                                     Text("Starting immediately").font(.title2)
                                 } else {
-                                    Text("""
-                                    \(operation.delay.hour) hours\(operation.delay.minute > 0 ? "\(operation.delay.minute) minutes" : "")
-                                    """)
-                                    .font(.title2)
+                                    Text(operation.delay.hourMinute).font(.title2)
                                 }
                                 Text("Finishing at \(operation.startEnd.upperBound.formatted(date: .omitted, time: .shortened))")
                             }

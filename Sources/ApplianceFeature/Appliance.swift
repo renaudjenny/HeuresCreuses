@@ -5,9 +5,9 @@ public struct Appliance: Identifiable {
     public var name: String
     public var type: ApplianceType
     public var programs: [Program]
-    public var delays: [Delay]
+    public var delays: [Duration]
 
-    public init(id: UUID, name: String, type: ApplianceType, programs: [Program], delays: [Delay]) {
+    public init(id: UUID, name: String, type: ApplianceType, programs: [Program], delays: [Duration]) {
         self.id = id
         self.name = name
         self.type = type

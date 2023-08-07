@@ -16,7 +16,7 @@ struct OptimumView: View {
 
         init(_ state: Optimum.State) {
             program = state.program
-            delay = state.delay.formatted
+            delay = state.delay.hourMinute
             shouldWaitBeforeStart = state.durationBeforeStart > 0
             durationBeforeStart = "\((state.durationBeforeStart / 60).formatted(.number.precision(.integerAndFractionLength(integer: 2, fraction: 0)))) minutes"
             ratio = state.ratio.formatted(.percent.precision(.significantDigits(3)))
@@ -43,21 +43,27 @@ struct OptimumView: View {
 
                     if viewStore.isRemindMeButtonShown {
                         Button { viewStore.send(.remindMeButtonTapped, animation: .default) } label: {
-                            Label("Send me a notification in \(viewStore.durationBeforeStart)", systemImage: "bell.badge")
+                            Label(
+                                "Send me a notification in \(viewStore.durationBeforeStart)",
+                                systemImage: "bell.badge"
+                            )
                         }
                         .padding()
                     } else if viewStore.isNotificationAuthorized {
                         Label("Notification is programmed", systemImage: "bell").padding()
                     } else {
                         Label(
-                            "Notification has been denied, please go to settings and allow Heures Creuses to send you notifications",
+                            """
+                            Notification has been denied, please go to settings and allow Heures Creuses \
+                            to send you notifications
+                            """,
                             systemImage: "bell.slash"
                         )
                         .padding()
                     }
                 } else {
                     Text("""
-                    You can start your appliance with the **\(viewStore.delay)** now and have an off peak of \
+                    You can start your appliance with the **\(viewStore.delay) delay** now and have an off peak of \
                     \(viewStore.ratio)
                     """)
                 }

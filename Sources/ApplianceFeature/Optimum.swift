@@ -7,7 +7,7 @@ public struct Optimum: Reducer {
     public struct State: Equatable {
         let program: Program
         let appliance: Appliance
-        var delay = Delay(hour: 0, minute: 0)
+        var delay = Duration.zero
         var ratio: Double = 0
         var durationBeforeStart: TimeInterval = 0
         var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
@@ -19,7 +19,7 @@ public struct Optimum: Reducer {
     }
     public enum Action: Equatable {
         case delaysTapped(Program)
-        case computationFinished(delay: Delay, ratio: Double, durationBeforeStart: TimeInterval)
+        case computationFinished(delay: Duration, ratio: Double, durationBeforeStart: TimeInterval)
         case remindMeButtonTapped
         case notificationStatusChanged(UNAuthorizationStatus)
         case task
@@ -60,7 +60,7 @@ public struct Optimum: Reducer {
                         let identifier = uuid().uuidString
                         let content = UNMutableNotificationContent()
                         content.title = "Appliance to program"
-                        content.body = "\(state.appliance.name)\nProgram \(state.program.name)\nDelay \(state.delay.formatted)"
+                        content.body = "\(state.appliance.name)\nProgram \(state.program.name)\nDelay \(state.delay.hourMinute)"
                         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: state.durationBeforeStart, repeats: false)
                         try await self.userNotificationCenter.add(
                             .init(

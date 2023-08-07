@@ -28,10 +28,10 @@ public extension Appliance {
             ),
         ],
         delays: [
-            Delay(hour: 3, minute: 0),
-            Delay(hour: 6, minute: 0),
-            Delay(hour: 9, minute: 0),
-            Delay(hour: 12, minute: 0),
+            Duration.hours(3),
+            Duration.hours(6),
+            Duration.hours(8),
+            Duration.hours(12),
         ]
     )
 
@@ -67,9 +67,13 @@ public extension Appliance {
             ),
         ],
         delays: [
-            Delay(hour: 2, minute: 0),
-            Delay(hour: 4, minute: 0),
-            Delay(hour: 8, minute: 0),
+            Duration.hours(2),
+            Duration.hours(4),
+            Duration.hours(8),
         ]
     )
+}
+
+private extension Duration {
+    static func hours(_ hours: Int) -> Self { seconds(hours * 60 * 60) }
 }

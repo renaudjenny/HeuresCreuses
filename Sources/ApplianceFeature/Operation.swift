@@ -2,7 +2,7 @@ import Foundation
 import Models
 
 struct Operation: Identifiable, Equatable {
-    let delay: Delay
+    let delay: Duration
     let startEnd: ClosedRange<Date>
     let offPeakPeriod: ClosedRange<Date>?
 
@@ -28,22 +28,20 @@ struct Operation: Identifiable, Equatable {
         return startRatio...endRatio
     }
 
-    var id: Delay.ID { delay.id }
+    var id: Int { delay.hashValue }
 }
 
 extension [Operation] {
     static func nextOperations(
         periods: [Period],
         program: Program,
-        delays: [Delay],
+        delays: [Duration],
         now: Date,
         calendar: Calendar
     ) -> Self {
         let ranges = dateRanges(periods, now: now, calendar: calendar)
         return delays.map {
-            let hour = TimeInterval($0.hour)
-            let minute = TimeInterval($0.minute)
-            let start = now.addingTimeInterval(hour * 60 * 60 + minute * 60)
+            let start = now.addingTimeInterval(Double($0.components.seconds))
             let end = start.addingTimeInterval(program.duration)
             let startEnd = start...end
 
