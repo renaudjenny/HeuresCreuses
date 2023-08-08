@@ -1,6 +1,5 @@
 import ApplianceFeature
 import ComposableArchitecture
-import DevicesFeature
 import SwiftUI
 
 public struct AppView: View {
@@ -30,12 +29,6 @@ public struct AppView: View {
     public var body: some View {
         NavigationStack {
             currentOffPeakStatusView
-                .navigationDestination(
-                    store: store.scope(state: \.$destination, action: { .destination($0) }),
-                    state: /App.Destination.State.legacyDeviceProgramPeriods,
-                    action: App.Destination.Action.legacyDeviceProgramPeriods,
-                    destination: DeviceProgramPeriodsView.init
-                )
                 .navigationDestination(
                     store: store.scope(state: \.$destination, action: { .destination($0) }),
                     state: /App.Destination.State.applianceSelection,

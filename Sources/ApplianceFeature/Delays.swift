@@ -50,11 +50,3 @@ public struct Delays: Reducer {
         return .none
     }
 }
-
-private extension ClosedRange<Date> {
-    func peakDuration(between range: ClosedRange<Date>) -> TimeInterval {
-        let distanceToOffPeakStart = range.lowerBound.distance(to: lowerBound)
-        let distanceFromOffPeakEnd = upperBound.distance(to: range.upperBound)
-        return Swift.max(distanceToOffPeakStart, 0) + Swift.max(distanceFromOffPeakEnd, 0)
-    }
-}

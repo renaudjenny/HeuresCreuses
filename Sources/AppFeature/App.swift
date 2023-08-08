@@ -1,6 +1,5 @@
 import ApplianceFeature
 import ComposableArchitecture
-import DevicesFeature
 import Foundation
 import Models
 
@@ -15,25 +14,19 @@ public struct App: Reducer {
         var currentPeakStatus: PeakStatus = .unavailable
 
         var offPeakPeriods: [OffPeakPeriod] = []
-        var devices = Devices.State()
         @PresentationState var destination: Destination.State?
     }
 
     public struct Destination: Reducer {
         public enum State: Equatable {
-            case legacyDeviceProgramPeriods(DeviceProgramPeriods.State)
             case applianceSelection(ApplianceSelection.State)
         }
 
         public enum Action: Equatable {
-            case legacyDeviceProgramPeriods(DeviceProgramPeriods.Action)
             case applianceSelection(ApplianceSelection.Action)
         }
 
         public var body: some ReducerOf<Self> {
-            Scope(state: /State.legacyDeviceProgramPeriods, action: /Action.legacyDeviceProgramPeriods) {
-                DeviceProgramPeriods()
-            }
             Scope(state: /State.applianceSelection, action: /Action.applianceSelection) {
                 ApplianceSelection()
             }
@@ -44,7 +37,6 @@ public struct App: Reducer {
         case task
         case timeChanged(Date)
         case cancel
-        case devicesButtonTapped
         case appliancesButtonTapped
         case destination(PresentationAction<Destination.Action>)
     }
@@ -88,12 +80,6 @@ public struct App: Reducer {
                 }
             case .cancel:
                 return .cancel(id: CancelID.timer)
-            case .devicesButtonTapped:
-                state.destination = .legacyDeviceProgramPeriods(DeviceProgramPeriods.State(
-                    periods: state.offPeakPeriods,
-                    devices: IdentifiedArrayOf(uniqueElements: state.devices.devices.map(\.device))
-                ))
-                return .none
             case .appliancesButtonTapped:
                 state.destination = .applianceSelection(ApplianceSelection.State())
                 return .none

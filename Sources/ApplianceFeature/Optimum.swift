@@ -74,13 +74,25 @@ public struct Optimum: Reducer {
                 return .none
             case .task:
                 return .run { [state] send in
-                    let operation = [Operation].nextOperations(
+                    let operations = [Operation].nextOperations(
                         periods: periodProvider(),
                         program: state.program,
                         delays: state.appliance.delays,
                         now: date(),
                         calendar: calendar
-                    ).max {
+                    )
+                    let operation = operations.max {
+                        if $0.delay == .seconds(2 * 60 * 60) && $1.delay == .seconds(4 * 60 * 60)
+                        || $0.delay == .seconds(4 * 60 * 60) && $1.delay == .seconds(2 * 60 * 60) {
+                            print("$0 delay", $0.delay)
+                            print("$1 delay", $1.delay)
+                            print("First condition", $0.offPeakRangeRatio.upperBound == 1 && $1.offPeakRangeRatio.upperBound < 1)
+                            print("Ratio $0", $0.offPeakRatio)
+                            print("Ratio $1", $1.offPeakRatio)
+                            print("Range Ratio $0", $0.offPeakRangeRatio)
+                            print("Range Ratio $1", $1.offPeakRangeRatio)
+                            print("Ratio $0 < $1", $0.offPeakRatio < $1.offPeakRatio)
+                        }
                         if $0.offPeakRangeRatio.upperBound == 1 && $1.offPeakRangeRatio.upperBound < 1 {
                             return false
                         }
