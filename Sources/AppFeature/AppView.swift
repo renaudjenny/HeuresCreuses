@@ -63,13 +63,10 @@ public struct AppView: View {
 
                 Spacer()
 
-                Button { viewStore.send(.devicesButtonTapped) } label: {
-                    Text("Legacy: Device programs and periods")
-                }
-
                 Button { viewStore.send(.appliancesButtonTapped) } label: {
                     Text("Appliance Selection")
                 }
+                .buttonStyle(.borderedProminent)
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
