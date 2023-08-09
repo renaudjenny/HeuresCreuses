@@ -17,8 +17,8 @@ struct OptimumView: View {
         init(_ state: Optimum.State) {
             program = state.program
             delay = state.delay.hourMinute
-            shouldWaitBeforeStart = state.durationBeforeStart > 0
-            durationBeforeStart = "\((state.durationBeforeStart / 60).formatted(.number.precision(.integerAndFractionLength(integer: 2, fraction: 0)))) minutes"
+            shouldWaitBeforeStart = state.durationBeforeStart > .zero
+            durationBeforeStart = state.durationBeforeStart.hourMinute
             ratio = state.ratio.formatted(.percent.precision(.significantDigits(3)))
             isRemindMeButtonShown = state.notificationAuthorizationStatus == .notDetermined
             isNotificationAuthorized = [.authorized, .ephemeral].contains(state.notificationAuthorizationStatus)

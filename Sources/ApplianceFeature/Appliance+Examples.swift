@@ -30,7 +30,7 @@ public extension Appliance {
         delays: [
             Duration.hours(3),
             Duration.hours(6),
-            Duration.hours(8),
+            Duration.hours(9),
             Duration.hours(12),
         ]
     )

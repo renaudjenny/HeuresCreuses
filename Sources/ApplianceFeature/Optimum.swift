@@ -9,7 +9,7 @@ public struct Optimum: Reducer {
         let appliance: Appliance
         var delay = Duration.zero
         var ratio: Double = 0
-        var durationBeforeStart: TimeInterval = 0
+        var durationBeforeStart: Duration = .zero
         var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
 
         public init(program: Program, appliance: Appliance) {
@@ -19,7 +19,7 @@ public struct Optimum: Reducer {
     }
     public enum Action: Equatable {
         case delaysTapped(Program)
-        case computationFinished(delay: Duration, ratio: Double, durationBeforeStart: TimeInterval)
+        case computationFinished(delay: Duration, ratio: Double, durationBeforeStart: Duration)
         case remindMeButtonTapped
         case notificationStatusChanged(UNAuthorizationStatus)
         case task
@@ -61,7 +61,8 @@ public struct Optimum: Reducer {
                         let content = UNMutableNotificationContent()
                         content.title = "Appliance to program"
                         content.body = "\(state.appliance.name)\nProgram \(state.program.name)\nDelay \(state.delay.hourMinute)"
-                        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: state.durationBeforeStart, repeats: false)
+                        let timeInterval = TimeInterval(state.durationBeforeStart.components.seconds)
+                        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
                         try await self.userNotificationCenter.add(
                             .init(
                                 identifier: identifier,
@@ -82,28 +83,23 @@ public struct Optimum: Reducer {
                         calendar: calendar
                     )
                     let operation = operations.max {
-                        if $0.delay == .seconds(2 * 60 * 60) && $1.delay == .seconds(4 * 60 * 60)
-                        || $0.delay == .seconds(4 * 60 * 60) && $1.delay == .seconds(2 * 60 * 60) {
-                            print("$0 delay", $0.delay)
-                            print("$1 delay", $1.delay)
-                            print("First condition", $0.offPeakRangeRatio.upperBound == 1 && $1.offPeakRangeRatio.upperBound < 1)
-                            print("Ratio $0", $0.offPeakRatio)
-                            print("Ratio $1", $1.offPeakRatio)
-                            print("Range Ratio $0", $0.offPeakRangeRatio)
-                            print("Range Ratio $1", $1.offPeakRangeRatio)
-                            print("Ratio $0 < $1", $0.offPeakRatio < $1.offPeakRatio)
-                        }
                         if $0.offPeakRangeRatio.upperBound == 1 && $1.offPeakRangeRatio.upperBound < 1 {
                             return false
                         }
                         return $0.offPeakRatio < $1.offPeakRatio
                     }
                     guard let operation, let offPeakPeriodStart = operation.offPeakPeriod?.lowerBound else { return }
-                    let durationBeforeStart = operation.startEnd.lowerBound.distance(to: offPeakPeriodStart)
+                    let durationBeforeStart = operation.startEnd.lowerBound.durationDistance(to: offPeakPeriodStart)
 
                     let bestOperation: Operation
-                    if durationBeforeStart > 0,
-                       let operation = [Operation].nextOperations(periods: periodProvider(), program: state.program, delays: state.appliance.delays, now: date().addingTimeInterval(durationBeforeStart), calendar: calendar).first(where: { $0.delay == operation.delay }) {
+                    if durationBeforeStart > .zero,
+                       let operation = [Operation].nextOperations(
+                        periods: periodProvider(),
+                        program: state.program,
+                        delays: state.appliance.delays,
+                        now: date().addingTimeInterval(TimeInterval(durationBeforeStart.components.seconds)),
+                        calendar: calendar
+                       ).first(where: { $0.delay == operation.delay }) {
                         bestOperation = operation
                     } else {
                         bestOperation = operation
