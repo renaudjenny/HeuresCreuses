@@ -1,6 +1,8 @@
 import ComposableArchitecture
 import Foundation
+#if canImport(NotificationCenter)
 import NotificationCenter
+#endif
 import UserNotificationsDependency
 
 public struct Optimum: Reducer {
@@ -10,7 +12,9 @@ public struct Optimum: Reducer {
         var delay = Duration.zero
         var ratio: Double = 0
         var durationBeforeStart: Duration = .zero
+        #if canImport(NotificationCenter)
         var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
+        #endif
 
         public init(program: Program, appliance: Appliance) {
             self.program = program
@@ -20,8 +24,10 @@ public struct Optimum: Reducer {
     public enum Action: Equatable {
         case delaysTapped(Program)
         case computationFinished(delay: Duration, ratio: Double, durationBeforeStart: Duration)
+        #if canImport(NotificationCenter)
         case remindMeButtonTapped
         case notificationStatusChanged(UNAuthorizationStatus)
+        #endif
         case task
     }
 
@@ -41,6 +47,7 @@ public struct Optimum: Reducer {
                 state.ratio = ratio
                 state.durationBeforeStart = durationBeforeStart
                 return .none
+            #if canImport(NotificationCenter)
             case .remindMeButtonTapped:
                 return .run { send in
                     let notificationSettings = await userNotificationCenter.notificationSettings()
@@ -73,6 +80,7 @@ public struct Optimum: Reducer {
                     }
                 }
                 return .none
+            #endif
             case .task:
                 return .run { [state] send in
                     let operations = [Operation].nextOperations(

@@ -20,62 +20,70 @@ struct OptimumView: View {
             shouldWaitBeforeStart = state.durationBeforeStart > .zero
             durationBeforeStart = state.durationBeforeStart.hourMinute
             ratio = state.ratio.formatted(.percent.precision(.significantDigits(3)))
+            #if canImport(NotificationCenter)
             isRemindMeButtonShown = state.notificationAuthorizationStatus == .notDetermined
             isNotificationAuthorized = [.authorized, .ephemeral].contains(state.notificationAuthorizationStatus)
+            #else
+            isRemindMeButtonShown = false
+            isNotificationAuthorized = false
+            #endif
         }
     }
 
     var body: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
-            VStack {
-                Text("Optimum").font(.title).padding()
+            ScrollView {
+                VStack {
+                    Text("Optimum").font(.title).padding()
 
-                Text("The **optimum** is the best time to start your appliance from now with the indicated delay")
-                    .font(.subheadline)
-                    .padding([.horizontal, .bottom])
+                    Text("The **optimum** is the best time to start your appliance from now with the indicated delay")
+                        .font(.subheadline)
+                        .padding([.horizontal, .bottom])
 
-                if viewStore.shouldWaitBeforeStart {
-                    Text("""
-                    Wait **\(viewStore.durationBeforeStart)** before starting your appliance \
-                    with the **\(viewStore.delay) delay** to be **\(viewStore.ratio)** off peak
-                    """)
-                    .padding(.horizontal)
+                    if viewStore.shouldWaitBeforeStart {
+                        Text("""
+                        Wait **\(viewStore.durationBeforeStart)** before starting your appliance \
+                        with the **\(viewStore.delay) delay** to be **\(viewStore.ratio)** off peak
+                        """)
+                        .padding(.horizontal)
 
-                    if viewStore.isRemindMeButtonShown {
-                        Button { viewStore.send(.remindMeButtonTapped, animation: .default) } label: {
-                            Label(
-                                "Send me a notification in \(viewStore.durationBeforeStart)",
-                                systemImage: "bell.badge"
-                            )
-                        }
-                        .padding()
-                    } else if viewStore.isNotificationAuthorized {
-                        Label("Notification is programmed", systemImage: "bell").padding()
-                    } else {
-                        Label(
-                            """
+                        #if canImport(NotificationCenter)
+                        if viewStore.isRemindMeButtonShown {
+                            Button { viewStore.send(.remindMeButtonTapped, animation: .default) } label: {
+                                Label(
+                                    "Send me a notification in \(viewStore.durationBeforeStart)",
+                                    systemImage: "bell.badge"
+                                )
+                            }
+                            .padding()
+                        } else if viewStore.isNotificationAuthorized {
+                            Label("Notification is programmed", systemImage: "bell").padding()
+                        } else {
+                            Label("""
                             Notification has been denied, please go to settings and allow Heures Creuses \
                             to send you notifications
                             """,
                             systemImage: "bell.slash"
-                        )
-                        .padding()
+                            )
+                            .padding()
+                        }
+                        #endif
+                    } else {
+                        Text("""
+                        You can start your appliance with the **\(viewStore.delay) delay** now and have an off peak of \
+                        \(viewStore.ratio)
+                        """)
                     }
-                } else {
-                    Text("""
-                    You can start your appliance with the **\(viewStore.delay) delay** now and have an off peak of \
-                    \(viewStore.ratio)
-                    """)
-                }
 
-                Spacer()
-                Button { viewStore.send(.delaysTapped(viewStore.program)) } label: {
-                    Label("All delays", systemImage: "arrowshape.turn.up.backward.badge.clock.rtl")
+                    Button { viewStore.send(.delaysTapped(viewStore.program)) } label: {
+                        Label("All delays", systemImage: "arrowshape.turn.up.backward.badge.clock.rtl")
+                    }
+                    .padding(.top)
                 }
+                .padding()
+                .presentationDetents([.medium])
+                .task { await viewStore.send(.task).finish() }
             }
-            .padding()
-            .presentationDetents([.medium])
-            .task { await viewStore.send(.task).finish() }
         }
     }
 }
