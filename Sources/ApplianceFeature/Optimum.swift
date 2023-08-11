@@ -13,7 +13,21 @@ public struct Optimum: Reducer {
         var ratio: Double = 0
         var durationBeforeStart: Duration = .zero
         #if canImport(NotificationCenter)
-        var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
+        var sendNotificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
+        var sendNotification: SendNotification.State {
+            get {
+                SendNotification.State(
+                    program: program,
+                    appliance: appliance,
+                    delay: delay,
+                    durationBeforeStart: durationBeforeStart,
+                    notificationAuthorizationStatus: sendNotificationAuthorizationStatus
+                )
+            }
+            set {
+                sendNotificationAuthorizationStatus = newValue.notificationAuthorizationStatus
+            }
+        }
         #endif
 
         public init(program: Program, appliance: Appliance) {
@@ -25,8 +39,7 @@ public struct Optimum: Reducer {
         case delaysTapped(Program)
         case computationFinished(delay: Duration, ratio: Double, durationBeforeStart: Duration)
         #if canImport(NotificationCenter)
-        case remindMeButtonTapped
-        case notificationStatusChanged(UNAuthorizationStatus)
+        case sendNotification(SendNotification.Action)
         #endif
         case task
     }
@@ -38,6 +51,12 @@ public struct Optimum: Reducer {
     @Dependency(\.uuid) var uuid
 
     public var body: some ReducerOf<Self> {
+        #if canImport(NotificationCenter)
+        Scope(state: \.sendNotification, action: /Action.sendNotification) {
+            SendNotification()
+        }
+        #endif
+
         Reduce { state, action in
             switch action {
             case .delaysTapped:
@@ -48,37 +67,7 @@ public struct Optimum: Reducer {
                 state.durationBeforeStart = durationBeforeStart
                 return .none
             #if canImport(NotificationCenter)
-            case .remindMeButtonTapped:
-                return .run { send in
-                    let notificationSettings = await userNotificationCenter.notificationSettings()
-                    let status = notificationSettings.authorizationStatus
-                    await send(.notificationStatusChanged(status))
-
-                    if status == .notDetermined {
-                        guard try await self.userNotificationCenter.requestAuthorization(options: [.alert])
-                        else { return }
-                        await send(.notificationStatusChanged(userNotificationCenter.notificationSettings().authorizationStatus))
-                    }
-                }
-            case let .notificationStatusChanged(status):
-                state.notificationAuthorizationStatus = status
-                if [.authorized, .ephemeral].contains(status) {
-                    return .run { [state] _ in
-                        let identifier = uuid().uuidString
-                        let content = UNMutableNotificationContent()
-                        content.title = "Appliance to program"
-                        content.body = "\(state.appliance.name)\nProgram \(state.program.name)\nDelay \(state.delay.hourMinute)"
-                        let timeInterval = TimeInterval(state.durationBeforeStart.components.seconds)
-                        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
-                        try await self.userNotificationCenter.add(
-                            .init(
-                                identifier: identifier,
-                                content: content,
-                                trigger: trigger
-                            )
-                        )
-                    }
-                }
+            case .sendNotification:
                 return .none
             #endif
             case .task:

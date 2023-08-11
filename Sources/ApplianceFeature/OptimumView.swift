@@ -4,15 +4,12 @@ import SwiftUI
 struct OptimumView: View {
     let store: StoreOf<Optimum>
 
-
     struct ViewState: Equatable {
         let program: Program
         let delay: String
         let shouldWaitBeforeStart: Bool
         let durationBeforeStart: String
         let ratio: String
-        let isRemindMeButtonShown: Bool
-        let isNotificationAuthorized: Bool
 
         init(_ state: Optimum.State) {
             program = state.program
@@ -20,13 +17,6 @@ struct OptimumView: View {
             shouldWaitBeforeStart = state.durationBeforeStart > .zero
             durationBeforeStart = state.durationBeforeStart.hourMinute
             ratio = state.ratio.formatted(.percent.precision(.significantDigits(3)))
-            #if canImport(NotificationCenter)
-            isRemindMeButtonShown = state.notificationAuthorizationStatus == .notDetermined
-            isNotificationAuthorized = [.authorized, .ephemeral].contains(state.notificationAuthorizationStatus)
-            #else
-            isRemindMeButtonShown = false
-            isNotificationAuthorized = false
-            #endif
         }
     }
 
@@ -48,25 +38,9 @@ struct OptimumView: View {
                         .padding(.horizontal)
 
                         #if canImport(NotificationCenter)
-                        if viewStore.isRemindMeButtonShown {
-                            Button { viewStore.send(.remindMeButtonTapped, animation: .default) } label: {
-                                Label(
-                                    "Send me a notification in \(viewStore.durationBeforeStart)",
-                                    systemImage: "bell.badge"
-                                )
-                            }
-                            .padding()
-                        } else if viewStore.isNotificationAuthorized {
-                            Label("Notification is programmed", systemImage: "bell").padding()
-                        } else {
-                            Label("""
-                            Notification has been denied, please go to settings and allow Heures Creuses \
-                            to send you notifications
-                            """,
-                            systemImage: "bell.slash"
-                            )
-                            .padding()
-                        }
+                        SendNotificationButtonView(
+                            store: store.scope(state: \.sendNotification, action: Optimum.Action.sendNotification)
+                        )
                         #endif
                     } else {
                         Text("""
