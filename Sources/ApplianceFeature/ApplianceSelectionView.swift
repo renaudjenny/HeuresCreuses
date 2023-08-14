@@ -25,14 +25,20 @@ public struct ApplianceSelectionView: View {
                     }
                 }
                 .navigationDestination(
-                    store: store.scope(
-                        state: \.$programSelectionDestination,
-                        action: ApplianceSelection.Action.programSelectionDestination
-                    ),
+                    store: store.scope(state: \.$destination, action: { .destination($0) }),
+                    state: /ApplianceSelection.Destination.State.selection,
+                    action: { .selection($0) },
                     destination: ProgramSelectionView.init
                 )
             }
             .navigationTitle("Choose your appliance")
+            .toolbar {
+                ToolbarItem {
+                    Button { viewStore.send(.addApplianceButtonTapped) } label: {
+                        Label("Add appliance", systemImage: "plus.app")
+                    }
+                }
+            }
         }
     }
 }

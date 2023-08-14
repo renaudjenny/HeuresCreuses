@@ -32,7 +32,7 @@ public struct AppView: View {
                 .navigationDestination(
                     store: store.scope(state: \.$destination, action: { .destination($0) }),
                     state: /App.Destination.State.applianceSelection,
-                    action: App.Destination.Action.applianceSelection,
+                    action: { .applianceSelection($0) },
                     destination: ApplianceSelectionView.init
                 )
         }
