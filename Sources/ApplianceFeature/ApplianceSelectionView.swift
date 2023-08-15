@@ -30,6 +30,23 @@ public struct ApplianceSelectionView: View {
                     action: { .selection($0) },
                     destination: ProgramSelectionView.init
                 )
+                .sheet(
+                    store: store.scope(state: \.$destination, action: { .destination($0) }),
+                    state: /ApplianceSelection.Destination.State.addAppliance,
+                    action: { .addAppliance($0) }) { store in
+                        NavigationView {
+                            ApplianceFormView(store: store)
+                                .navigationTitle("New appliance")
+                                .toolbar {
+                                    ToolbarItem {
+                                        Button { } label: { Text("Save") }
+                                    }
+                                    ToolbarItem(placement: .cancellationAction) {
+                                        Button { } label: { Text("Cancel") }
+                                    }
+                                }
+                        }
+                    }
             }
             .navigationTitle("Choose your appliance")
             .toolbar {

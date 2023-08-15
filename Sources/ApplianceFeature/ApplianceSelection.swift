@@ -4,16 +4,13 @@ public struct ApplianceSelection: Reducer {
     public struct State: Equatable {
         var appliances: IdentifiedArrayOf<Appliance>
         @PresentationState var destination: Destination.State?
-//        @PresentationState var programSelectionDestination: ProgramSelection.State?
 
         public init(
             appliances: IdentifiedArrayOf<Appliance> = [.washingMachine, .dishwasher],
             destination: Destination.State? = nil
-//            programSelectionDestination: ProgramSelection.State? = nil
         ) {
             self.appliances = appliances
             self.destination = destination
-//            self.programSelectionDestination = programSelectionDestination
         }
     }
     public enum Action: Equatable {
@@ -25,11 +22,12 @@ public struct ApplianceSelection: Reducer {
 
     public init() {}
 
+    @Dependency(\.uuid) var uuid
+
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case let .applianceTapped(appliance):
-//                state.programSelectionDestination = ProgramSelection.State(appliance: appliance)
                 state.destination = .selection(ProgramSelection.State(appliance: appliance))
                 return .none
             case .destination:
@@ -37,16 +35,14 @@ public struct ApplianceSelection: Reducer {
             case .programSelectionDestination:
                 return .none
             case .addApplianceButtonTapped:
-                // TODO: change the state.destination to a future ApplianceForm.State
+                let newAppliance = Appliance(id: uuid())
+                state.destination = .addAppliance(ApplianceForm.State(appliance: newAppliance))
                 return .none
             }
         }
         .ifLet(\.$destination, action: /ApplianceSelection.Action.destination) {
             Destination()
         }
-//        .ifLet(\.$programSelectionDestination, action: /ApplianceSelection.Action.programSelectionDestination) {
-//            ProgramSelection()
-//        }
     }
 }
 
@@ -54,13 +50,18 @@ extension ApplianceSelection {
     public struct Destination: Reducer {
         public enum State: Equatable {
             case selection(ProgramSelection.State)
+            case addAppliance(ApplianceForm.State)
         }
         public enum Action: Equatable {
             case selection(ProgramSelection.Action)
+            case addAppliance(ApplianceForm.Action)
         }
         public var body: some ReducerOf<Self> {
             Scope(state: /State.selection, action: /Action.selection) {
                 ProgramSelection()
+            }
+            Scope(state: /State.addAppliance, action: /Action.addAppliance) {
+                ApplianceForm()
             }
         }
     }

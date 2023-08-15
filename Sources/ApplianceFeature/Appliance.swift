@@ -7,7 +7,13 @@ public struct Appliance: Identifiable {
     public var programs: [Program]
     public var delays: [Duration]
 
-    public init(id: UUID, name: String, type: ApplianceType, programs: [Program], delays: [Duration]) {
+    public init(
+        id: UUID,
+        name: String = "",
+        type: ApplianceType = .dishWasher,
+        programs: [Program] = [],
+        delays: [Duration] = []
+    ) {
         self.id = id
         self.name = name
         self.type = type
