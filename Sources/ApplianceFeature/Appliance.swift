@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Appliance: Identifiable {
+public struct Appliance: Identifiable, Equatable {
     public var id: UUID
     public var name: String
     public var type: ApplianceType
@@ -25,8 +25,4 @@ public struct Appliance: Identifiable {
 public enum ApplianceType {
     case washingMachine
     case dishWasher
-}
-
-extension Appliance: Equatable {
-    public static func ==(lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
 }
