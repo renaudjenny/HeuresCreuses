@@ -9,7 +9,7 @@ public struct ApplianceForm: Reducer {
         }
     }
     public enum Action: BindableAction, Equatable {
-        case binding(BindingAction<ApplianceForm.State>)
+        case binding(BindingAction<State>)
     }
     public var body: some ReducerOf<Self> {
         BindingReducer()

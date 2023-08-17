@@ -4,8 +4,16 @@ import SwiftUI
 struct ApplianceFormView: View {
     let store: StoreOf<ApplianceForm>
 
+    struct ViewState: Equatable {
+        @BindingViewState var appliance: Appliance
+
+        init(_ state: BindingViewStore<ApplianceForm.State>) {
+            _appliance = state.$appliance
+        }
+    }
+
     var body: some View {
-        WithViewStore(store, observe: { $0 }) { viewStore in
+        WithViewStore(store, observe: ViewState.init) { viewStore in
             Form {
                 TextField("Name", text: viewStore.$appliance.name)
             }

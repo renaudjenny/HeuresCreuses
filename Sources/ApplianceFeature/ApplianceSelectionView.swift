@@ -34,15 +34,19 @@ public struct ApplianceSelectionView: View {
                     store: store.scope(state: \.$destination, action: { .destination($0) }),
                     state: /ApplianceSelection.Destination.State.addAppliance,
                     action: { .addAppliance($0) }) { store in
-                        NavigationView {
+                        NavigationStack {
                             ApplianceFormView(store: store)
                                 .navigationTitle("New appliance")
                                 .toolbar {
                                     ToolbarItem {
-                                        Button { } label: { Text("Save") }
+                                        Button { viewStore.send(.addApplianceSaveButtonTapped) } label: {
+                                            Text("Save")
+                                        }
                                     }
                                     ToolbarItem(placement: .cancellationAction) {
-                                        Button { } label: { Text("Cancel") }
+                                        Button { viewStore.send(.addApplianceCancelButtonTapped) } label: {
+                                            Text("Cancel")
+                                        }
                                     }
                                 }
                         }
