@@ -22,7 +22,7 @@ public struct Appliance: Identifiable, Equatable {
     }
 }
 
-public enum ApplianceType {
+public enum ApplianceType: CaseIterable {
     case washingMachine
     case dishWasher
 }

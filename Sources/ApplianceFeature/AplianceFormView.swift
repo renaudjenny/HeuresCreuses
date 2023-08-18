@@ -15,10 +15,34 @@ struct ApplianceFormView: View {
     var body: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
             Form {
-                TextField("Name", text: viewStore.$appliance.name)
+                Section {
+                    TextField("Name", text: viewStore.$appliance.name)
+                    Picker("Type", selection: viewStore.$appliance.type) {
+                        ForEach(ApplianceType.allCases) {
+                            switch $0 {
+                            case .washingMachine: Label("Washing machine", systemImage: "washer")
+                            case .dishWasher: Label("Dishwasher", systemImage: "dishwasher")
+                            }
+                        }
+                    }
+                }
+
+                Section("Programs") {
+                    // TODO
+                    EmptyView()
+                }
+
+                Section("Delays") {
+                    // TODO
+                    EmptyView()
+                }
             }
         }
     }
+}
+
+extension ApplianceType: Identifiable {
+    public var id: Self { self }
 }
 
 #if DEBUG

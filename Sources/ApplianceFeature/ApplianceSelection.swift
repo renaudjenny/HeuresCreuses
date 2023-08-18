@@ -53,7 +53,6 @@ public struct ApplianceSelection: Reducer {
         .ifLet(\.$destination, action: /ApplianceSelection.Action.destination) {
             Destination()
         }
-        ._printChanges()
     }
 }
 
