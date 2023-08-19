@@ -23,7 +23,11 @@ public struct ProgramSelectionView: View {
                         Button { viewStore.send(.programTapped(program)) } label: {
                             VStack(alignment: .leading) {
                                 Text(program.name).font(.title3)
-                                Label("\((program.duration/60).formatted()) minutes", systemImage: "timer")
+                                Label(
+                                    program.duration
+                                        .formatted(.units(allowed: [.minutes], width: .wide)),
+                                    systemImage: "timer"
+                                )
                             }
                         }
                         .padding()

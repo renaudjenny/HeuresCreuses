@@ -42,7 +42,7 @@ extension [Operation] {
         let ranges = dateRanges(periods, now: now, calendar: calendar)
         return delays.map {
             let start = now.addingTimeInterval(Double($0.components.seconds))
-            let end = start.addingTimeInterval(program.duration)
+            let end = start.addingTimeInterval(Double(program.duration.components.seconds))
             let startEnd = start...end
 
             let bestOffPeakPeriod = ranges.max { a, b in

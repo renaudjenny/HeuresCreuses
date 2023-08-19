@@ -28,16 +28,24 @@ struct ApplianceFormView: View {
                 }
 
                 Section("Programs") {
-                    // TODO
-                    EmptyView()
+                    ForEach(viewStore.$appliance.programs, content: program)
+                    Button { viewStore.send(.addProgramButtonTapped) } label: {
+                        Label("Add a program", systemImage: "plus.circle")
+                    }
                 }
 
                 Section("Delays") {
                     // TODO
-                    EmptyView()
+                    Button { } label: {
+                        Label("Add a delay", systemImage: "plus.circle")
+                    }
                 }
             }
         }
+    }
+
+    private func program(_ program: Binding<Program>) -> some View {
+        TextField("Name", text: program.name)
     }
 }
 

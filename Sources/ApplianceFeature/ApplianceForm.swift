@@ -9,9 +9,22 @@ public struct ApplianceForm: Reducer {
         }
     }
     public enum Action: BindableAction, Equatable {
+        case addProgramButtonTapped
         case binding(BindingAction<State>)
     }
+
+    @Dependency(\.uuid) var uuid
+
     public var body: some ReducerOf<Self> {
         BindingReducer()
+        Reduce { state, action in
+            switch action {
+            case .addProgramButtonTapped:
+                state.appliance.programs.append(Program(id: uuid()))
+                return .none
+            case .binding:
+                return .none
+            }
+        }
     }
 }

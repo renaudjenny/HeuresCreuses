@@ -9,22 +9,22 @@ public extension Appliance {
             Program(
                 id: UUID(uuidString: "63C16AB1-5700-4178-9DB3-415F3475EBD8")!,
                 name: "Eco 20º",
-                duration: 98 * 60
+                duration: .seconds(98 * 60)
             ),
             Program(
                 id: UUID(uuidString: "5177EB41-7CD3-4FD7-B5BA-CE7568AEDC2F")!,
                 name: "Cotton 40º",
-                duration: 190 * 60
+                duration: .seconds(190 * 60)
             ),
             Program(
                 id: UUID(uuidString: "904701A5-78E1-4065-801B-C54CDC2A9FFF")!,
                 name: "Hand wash",
-                duration: 91 * 60
+                duration: .seconds(91 * 60)
             ),
             Program(
                 id: UUID(uuidString: "08C1B039-C444-4DBB-B81C-C6B1F88AC373")!,
                 name: "Mixed",
-                duration: 87 * 60
+                duration: .seconds(87 * 60)
             ),
         ],
         delays: [
@@ -43,27 +43,27 @@ public extension Appliance {
             Program(
                 id: UUID(uuidString: "3E1C48C3-6FBC-4731-8A73-B1378827747C")!,
                 name: "Eco",
-                duration: 240 * 60
+                duration: .seconds(240 * 60)
             ),
             Program(
                 id: UUID(uuidString: "E1467751-BBD9-4E9C-8FF0-579E9F13A149")!,
                 name: "Prewash",
-                duration: 15 * 60
+                duration: .seconds(15 * 60)
             ),
             Program(
                 id: UUID(uuidString: "A4800539-B772-4DD9-9651-3A1C31F78D8E")!,
                 name: "Fragile",
-                duration: 114 * 60
+                duration: .seconds(114 * 60)
             ),
             Program(
                 id: UUID(uuidString: "08CA212D-B49C-4D71-A770-1D280A38D7CF")!,
                 name: "Quick",
-                duration: 50 * 60
+                duration: .seconds(50 * 60)
             ),
             Program(
                 id: UUID(uuidString: "6E4CDDB3-E5BC-4975-A272-0C7EEA851948")!,
                 name: "Intense",
-                duration: 175 * 60
+                duration: .seconds(175 * 60)
             ),
         ],
         delays: [
