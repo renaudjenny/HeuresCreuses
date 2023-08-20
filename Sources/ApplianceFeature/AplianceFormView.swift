@@ -45,12 +45,22 @@ struct ApplianceFormView: View {
     }
 
     private func program(_ program: Binding<Program>) -> some View {
-        TextField("Name", text: program.name)
+        VStack {
+            TextField("Name", text: program.name)
+            TextField("Duration in minutes", value: program.duration.minutes, format: .number)
+        }
     }
 }
 
 extension ApplianceType: Identifiable {
     public var id: Self { self }
+}
+
+private extension Duration {
+    var minutes: Int {
+        get { Int(components.seconds) / 60 }
+        set { self = .seconds(newValue * 60) }
+    }
 }
 
 #if DEBUG
