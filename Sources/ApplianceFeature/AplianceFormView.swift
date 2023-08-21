@@ -28,7 +28,10 @@ struct ApplianceFormView: View {
                 }
 
                 Section("Programs") {
-                    ForEach(viewStore.$appliance.programs, content: program)
+                    ForEachStore(store.scope(state: \.programs, action: { .programs(id: $0, action: $1) })) { store in
+                        ProgramFormView(store: store)
+                    }
+
                     Button { viewStore.send(.addProgramButtonTapped) } label: {
                         Label("Add a program", systemImage: "plus.circle")
                     }
@@ -43,24 +46,10 @@ struct ApplianceFormView: View {
             }
         }
     }
-
-    private func program(_ program: Binding<Program>) -> some View {
-        VStack {
-            TextField("Name", text: program.name)
-            TextField("Duration in minutes", value: program.duration.minutes, format: .number)
-        }
-    }
 }
 
 extension ApplianceType: Identifiable {
     public var id: Self { self }
-}
-
-private extension Duration {
-    var minutes: Int {
-        get { Int(components.seconds) / 60 }
-        set { self = .seconds(newValue * 60) }
-    }
 }
 
 #if DEBUG
