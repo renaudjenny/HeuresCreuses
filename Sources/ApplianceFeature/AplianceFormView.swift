@@ -32,7 +32,7 @@ struct ApplianceFormView: View {
                         ProgramFormView(store: store)
                     }
 
-                    Button { viewStore.send(.addProgramButtonTapped) } label: {
+                    Button { viewStore.send(.addProgramButtonTapped, animation: .default) } label: {
                         Label("Add a program", systemImage: "plus.circle")
                     }
                 }

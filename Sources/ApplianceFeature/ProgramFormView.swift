@@ -18,10 +18,22 @@ struct ProgramFormView: View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
             DisclosureGroup(
                 viewStore.program.name.isEmpty ? "New program" : viewStore.program.name,
-                isExpanded: viewStore.$isExtended
+                isExpanded: viewStore.$isExtended.animation()
             ) {
-                TextField("Name", text: viewStore.$program.name)
-                TextField("Duration in minutes", value: viewStore.$program.duration.minutes, format: .number)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Name").font(.headline)
+                    TextField(text: viewStore.$program.name, axis: .vertical) {
+                        Label("Name", systemImage: "dishwasher.fill")
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Duration in minutes").font(.headline)
+                    TextField(value: viewStore.$program.duration.minutes, format: .number) {
+                        Label("Duration in minutes", systemImage: "timer")
+                    }
+                    .keyboardType(.numberPad)
+                }
             }
         }
     }
