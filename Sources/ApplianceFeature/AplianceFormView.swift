@@ -31,6 +31,7 @@ struct ApplianceFormView: View {
                     ForEachStore(store.scope(state: \.programs, action: { .programs(id: $0, action: $1) })) { store in
                         ProgramFormView(store: store)
                     }
+                    .onDelete { viewStore.send(.deletePrograms($0)) }
 
                     Button { viewStore.send(.addProgramButtonTapped, animation: .default) } label: {
                         Label("Add a program", systemImage: "plus.circle")

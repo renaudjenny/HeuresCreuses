@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import Foundation
 
 public struct ApplianceForm: Reducer {
     public struct State: Equatable {
@@ -15,6 +16,7 @@ public struct ApplianceForm: Reducer {
     public enum Action: BindableAction, Equatable {
         case addProgramButtonTapped
         case binding(BindingAction<State>)
+        case deletePrograms(IndexSet)
         case programs(id: ProgramForm.State.ID, action: ProgramForm.Action)
     }
 
@@ -28,6 +30,9 @@ public struct ApplianceForm: Reducer {
                 state.appliance.programs.append(Program(id: uuid()))
                 return .none
             case .binding:
+                return .none
+            case let .deletePrograms(indexSet):
+                state.programs.remove(atOffsets: indexSet)
                 return .none
             case .programs:
                 return .none

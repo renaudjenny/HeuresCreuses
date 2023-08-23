@@ -16,10 +16,7 @@ struct ProgramFormView: View {
 
     var body: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
-            DisclosureGroup(
-                viewStore.program.name.isEmpty ? "New program" : viewStore.program.name,
-                isExpanded: viewStore.$isExtended.animation()
-            ) {
+            DisclosureGroup(isExpanded: viewStore.$isExtended.animation()) {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Name").font(.headline)
                     TextField(text: viewStore.$program.name, axis: .vertical) {
@@ -33,6 +30,12 @@ struct ProgramFormView: View {
                         Label("Duration in minutes", systemImage: "timer")
                     }
                     .keyboardType(.numberPad)
+                }
+            } label: {
+                if viewStore.program.name.isEmpty {
+                    Text("*New program*").foregroundColor(.secondary)
+                } else {
+                    Text(viewStore.program.name)
                 }
             }
         }
