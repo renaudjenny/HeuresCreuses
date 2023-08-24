@@ -14,8 +14,10 @@ public struct ApplianceForm: Reducer {
         }
     }
     public enum Action: BindableAction, Equatable {
+        case addDelayButtonTapped
         case addProgramButtonTapped
         case binding(BindingAction<State>)
+        case deleteDelays(IndexSet)
         case deletePrograms(IndexSet)
         case programs(id: ProgramForm.State.ID, action: ProgramForm.Action)
     }
@@ -26,10 +28,16 @@ public struct ApplianceForm: Reducer {
         BindingReducer()
         Reduce { state, action in
             switch action {
+            case .addDelayButtonTapped:
+                state.appliance.delays.append(.seconds(2 * 60 * 60))
+                return .none
             case .addProgramButtonTapped:
                 state.appliance.programs.append(Program(id: uuid()))
                 return .none
             case .binding:
+                return .none
+            case let .deleteDelays(indexSet):
+                state.appliance.delays.remove(atOffsets: indexSet)
                 return .none
             case let .deletePrograms(indexSet):
                 state.programs.remove(atOffsets: indexSet)
@@ -40,12 +48,6 @@ public struct ApplianceForm: Reducer {
         }
         .forEach(\.programs, action: /Action.programs) {
             ProgramForm()
-        }
-        .onChange(of: \.programs) { _, newValue in
-            Reduce { state, action in
-                state.appliance.programs = newValue.map(\.program)
-                return .none
-            }
         }
         .onChange(of: \.appliance.programs) { _, newValue in
             Reduce { state, action in

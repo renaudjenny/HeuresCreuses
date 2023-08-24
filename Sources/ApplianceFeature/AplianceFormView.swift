@@ -39,8 +39,17 @@ struct ApplianceFormView: View {
                 }
 
                 Section("Delays") {
-                    // TODO
-                    Button { } label: {
+                    ForEach(Array(viewStore.appliance.delays.enumerated()), id: \.0) { index, duration in
+                        Stepper(
+                            "^[\(duration.hours) hours](inflect: true)",
+                            value: viewStore.$appliance.delays[index].hours,
+                            in: 1...48
+                        )
+
+                    }
+                    .onDelete { viewStore.send(.deleteDelays($0)) }
+
+                    Button { viewStore.send(.addDelayButtonTapped, animation: .default) } label: {
                         Label("Add a delay", systemImage: "plus.circle")
                     }
                 }
@@ -51,6 +60,13 @@ struct ApplianceFormView: View {
 
 extension ApplianceType: Identifiable {
     public var id: Self { self }
+}
+
+private extension Duration {
+    var hours: Int {
+        get { Int(components.seconds / 60 / 60) }
+        set { self = .seconds(newValue * 60 * 60) }
+    }
 }
 
 #if DEBUG
