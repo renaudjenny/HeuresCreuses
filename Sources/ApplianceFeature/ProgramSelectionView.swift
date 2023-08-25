@@ -50,6 +50,22 @@ public struct ProgramSelectionView: View {
                         action: ProgramSelection.Destination.Action.delays,
                         destination: DelaysView.init
                     )
+                    .sheet(
+                        store: store.scope(
+                            state: \.$destination,
+                            action: ProgramSelection.Action.destination
+                        ),
+                        state: /ProgramSelection.Destination.State.edit,
+                        action: ProgramSelection.Destination.Action.edit,
+                        content: { store in
+                            NavigationStack {
+                                ApplianceFormView(store: store)
+                            }
+                        }
+                    )
+                }
+                Button { viewStore.send(.editApplianceButtonTapped) } label: {
+                    Label("Edit \(viewStore.appliance.name)", systemImage: "pencil")
                 }
             }
         }
