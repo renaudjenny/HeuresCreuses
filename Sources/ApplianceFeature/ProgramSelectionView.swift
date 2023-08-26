@@ -60,6 +60,19 @@ public struct ProgramSelectionView: View {
                         content: { store in
                             NavigationStack {
                                 ApplianceFormView(store: store)
+                                    .navigationTitle("Edit appliance")
+                                    .toolbar {
+                                        ToolbarItem {
+                                            Button { viewStore.send(.editApplianceSaveButtonTapped) } label: {
+                                                Text("Save")
+                                            }
+                                        }
+                                        ToolbarItem(placement: .cancellationAction) {
+                                            Button { viewStore.send(.editApplianceCancelButtonTapped) } label: {
+                                                Text("Cancel")
+                                            }
+                                        }
+                                    }
                             }
                         }
                     )

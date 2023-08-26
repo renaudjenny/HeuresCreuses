@@ -7,8 +7,15 @@ public struct ProgramSelection: Reducer {
     }
     public enum Action: Equatable {
         case programTapped(Program)
+        case delegate(Delegate)
         case destination(PresentationAction<Destination.Action>)
         case editApplianceButtonTapped
+        case editApplianceCancelButtonTapped
+        case editApplianceSaveButtonTapped
+
+        public enum Delegate: Equatable {
+            case applianceUpdated(Appliance)
+        }
     }
 
     public struct Destination: Reducer {
@@ -42,6 +49,8 @@ public struct ProgramSelection: Reducer {
             case let .programTapped(program):
                 state.destination = .optimum(Optimum.State(program: program, appliance: state.appliance))
                 return .none
+            case .delegate:
+                return .none
             case let .destination(.presented(.optimum(.delaysTapped(program)))):
                 state.destination = .delays(Delays.State(program: program, appliance: state.appliance))
                 return .none
@@ -50,10 +59,23 @@ public struct ProgramSelection: Reducer {
             case .editApplianceButtonTapped:
                 state.destination = .edit(ApplianceForm.State(appliance: state.appliance))
                 return .none
+            case .editApplianceCancelButtonTapped:
+                state.destination = nil
+                return .none
+            case .editApplianceSaveButtonTapped:
+                guard case let .edit(editedApplianceState) = state.destination else { return .none }
+                state.destination = nil
+                state.appliance = editedApplianceState.appliance
+                return .none
             }
         }
         .ifLet(\.$destination, action: /Action.destination) {
             Destination()
+        }
+        .onChange(of: \.appliance) { oldValue, newValue in
+            Reduce { state, action in
+                return .send(.delegate(.applianceUpdated(newValue)))
+            }
         }
     }
 }

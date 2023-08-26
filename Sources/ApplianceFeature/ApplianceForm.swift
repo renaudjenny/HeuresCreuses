@@ -55,5 +55,11 @@ public struct ApplianceForm: Reducer {
                 return .none
             }
         }
+        .onChange(of: \.programs) { oldValue, newValue in
+            Reduce { state, action in
+                state.appliance.programs = newValue.map(\.program)
+                return .none
+            }
+        }
     }
 }

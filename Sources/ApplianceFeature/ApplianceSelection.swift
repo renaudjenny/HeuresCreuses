@@ -44,6 +44,12 @@ public struct ApplianceSelection: Reducer {
             case let .applianceTapped(appliance):
                 state.destination = .selection(ProgramSelection.State(appliance: appliance))
                 return .none
+            case let .destination(.presented(.selection(.delegate(action)))):
+                switch action {
+                case let .applianceUpdated(appliance):
+                    state.appliances[id: appliance.id] = appliance
+                    return .none
+                }
             case .destination:
                 return .none
             case .programSelectionDestination:
