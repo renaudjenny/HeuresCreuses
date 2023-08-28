@@ -76,9 +76,27 @@ public struct ProgramSelectionView: View {
                             }
                         }
                     )
+                    .alert(
+                        store: store.scope(
+                            state: \.$destination,
+                            action: ProgramSelection.Action.destination
+                        ),
+                        state: /ProgramSelection.Destination.State.alert,
+                        action: ProgramSelection.Destination.Action.alert
+                    )
                 }
-                Button { viewStore.send(.editApplianceButtonTapped) } label: {
-                    Label("Edit \(viewStore.appliance.name)", systemImage: "pencil")
+                .toolbar {
+                    ToolbarItem {
+                        Button { viewStore.send(.editApplianceButtonTapped) } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                    }
+
+                    ToolbarItem(placement: .destructiveAction) {
+                        Button(role: .destructive) { viewStore.send(.deleteButtonTapped) } label: {
+                            Label("Delete \(viewStore.appliance.name)", systemImage: "trash")
+                        }
+                    }
                 }
             }
         }

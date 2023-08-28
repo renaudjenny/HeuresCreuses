@@ -49,6 +49,9 @@ public struct ApplianceSelection: Reducer {
                 case let .applianceUpdated(appliance):
                     state.appliances[id: appliance.id] = appliance
                     return .none
+                case let .deleteAppliance(id):
+                    state.appliances.remove(id: id)
+                    return .none
                 }
             case .destination:
                 return .none

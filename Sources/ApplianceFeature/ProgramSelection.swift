@@ -8,6 +8,7 @@ public struct ProgramSelection: Reducer {
     public enum Action: Equatable {
         case programTapped(Program)
         case delegate(Delegate)
+        case deleteButtonTapped
         case destination(PresentationAction<Destination.Action>)
         case editApplianceButtonTapped
         case editApplianceCancelButtonTapped
@@ -15,19 +16,26 @@ public struct ProgramSelection: Reducer {
 
         public enum Delegate: Equatable {
             case applianceUpdated(Appliance)
+            case deleteAppliance(id: Appliance.ID)
         }
     }
 
     public struct Destination: Reducer {
         public enum State: Equatable {
+            case alert(AlertState<Action.Alert>)
             case delays(Delays.State)
             case edit(ApplianceForm.State)
             case optimum(Optimum.State)
         }
         public enum Action: Equatable {
+            case alert(Alert)
             case delays(Delays.Action)
             case edit(ApplianceForm.Action)
             case optimum(Optimum.Action)
+
+            public enum Alert: Equatable {
+                case confirmDeletion
+            }
         }
 
         public var body: some ReducerOf<Self> {
@@ -43,6 +51,8 @@ public struct ProgramSelection: Reducer {
         }
     }
 
+    @Dependency(\.dismiss) var dismiss
+
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
@@ -51,6 +61,25 @@ public struct ProgramSelection: Reducer {
                 return .none
             case .delegate:
                 return .none
+            case .deleteButtonTapped:
+                state.destination = .alert(
+                    AlertState {
+                        TextState("Are you sure you want to delete?")
+                    } actions: {
+                        ButtonState(
+                            role: .destructive, action: .confirmDeletion
+                        ) {
+                            TextState("Delete")
+                        }
+                    }
+                )
+                return .none
+            case .destination(.presented(.alert(.confirmDeletion))):
+                state.destination = nil
+                return .run { [id = state.appliance.id] send in
+                    await send(.delegate(.deleteAppliance(id: id)))
+                    await dismiss()
+                }
             case let .destination(.presented(.optimum(.delaysTapped(program)))):
                 state.destination = .delays(Delays.State(program: program, appliance: state.appliance))
                 return .none
