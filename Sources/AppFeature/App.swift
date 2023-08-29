@@ -13,7 +13,7 @@ public struct App: Reducer {
         var date: Date = .distantPast
         var currentPeakStatus: PeakStatus = .unavailable
 
-        var offPeakPeriods: [OffPeakPeriod] = []
+        var offPeakRanges: [ClosedRange<Date>] = []
         @PresentationState var destination: Destination.State?
     }
 
@@ -58,24 +58,23 @@ public struct App: Reducer {
             switch action {
             case .task:
                 state.date = date()
-                return .merge(
-                    updateOffPeakPeriods(state: &state),
-                    .run { send in
-                        for await _ in clock.timer(interval: .seconds(1)) {
-                            await send(.timeChanged(date()))
-                        }
+                state.offPeakRanges = .offPeakRanges(state.periods, now: date(), calendar: calendar)
+                return .run { send in
+                    for await _ in clock.timer(interval: .seconds(1)) {
+                        await send(.timeChanged(date()))
                     }
-                )
+                }
                 .cancellable(id: CancelID.timer)
             case let .timeChanged(date):
                 state.date = date
-                if let currentOffPeak = state.offPeakPeriods.first(where: { ($0.start...$0.end).contains(state.date) }) {
-                    state.currentPeakStatus = .offPeak(until: .seconds(date.distance(to: currentOffPeak.end)))
+                if let currentOffPeak = state.offPeakRanges.first(where: { $0.contains(state.date) }) {
+                    state.currentPeakStatus = .offPeak(until: .seconds(date.distance(to: currentOffPeak.upperBound)))
                     return .none
                 } else {
-                    guard let closestOffPeak = state.offPeakPeriods.first(where: { date.distance(to: $0.start) > 0 })
+                    guard let closestOffPeak = state.offPeakRanges
+                        .first(where: { date.distance(to: $0.lowerBound) > 0 })
                     else { return .none }
-                    state.currentPeakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.start)))
+                    state.currentPeakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.lowerBound)))
                     return .none
                 }
             case .cancel:
@@ -90,33 +89,6 @@ public struct App: Reducer {
         .ifLet(\.$destination, action: /App.Action.destination) {
             Destination()
         }
-    }
-
-    private func updateOffPeakPeriods(state: inout State) -> Effect<Action> {
-        for period in state.periods {
-            var start = period.start
-            start.year = calendar.component(.year, from: date())
-            start.month = calendar.component(.month, from: date())
-            start.day = calendar.component(.day, from: date())
-            var end = period.end
-            end.year = calendar.component(.year, from: date())
-            end.month = calendar.component(.month, from: date())
-            end.day = calendar.component(.day, from: date())
-
-            for day in -1...1 {
-                let day = TimeInterval(day)
-                guard let offPeakStartDate = calendar.date(from: start)?.addingTimeInterval(day * 60 * 60 * 24),
-                      let offPeakEndDate = calendar.date(from: end)?.addingTimeInterval(day * 60 * 60 * 24)
-                else { continue }
-                if offPeakEndDate > offPeakStartDate {
-                    state.offPeakPeriods.append(OffPeakPeriod(start: offPeakStartDate, end: offPeakEndDate))
-                } else {
-                    let offPeakEndDate = offPeakEndDate.addingTimeInterval(60 * 60 * 24)
-                    state.offPeakPeriods.append(OffPeakPeriod(start: offPeakStartDate, end: offPeakEndDate))
-                }
-            }
-        }
-        return .none
     }
 }
 
