@@ -1,14 +1,17 @@
 import ApplianceFeature
 import ComposableArchitecture
+import Models
 import SwiftUI
 
 public struct AppView: View {
     struct ViewState: Equatable {
         let peakStatus: App.PeakStatus
         let formattedDuration: String
+        let notifications: [UserNotification]
 
         init(_ state: App.State) {
             self.peakStatus = state.currentPeakStatus
+            self.notifications = state.notifications
             switch state.currentPeakStatus {
             case .unavailable:
                 self.formattedDuration = ""
@@ -41,8 +44,6 @@ public struct AppView: View {
     private var currentOffPeakStatusView: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
             VStack {
-                Spacer()
-
                 switch viewStore.peakStatus {
                 case .unavailable:
                     Text("Wait a sec...")
@@ -54,7 +55,18 @@ public struct AppView: View {
                         .multilineTextAlignment(.center)
                 }
 
-                Spacer()
+                Section("Planned Notifications") {
+                    List {
+                        ForEach(viewStore.notifications) { notification in
+                            HStack {
+                                Text(notification.message).font(.caption)
+                                // TODO: improve this "distance" to show a nice formatted time
+                                Text("Will be send in \(Date().distance(to: notification.date) / 60, format: .number.precision(.significantDigits(2))) minutes")
+                            }
+                        }
+                    }
+                    .listStyle(.inset)
+                }
 
                 Button { viewStore.send(.appliancesButtonTapped) } label: {
                     Text("Appliance Selection")
@@ -101,19 +113,33 @@ struct AppView_Previews: PreviewProvider {
             App().dependency(\.date, DateGenerator { try! Date("2023-04-10T16:00:00+02:00", strategy: .iso8601) })
         })
         .previewDisplayName("At 16:00")
+
+        Preview(
+            store: Store(
+                initialState: App.State(notifications: [
+                    UserNotification(
+                        id: "0",
+                        message: "White Dishwasher\nProgram Eco\nDelay 3 hour",
+                        date: Date().addingTimeInterval(60 * 60)
+                    ),
+                    UserNotification(
+                        id: "1",
+                        message: "Gray Washing machine\nProgram Intense\nDelay 4 hours",
+                        date: Date().addingTimeInterval(2 * 60 * 60 + 15 * 60)
+                    )
+                ])
+            ) {
+                App()
+            }
+        )
+        .previewDisplayName("With Notifications")
     }
 
     private struct Preview: View {
         let store: StoreOf<App>
 
         var body: some View {
-//            WithViewStore(store, observe: { $0 }) { viewStore in
-//                VStack {
-                    AppView(store: store)
-//                    Divider()
-//                    Text("Current time: \(viewStore.date.formatted())")
-//                }
-//            }
+            AppView(store: store)
         }
     }
 }

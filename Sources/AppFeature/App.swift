@@ -14,6 +14,9 @@ public struct App: Reducer {
         var currentPeakStatus: PeakStatus = .unavailable
 
         var offPeakRanges: [ClosedRange<Date>] = []
+
+        var notifications: [UserNotification] = []
+
         @PresentationState var destination: Destination.State?
     }
 
