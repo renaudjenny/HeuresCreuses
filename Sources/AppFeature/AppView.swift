@@ -59,13 +59,25 @@ public struct AppView: View {
                     List {
                         ForEach(viewStore.notifications) { notification in
                             HStack {
-                                Text(notification.message).font(.caption)
-                                // TODO: improve this "distance" to show a nice formatted time
-                                Text("Will be send in \(Date().distance(to: notification.date) / 60, format: .number.precision(.significantDigits(2))) minutes")
+                                HStack(alignment: .top) {
+                                    Text(notification.message)
+                                        .font(.caption)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+
+
+                                    let relativeDateFormatted = notification.date.formatted(.relative(presentation: .numeric))
+                                    Text("Will be sent \(relativeDateFormatted)")
+                                        .font(.caption.bold())
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .padding()
                             }
                         }
+                        .onDelete { viewStore.send(.deleteNotifications($0)) }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                     }
-                    .listStyle(.inset)
+                    .listStyle(.plain)
                 }
 
                 Button { viewStore.send(.appliancesButtonTapped) } label: {

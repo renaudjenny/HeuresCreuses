@@ -40,6 +40,7 @@ public struct App: Reducer {
         case task
         case timeChanged(Date)
         case cancel
+        case deleteNotifications(IndexSet)
         case appliancesButtonTapped
         case destination(PresentationAction<Destination.Action>)
     }
@@ -53,6 +54,7 @@ public struct App: Reducer {
     @Dependency(\.date) var date
     @Dependency(\.calendar) var calendar
     @Dependency(\.continuousClock) var clock
+    @Dependency(\.userNotificationCenter) var userNotificationCenter
 
     private enum CancelID { case timer }
 
@@ -82,6 +84,11 @@ public struct App: Reducer {
                 }
             case .cancel:
                 return .cancel(id: CancelID.timer)
+            case let .deleteNotifications(indexSet):
+                var ids = indexSet.map { state.notifications[$0].id }
+                userNotificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
+                state.notifications.remove(atOffsets: indexSet)
+                return .none
             case .appliancesButtonTapped:
                 state.destination = .applianceSelection(ApplianceSelection.State())
                 return .none
