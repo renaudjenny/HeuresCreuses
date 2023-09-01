@@ -10,7 +10,6 @@ public struct App: Reducer {
             Period(start: DateComponents(hour: 15, minute: 2), end: DateComponents(hour: 17, minute: 2)),
         ]
 
-        var date: Date = .distantPast
         var currentPeakStatus: PeakStatus = .unavailable
 
         var offPeakRanges: [ClosedRange<Date>] = []
@@ -62,7 +61,6 @@ public struct App: Reducer {
         Reduce { state, action in
             switch action {
             case .task:
-                state.date = date()
                 state.offPeakRanges = .offPeakRanges(state.periods, now: date(), calendar: calendar)
                 return .run { send in
                     for await _ in clock.timer(interval: .seconds(1)) {
@@ -71,8 +69,7 @@ public struct App: Reducer {
                 }
                 .cancellable(id: CancelID.timer)
             case let .timeChanged(date):
-                state.date = date
-                if let currentOffPeak = state.offPeakRanges.first(where: { $0.contains(state.date) }) {
+                if let currentOffPeak = state.offPeakRanges.first(where: { $0.contains(self.date()) }) {
                     state.currentPeakStatus = .offPeak(until: .seconds(date.distance(to: currentOffPeak.upperBound)))
                     return .none
                 } else {
@@ -85,13 +82,19 @@ public struct App: Reducer {
             case .cancel:
                 return .cancel(id: CancelID.timer)
             case let .deleteNotifications(indexSet):
-                var ids = indexSet.map { state.notifications[$0].id }
+                let ids = indexSet.map { state.notifications[$0].id }
                 userNotificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
                 state.notifications.remove(atOffsets: indexSet)
                 return .none
             case .appliancesButtonTapped:
                 state.destination = .applianceSelection(ApplianceSelection.State())
                 return .none
+            case let .destination(.presented(.applianceSelection(.destination(.presented(.selection(.destination(.presented(.optimum(.sendNotification(.delegate(action))))))))))):
+                switch action {
+                case let .notificationAdded(notification):
+                    state.notifications.append(notification)
+                    return .none
+                }
             case .destination:
                 return .none
             }

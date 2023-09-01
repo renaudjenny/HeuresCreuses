@@ -79,13 +79,14 @@ public struct AppView: View {
                     }
                     .listStyle(.plain)
                 }
+//                .fixedSize(horizontal: false, vertical: true)
 
                 Button { viewStore.send(.appliancesButtonTapped) } label: {
                     Text("Appliance Selection")
                 }
                 .buttonStyle(.borderedProminent)
             }
-            .padding()
+            .padding(.vertical)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background {
                 switch viewStore.peakStatus {

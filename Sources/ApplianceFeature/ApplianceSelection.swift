@@ -19,7 +19,6 @@ public struct ApplianceSelection: Reducer {
         case addApplianceSaveButtonTapped
         case applianceTapped(Appliance)
         case destination(PresentationAction<Destination.Action>)
-        case programSelectionDestination(PresentationAction<ProgramSelection.Action>)
     }
 
     public init() {}
@@ -54,8 +53,6 @@ public struct ApplianceSelection: Reducer {
                     return .none
                 }
             case .destination:
-                return .none
-            case .programSelectionDestination:
                 return .none
             }
         }
