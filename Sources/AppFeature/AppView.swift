@@ -43,43 +43,60 @@ public struct AppView: View {
 
     private var currentOffPeakStatusView: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
-            VStack {
+            VStack{
                 switch viewStore.peakStatus {
                 case .unavailable:
                     Text("Wait a sec...")
+                        .padding()
                 case .offPeak:
                     Text("Currently **off peak** until \(viewStore.formattedDuration)")
                         .multilineTextAlignment(.center)
+                        .padding()
                 case .peak:
                     Text("Currently **peak** hour until \(viewStore.formattedDuration)")
                         .multilineTextAlignment(.center)
+                        .padding()
                 }
+
+                Divider()
 
                 Section("Planned Notifications") {
-                    List {
-                        ForEach(viewStore.notifications) { notification in
-                            HStack {
-                                HStack(alignment: .top) {
-                                    Text(notification.message)
-                                        .font(.caption)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if viewStore.notifications.isEmpty {
+                        Text("""
+                        When you want to be rembered by a notification to when it's optimum to start your appliance.
+                        You'll find here all the "to be sent" notifications. You'll also be able to remove them, so \
+                        you won't be spammed.
+                        """)
+                        .font(.caption)
+                        .multilineTextAlignment(.leading)
+                        .padding()
+                    } else {
+                        List {
+                            ForEach(viewStore.notifications) { notification in
+                                HStack {
+                                    HStack(alignment: .top) {
+                                        Text(notification.message)
+                                            .font(.caption)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
 
 
-                                    let relativeDateFormatted = notification.date.formatted(.relative(presentation: .numeric))
-                                    Text("Will be sent \(relativeDateFormatted)")
-                                        .font(.caption.bold())
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        let relativeDateFormatted = notification.date.formatted(.relative(presentation: .numeric))
+                                        Text("Will be sent \(relativeDateFormatted)")
+                                            .font(.caption.bold())
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .padding()
                                 }
-                                .padding()
                             }
+                            .onDelete { viewStore.send(.deleteNotifications($0)) }
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                         }
-                        .onDelete { viewStore.send(.deleteNotifications($0)) }
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
+                        .listStyle(.plain)
                     }
-                    .listStyle(.plain)
                 }
-//                .fixedSize(horizontal: false, vertical: true)
+
+                Spacer()
 
                 Button { viewStore.send(.appliancesButtonTapped) } label: {
                     Text("Appliance Selection")
@@ -98,7 +115,7 @@ public struct AppView: View {
                     Color.green.opacity(20/100).ignoresSafeArea(.all)
                 }
             }
-            .task { @MainActor in viewStore.send(.task) }
+            .task { await viewStore.send(.task).finish() }
         }
     }
 }

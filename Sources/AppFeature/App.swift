@@ -64,7 +64,7 @@ public struct App: Reducer {
                 state.offPeakRanges = .offPeakRanges(state.periods, now: date(), calendar: calendar)
                 return .run { send in
                     for await _ in clock.timer(interval: .seconds(1)) {
-                        await send(.timeChanged(date()))
+                        await send(.timeChanged(date()), animation: .default)
                     }
                 }
                 .cancellable(id: CancelID.timer)
