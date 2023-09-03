@@ -24,6 +24,10 @@ let package = Package(
                 "Models",
             ]
         ),
+        .testTarget(
+            name: "ApplianceFeatureTests",
+            dependencies: ["ApplianceFeature"]
+        ),
         .target(
             name: "AppFeature",
             dependencies: [

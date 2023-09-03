@@ -2,8 +2,8 @@ import ComposableArchitecture
 
 public struct ApplianceSelection: Reducer {
     public struct State: Equatable {
-        var appliances: IdentifiedArrayOf<Appliance>
-        @PresentationState var destination: Destination.State?
+        public var appliances: IdentifiedArrayOf<Appliance>
+        @PresentationState public var destination: Destination.State?
 
         public init(
             appliances: IdentifiedArrayOf<Appliance> = [.washingMachine, .dishwasher],
