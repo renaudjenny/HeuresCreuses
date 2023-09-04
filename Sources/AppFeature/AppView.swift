@@ -6,19 +6,15 @@ import SwiftUI
 public struct AppView: View {
     struct ViewState: Equatable {
         let peakStatus: App.PeakStatus
-        let formattedDuration: String
+        let duration: Duration
         let notifications: [UserNotification]
 
         init(_ state: App.State) {
             self.peakStatus = state.currentPeakStatus
             self.notifications = state.notifications
             switch state.currentPeakStatus {
-            case .unavailable:
-                self.formattedDuration = ""
-            case let .offPeak(until: duration):
-                self.formattedDuration = duration.formatted(.units(allowed: [.hours, .minutes], width: .wide))
-            case let .peak(until: duration):
-                self.formattedDuration = duration.formatted(.units(allowed: [.hours, .minutes], width: .wide))
+            case .unavailable: self.duration = .zero
+            case let .offPeak(duration), let .peak(until: duration): self.duration = duration
             }
         }
     }
@@ -44,19 +40,10 @@ public struct AppView: View {
     private var currentOffPeakStatusView: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
             VStack{
-                switch viewStore.peakStatus {
-                case .unavailable:
-                    Text("Wait a sec...")
-                        .padding()
-                case .offPeak:
-                    Text("Currently **off peak** until \(viewStore.formattedDuration)")
-                        .multilineTextAlignment(.center)
-                        .padding()
-                case .peak:
-                    Text("Currently **peak** hour until \(viewStore.formattedDuration)")
-                        .multilineTextAlignment(.center)
-                        .padding()
-                }
+                viewStore.peakStatusView
+                    .padding()
+                    .background { viewStore.backgroundColor }
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
 
                 Divider()
 
@@ -105,18 +92,47 @@ public struct AppView: View {
             }
             .padding(.vertical)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background {
-                switch viewStore.peakStatus {
-                case .unavailable:
-                    Color.clear
-                case .peak:
-                    Color.red.opacity(20/100).ignoresSafeArea(.all)
-                case .offPeak:
-                    Color.green.opacity(20/100).ignoresSafeArea(.all)
-                }
-            }
+            .background { viewStore.backgroundColor.ignoresSafeArea(.all) }
             .task { await viewStore.send(.task).finish() }
         }
+    }
+}
+
+private extension AppView.ViewState {
+    var backgroundColor: Color {
+        switch peakStatus {
+        case .unavailable: return Color.clear
+        case .peak: return Color.red.opacity(20/100)
+        case .offPeak:  return Color.green.opacity(20/100)
+        }
+    }
+
+    @ViewBuilder
+    var peakStatusView: some View {
+        let relativeNextChange = "Until \(duration.formatted(.units(allowed: [.hours, .minutes], width: .wide)))"
+        Group {
+            switch peakStatus {
+            case .unavailable:
+                Text("Wait a sec...")
+                    .font(.body)
+            case .offPeak:
+                VStack {
+                    Text("Currently **off peak**")
+                        .font(.title3)
+                    Text(relativeNextChange)
+                        .font(.headline)
+                }
+            case .peak:
+                VStack {
+                    Text("Currently **peak** hour")
+                        .font(.title3)
+                    Text(relativeNextChange)
+                        .font(.headline)
+                }
+            }
+        }
+        .multilineTextAlignment(.center)
+        .padding()
     }
 }
 
