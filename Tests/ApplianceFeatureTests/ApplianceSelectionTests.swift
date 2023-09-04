@@ -14,4 +14,17 @@ final class ApplianceSelectionTests: XCTestCase {
             $0.destination = .addAppliance(ApplianceForm.State(appliance: Appliance(id: UUID(0))))
         }
     }
+
+    func testAddApplianceCancel() async throws {
+        let store = TestStore(
+            initialState: ApplianceSelection.State(
+                destination: .addAppliance(ApplianceForm.State(appliance: Appliance(id: UUID(0))))
+            )
+        ) {
+            ApplianceSelection()
+        }
+        await store.send(.addApplianceCancelButtonTapped) {
+            $0.destination = nil
+        }
+    }
 }
