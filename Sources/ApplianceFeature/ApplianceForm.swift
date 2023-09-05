@@ -3,8 +3,8 @@ import Foundation
 
 public struct ApplianceForm: Reducer {
     public struct State: Equatable {
-        @BindingState var appliance: Appliance
-        var programs: IdentifiedArrayOf<ProgramForm.State>
+        @BindingState public var appliance: Appliance
+        public var programs: IdentifiedArrayOf<ProgramForm.State>
 
         public init(appliance: Appliance) {
             self.appliance = appliance

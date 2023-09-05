@@ -27,4 +27,24 @@ final class ApplianceSelectionTests: XCTestCase {
             $0.destination = nil
         }
     }
+
+    func testAddApplianceSave() async throws {
+        var appliance = Appliance(id: UUID(0))
+        let store = TestStore(
+            initialState: ApplianceSelection.State(
+                destination: .addAppliance(ApplianceForm.State(appliance: appliance))
+            )
+        ) {
+            ApplianceSelection()
+        }
+        appliance.name = "Test appliance"
+        await store.send(.destination(.presented(.addAppliance(.set(\.$appliance, appliance))))) {
+            $0.destination = .addAppliance(ApplianceForm.State(appliance: appliance))
+        }
+
+        await store.send(.addApplianceSaveButtonTapped) {
+            $0.appliances.append(appliance)
+            $0.destination = nil
+        }
+    }
 }
