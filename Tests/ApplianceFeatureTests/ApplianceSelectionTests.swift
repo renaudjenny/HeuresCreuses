@@ -47,4 +47,20 @@ final class ApplianceSelectionTests: XCTestCase {
             $0.destination = nil
         }
     }
+
+    func testApplianceNavigation() async throws {
+        let appliance = Appliance(id: UUID(0))
+        func testAddApplianceCancel() async throws {
+            let store = TestStore(
+                initialState: ApplianceSelection.State(
+                    appliances: [appliance]
+                )
+            ) {
+                ApplianceSelection()
+            }
+            await store.send(.applianceTapped(appliance)) {
+                $0.destination = .selection(ProgramSelection.State(appliance: appliance))
+            }
+        }
+    }
 }

@@ -2,8 +2,13 @@ import ComposableArchitecture
 
 public struct ProgramSelection: Reducer {
     public struct State: Equatable {
-        var appliance: Appliance
-        @PresentationState var destination: Destination.State?
+        public var appliance: Appliance
+        @PresentationState public var destination: Destination.State?
+
+        public init(appliance: Appliance, destination: Destination.State? = nil) {
+            self.appliance = appliance
+            self.destination = destination
+        }
     }
     public enum Action: Equatable {
         case programTapped(Program)
