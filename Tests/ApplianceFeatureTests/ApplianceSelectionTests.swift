@@ -63,4 +63,25 @@ final class ApplianceSelectionTests: XCTestCase {
             }
         }
     }
+
+    func testUpdateAppliance() async throws {
+        var appliance = Appliance(id: UUID(0))
+        let store = TestStore(
+            initialState: ApplianceSelection.State(
+                appliances: [appliance],
+                destination: .selection(ProgramSelection.State(
+                    appliance: appliance,
+                    destination: .edit(ApplianceForm.State(appliance: appliance))
+                ))
+            )
+        ) {
+            ApplianceSelection()
+        } withDependencies: {
+            $0.uuid = .incrementing
+        }
+        appliance.name = "Updated appliance name"
+        await store.send(.destination(.presented(.selection(.delegate(.applianceUpdated(appliance)))))) {
+            $0.appliances[id: appliance.id] = appliance
+        }
+    }
 }
