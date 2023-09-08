@@ -84,4 +84,24 @@ final class ApplianceSelectionTests: XCTestCase {
             $0.appliances[id: appliance.id] = appliance
         }
     }
+
+    func testDeletateAppliance() async throws {
+        let appliance = Appliance(id: UUID(0))
+        let store = TestStore(
+            initialState: ApplianceSelection.State(
+                appliances: [appliance],
+                destination: .selection(ProgramSelection.State(
+                    appliance: appliance,
+                    destination: .edit(ApplianceForm.State(appliance: appliance))
+                ))
+            )
+        ) {
+            ApplianceSelection()
+        } withDependencies: {
+            $0.uuid = .incrementing
+        }
+        await store.send(.destination(.presented(.selection(.delegate(.deleteAppliance(id: appliance.id)))))) {
+            $0.appliances.remove(appliance)
+        }
+    }
 }
