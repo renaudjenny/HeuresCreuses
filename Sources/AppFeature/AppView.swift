@@ -27,7 +27,7 @@ public struct AppView: View {
 
     public var body: some View {
         NavigationStack {
-            currentOffPeakStatusView
+            content
                 .navigationDestination(
                     store: store.scope(state: \.$destination, action: { .destination($0) }),
                     state: /App.Destination.State.applianceSelection,
@@ -37,53 +37,67 @@ public struct AppView: View {
         }
     }
 
-    private var currentOffPeakStatusView: some View {
+    private var content: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
-            VStack{
-                viewStore.peakStatusView
-                    .padding()
-                    .background { viewStore.backgroundColor }
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            VStack {
+                ScrollView {
+                    viewStore.peakStatusView
+                        .padding()
+                        .background { viewStore.backgroundColor }
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
 
-                Divider()
+                    if case .peak = viewStore.peakStatus {
+                        VStack {
+                            Text("Do you want to be notified when it's the next off peak?")
+                                .multilineTextAlignment(.center)
 
-                Section("Planned Notifications") {
-                    if viewStore.notifications.isEmpty {
-                        Text("""
+                            Button { } label: {
+                                Label("Send me a notification", systemImage: "bell.badge")
+                            }
+                        }
+                        .padding()
+                    }
+
+                    Divider()
+                        .padding()
+
+                    Section("Planned Notifications") {
+                        if viewStore.notifications.isEmpty {
+                            Text("""
                         When you want to be rembered by a notification to when it's optimum to start your appliance.
                         You'll find here all the "to be sent" notifications. You'll also be able to remove them, so \
                         you won't be spammed.
                         """)
-                        .font(.caption)
-                        .multilineTextAlignment(.leading)
-                        .padding()
-                    } else {
-                        List {
-                            ForEach(viewStore.notifications) { notification in
-                                HStack {
-                                    HStack(alignment: .top) {
-                                        Text(notification.message)
-                                            .font(.caption)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.caption)
+                            .multilineTextAlignment(.leading)
+                            .padding()
+                        } else {
+                            List {
+                                ForEach(viewStore.notifications) { notification in
+                                    HStack {
+                                        HStack(alignment: .top) {
+                                            Text(notification.message)
+                                                .font(.caption)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
 
 
-                                        let relativeDateFormatted = notification.date.formatted(.relative(presentation: .numeric))
-                                        Text("Will be sent \(relativeDateFormatted)")
-                                            .font(.caption.bold())
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            let relativeDateFormatted = notification.date
+                                                .formatted(.relative(presentation: .numeric))
+                                            Text("Will be sent \(relativeDateFormatted)")
+                                                .font(.caption.bold())
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                        }
+                                        .padding()
                                     }
-                                    .padding()
                                 }
+                                .onDelete { viewStore.send(.deleteNotifications($0)) }
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
                             }
-                            .onDelete { viewStore.send(.deleteNotifications($0)) }
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
+                            .listStyle(.plain)
                         }
-                        .listStyle(.plain)
                     }
                 }
-
-                Spacer()
 
                 Button { viewStore.send(.appliancesButtonTapped) } label: {
                     Text("Appliance Selection")
