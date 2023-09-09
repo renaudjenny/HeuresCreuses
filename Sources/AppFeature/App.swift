@@ -5,18 +5,24 @@ import Models
 
 public struct App: Reducer {
     public struct State: Equatable {
-        let periods: [Period] = [
-            Period(start: DateComponents(hour: 2, minute: 2), end: DateComponents(hour: 8, minute: 2)),
-            Period(start: DateComponents(hour: 15, minute: 2), end: DateComponents(hour: 17, minute: 2)),
-        ]
+        public var periods: [Period] = .example
+        public var currentPeakStatus: PeakStatus = .unavailable
+        public var offPeakRanges: [ClosedRange<Date>] = []
+        public var notifications: [UserNotification] = []
+        @PresentationState public var destination: Destination.State?
 
-        var currentPeakStatus: PeakStatus = .unavailable
-
-        var offPeakRanges: [ClosedRange<Date>] = []
-
-        var notifications: [UserNotification] = []
-
-        @PresentationState var destination: Destination.State?
+        public init(
+            periods: [Period] = .example,
+            currentPeakStatus: PeakStatus = .unavailable,
+            offPeakRanges: [ClosedRange<Date>] = [],
+            notifications: [UserNotification] = [],
+            destination: Destination.State? = nil
+        ) {
+            self.currentPeakStatus = currentPeakStatus
+            self.offPeakRanges = offPeakRanges
+            self.notifications = notifications
+            self.destination = destination
+        }
     }
 
     public struct Destination: Reducer {
@@ -49,6 +55,8 @@ public struct App: Reducer {
         case peak(until: Duration)
         case unavailable
     }
+
+    public init() {}
 
     @Dependency(\.date) var date
     @Dependency(\.calendar) var calendar

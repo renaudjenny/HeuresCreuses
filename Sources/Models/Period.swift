@@ -11,6 +11,14 @@ public struct Period: Equatable {
     }
 }
 
+public extension [Period] {
+    static let example: Self = [
+        Period(start: DateComponents(hour: 2, minute: 2), end: DateComponents(hour: 8, minute: 2)),
+        Period(start: DateComponents(hour: 15, minute: 2), end: DateComponents(hour: 17, minute: 2)),
+    ]
+}
+
+// TODO: add a couple of unit tests
 public extension [ClosedRange<Date>] {
     static func offPeakRanges(_ periods: [Period], now: Date, calendar: Calendar) -> Self {
         periods.flatMap { period -> [ClosedRange<Date>] in
