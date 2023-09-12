@@ -1,5 +1,7 @@
 import AppFeature
+import ApplianceFeature
 import ComposableArchitecture
+import Models
 import XCTest
 
 typealias App = AppFeature.App
@@ -46,6 +48,36 @@ final class AppFeatureTests: XCTestCase {
         await store.send(.cancel)
         await store.send(.timeChanged(date)) {
             $0.currentPeakStatus = .offPeak(until: .seconds(date.distance(to: currentOffPeak.upperBound)))
+        }
+    }
+
+    func testNotificationHasBeenSet() async throws {
+        let appliance = Appliance.dishwasher
+        let program = try XCTUnwrap(appliance.programs.first)
+        let store = TestStore(
+            initialState: App.State(
+                destination: .applianceSelection(ApplianceSelection.State(
+                    destination: .selection(ProgramSelection.State(
+                        appliance: appliance,
+                        destination: .optimum(Optimum.State(
+                            program: program,
+                            appliance: appliance
+                        ))
+                    ))
+                ))
+            )
+        ) {
+            App()
+        }
+        let notification = UserNotification(id: "1234", message: "Test notification", date: .now)
+        await store.send(.destination(.presented(
+            .applianceSelection(.destination(.presented(
+                .selection(.destination(.presented(
+                    .optimum(.sendNotification(.delegate(.notificationAdded(notification))))
+                )))
+            )))
+        ))) {
+            $0.notifications.append(notification)
         }
     }
 }
