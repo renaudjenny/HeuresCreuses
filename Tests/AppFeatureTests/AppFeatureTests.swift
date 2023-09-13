@@ -80,4 +80,22 @@ final class AppFeatureTests: XCTestCase {
             $0.notifications.append(notification)
         }
     }
+
+    func testDeleteNotification() async throws {
+        let notification = UserNotification(id: "1234", message: "Test notification", date: .now)
+        let store = TestStore(
+            initialState: App.State(
+                notifications: [notification]
+            )
+        ) {
+            App()
+        } withDependencies: {
+            $0.userNotificationCenter.$removePendingNotificationRequests = { @Sendable ids in
+                XCTAssertEqual(ids, ["1234"])
+            }
+        }
+        await store.send(.deleteNotifications(IndexSet(integer: 0))) {
+            $0.notifications.remove(at: 0)
+        }
+    }
 }
