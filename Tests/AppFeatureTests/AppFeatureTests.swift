@@ -98,4 +98,13 @@ final class AppFeatureTests: XCTestCase {
             $0.notifications.remove(at: 0)
         }
     }
+
+    func testNavigateToApplianceSelection() async throws {
+        let store = TestStore(initialState: App.State()) {
+            App()
+        }
+        await store.send(.appliancesButtonTapped) {
+            $0.destination = .applianceSelection(ApplianceSelection.State())
+        }
+    }
 }
