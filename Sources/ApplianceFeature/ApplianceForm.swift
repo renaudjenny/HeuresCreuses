@@ -24,6 +24,8 @@ public struct ApplianceForm: Reducer {
 
     @Dependency(\.uuid) var uuid
 
+    public init() {}
+
     public var body: some ReducerOf<Self> {
         BindingReducer()
         Reduce { state, action in
