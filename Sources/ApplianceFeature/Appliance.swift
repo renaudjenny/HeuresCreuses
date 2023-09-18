@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Appliance: Identifiable, Equatable {
+public struct Appliance: Identifiable, Equatable, Codable {
     public var id: UUID
     public var name: String
     public var type: ApplianceType
@@ -22,7 +22,7 @@ public struct Appliance: Identifiable, Equatable {
     }
 }
 
-public enum ApplianceType: CaseIterable {
+public enum ApplianceType: CaseIterable, Codable {
     case washingMachine
     case dishWasher
 }

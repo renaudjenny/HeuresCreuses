@@ -1,5 +1,6 @@
 import ApplianceFeature
 import ComposableArchitecture
+import DataManagerDependency
 import Foundation
 import Models
 
@@ -62,6 +63,7 @@ public struct App: Reducer {
     @Dependency(\.calendar) var calendar
     @Dependency(\.continuousClock) var clock
     @Dependency(\.userNotificationCenter) var userNotificationCenter
+    @Dependency(\.dataManager.save) var saveData
 
     private enum CancelID { case timer }
 
@@ -109,6 +111,17 @@ public struct App: Reducer {
         }
         .ifLet(\.$destination, action: /App.Action.destination) {
             Destination()
+        }
+
+        Reduce { state, _ in
+            let appliances = (/App.Destination.State.applianceSelection).extract(from: state.destination)?.appliances
+            return .run { [appliances] _ in
+                enum CancelID { case saveDebounce }
+                try await withTaskCancellation(id: CancelID.saveDebounce, cancelInFlight: true) {
+                    try await self.clock.sleep(for: .seconds(1))
+                    try self.saveData(try JSONEncoder().encode(appliances), .appliances)
+                }
+            }
         }
     }
 }

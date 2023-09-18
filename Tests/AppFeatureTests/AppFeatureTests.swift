@@ -15,8 +15,9 @@ final class AppFeatureTests: XCTestCase {
             App()
         } withDependencies: {
             $0.calendar = calendar
+            $0.continuousClock = ImmediateClock()
+            $0.dataManager = .mock()
             $0.date = .constant(date)
-            $0.continuousClock = TestClock()
         }
         let offPeakRanges: [ClosedRange<Date>] = .offPeakRanges(store.state.periods, now: date, calendar: calendar)
         let closestOffPeak = try XCTUnwrap(offPeakRanges.first { date.distance(to: $0.lowerBound) > 0 })
@@ -27,6 +28,7 @@ final class AppFeatureTests: XCTestCase {
         await store.send(.timeChanged(date)) {
             $0.currentPeakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.lowerBound)))
         }
+        await store.finish()
     }
 
     func testTimeChangedAndItOffPeakHour() async throws {
@@ -36,8 +38,9 @@ final class AppFeatureTests: XCTestCase {
             App()
         } withDependencies: {
             $0.calendar = calendar
+            $0.continuousClock = ImmediateClock()
+            $0.dataManager = .mock()
             $0.date = .constant(date)
-            $0.continuousClock = TestClock()
         }
 
         let offPeakRanges: [ClosedRange<Date>] = .offPeakRanges(store.state.periods, now: date, calendar: calendar)
@@ -49,6 +52,7 @@ final class AppFeatureTests: XCTestCase {
         await store.send(.timeChanged(date)) {
             $0.currentPeakStatus = .offPeak(until: .seconds(date.distance(to: currentOffPeak.upperBound)))
         }
+        await store.finish()
     }
 
     func testNotificationHasBeenSet() async throws {
@@ -68,6 +72,9 @@ final class AppFeatureTests: XCTestCase {
             )
         ) {
             App()
+        } withDependencies: {
+            $0.continuousClock = ImmediateClock()
+            $0.dataManager = .mock()
         }
         let notification = UserNotification(id: "1234", message: "Test notification", date: .now)
         await store.send(.destination(.presented(
@@ -79,6 +86,7 @@ final class AppFeatureTests: XCTestCase {
         ))) {
             $0.notifications.append(notification)
         }
+        await store.finish()
     }
 
     func testDeleteNotification() async throws {
@@ -90,6 +98,8 @@ final class AppFeatureTests: XCTestCase {
         ) {
             App()
         } withDependencies: {
+            $0.continuousClock = ImmediateClock()
+            $0.dataManager = .mock()
             $0.userNotificationCenter.$removePendingNotificationRequests = { @Sendable ids in
                 XCTAssertEqual(ids, ["1234"])
             }
@@ -97,14 +107,19 @@ final class AppFeatureTests: XCTestCase {
         await store.send(.deleteNotifications(IndexSet(integer: 0))) {
             $0.notifications.remove(at: 0)
         }
+        await store.finish()
     }
 
     func testNavigateToApplianceSelection() async throws {
         let store = TestStore(initialState: App.State()) {
             App()
+        } withDependencies: {
+            $0.continuousClock = ImmediateClock()
+            $0.dataManager = .mock()
         }
         await store.send(.appliancesButtonTapped) {
             $0.destination = .applianceSelection(ApplianceSelection.State())
         }
+        await store.finish()
     }
 }

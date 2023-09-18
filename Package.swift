@@ -9,6 +9,7 @@ let package = Package(
     products: [
         .library(name: "ApplianceFeature", targets: ["ApplianceFeature"]),
         .library(name: "AppFeature", targets: ["AppFeature"]),
+        .library(name: "DataManagerDependency", targets: ["DataManagerDependency"]),
         .library(name: "Models", targets: ["Models"]),
     ],
     dependencies: [
@@ -33,6 +34,7 @@ let package = Package(
             dependencies: [
                 "ApplianceFeature",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "DataManagerDependency",
                 "Models",
             ]
         ),
@@ -40,6 +42,7 @@ let package = Package(
             name: "AppFeatureTests",
             dependencies: ["AppFeature"]
         ),
+        .target(name: "DataManagerDependency", dependencies: []),
         .target(
             name: "Models",
             dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]

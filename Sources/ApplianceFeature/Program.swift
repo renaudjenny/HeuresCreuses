@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Program: Identifiable, Equatable, Hashable {
+public struct Program: Identifiable, Equatable, Hashable, Codable {
     public var id: UUID
     public var name: String
     public var duration: Duration
