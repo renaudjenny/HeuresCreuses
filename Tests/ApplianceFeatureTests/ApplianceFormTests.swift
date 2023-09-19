@@ -25,4 +25,15 @@ final class ApplianceFormTests: XCTestCase {
             $0.programs.append(ProgramForm.State(program: program))
         }
     }
+
+    func testDeleteDelays() async throws {
+        var appliance = Appliance.dishwasher
+        appliance.delays.append(.seconds(2 * 60 * 60))
+        let store = TestStore(initialState: ApplianceForm.State(appliance: appliance)) {
+            ApplianceForm()
+        }
+        await store.send(.deleteDelays(IndexSet(integer: 0))) {
+            $0.appliance.delays.remove(at: 0)
+        }
+    }
 }
