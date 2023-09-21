@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4C06EC0129E098F90050E753"
-               BuildableName = "HeuresCreuses.app"
-               BlueprintName = "HeuresCreuses"
+               BlueprintIdentifier = "4CC951E329E5EFE60022C537"
+               BuildableName = "Heures Creuses.app"
+               BlueprintName = "HeuresCreuses Watch App"
                ReferencedContainer = "container:HeuresCreuses.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -43,9 +43,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4C06EC0129E098F90050E753"
-            BuildableName = "HeuresCreuses.app"
-            BlueprintName = "HeuresCreuses"
+            BlueprintIdentifier = "4CC951E329E5EFE60022C537"
+            BuildableName = "Heures Creuses.app"
+            BlueprintName = "HeuresCreuses Watch App"
             ReferencedContainer = "container:HeuresCreuses.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -60,9 +60,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "4C06EC0129E098F90050E753"
-            BuildableName = "HeuresCreuses.app"
-            BlueprintName = "HeuresCreuses"
+            BlueprintIdentifier = "4CC951E329E5EFE60022C537"
+            BuildableName = "Heures Creuses.app"
+            BlueprintName = "HeuresCreuses Watch App"
             ReferencedContainer = "container:HeuresCreuses.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
