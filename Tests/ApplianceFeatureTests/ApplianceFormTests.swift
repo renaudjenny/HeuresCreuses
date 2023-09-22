@@ -27,13 +27,21 @@ final class ApplianceFormTests: XCTestCase {
     }
 
     func testDeleteDelays() async throws {
-        var appliance = Appliance.dishwasher
-        appliance.delays.append(.seconds(2 * 60 * 60))
-        let store = TestStore(initialState: ApplianceForm.State(appliance: appliance)) {
+        let store = TestStore(initialState: ApplianceForm.State(appliance: .dishwasher)) {
             ApplianceForm()
         }
-        await store.send(.deleteDelays(IndexSet(integer: 0))) {
+        await store.send(.deleteDelays(IndexSet(integersIn: 0..<1))) {
             $0.appliance.delays.remove(at: 0)
+        }
+    }
+
+    func testDeletePrograms() async throws {
+        let store = TestStore(initialState: ApplianceForm.State(appliance: .dishwasher)) {
+            ApplianceForm()
+        }
+        await store.send(.deletePrograms(IndexSet(integersIn: 0..<1))) {
+            $0.programs.remove(at: 0)
+            $0.appliance.programs.remove(at: 0)
         }
     }
 }
