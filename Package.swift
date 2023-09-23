@@ -42,7 +42,10 @@ let package = Package(
             name: "AppFeatureTests",
             dependencies: ["AppFeature"]
         ),
-        .target(name: "DataManagerDependency", dependencies: []),
+        .target(
+            name: "DataManagerDependency",
+            dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]
+        ),
         .target(
             name: "Models",
             dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]

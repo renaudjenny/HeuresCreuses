@@ -4,6 +4,10 @@ import DataManagerDependency
 import Foundation
 import Models
 
+#if canImport(NotificationCenter)
+import NotificationCenter
+#endif
+
 public struct App: Reducer {
     public struct State: Equatable {
         public var periods: [Period] = .example
@@ -12,6 +16,24 @@ public struct App: Reducer {
         public var notifications: [UserNotification] = []
         @PresentationState public var destination: Destination.State?
 
+        #if canImport(NotificationCenter)
+        var notificationAuthorizationStatus: UNAuthorizationStatus
+
+        public init(
+            periods: [Period] = .example,
+            currentPeakStatus: PeakStatus = .unavailable,
+            offPeakRanges: [ClosedRange<Date>] = [],
+            notifications: [UserNotification] = [],
+            destination: Destination.State? = nil,
+            notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
+        ) {
+            self.currentPeakStatus = currentPeakStatus
+            self.offPeakRanges = offPeakRanges
+            self.notifications = notifications
+            self.destination = destination
+            self.notificationAuthorizationStatus = notificationAuthorizationStatus
+        }
+        #else
         public init(
             periods: [Period] = .example,
             currentPeakStatus: PeakStatus = .unavailable,
@@ -24,6 +46,7 @@ public struct App: Reducer {
             self.notifications = notifications
             self.destination = destination
         }
+        #endif
     }
 
     public struct Destination: Reducer {
@@ -43,12 +66,16 @@ public struct App: Reducer {
     }
 
     public enum Action: Equatable {
-        case task
-        case timeChanged(Date)
+        case appliancesButtonTapped
         case cancel
         case deleteNotifications(IndexSet)
-        case appliancesButtonTapped
         case destination(PresentationAction<Destination.Action>)
+        case task
+        case timeChanged(Date)
+        #if canImport(NotificationCenter)
+        case offPeakNotificationButtonTapped
+        case notificationStatusChanged(UNAuthorizationStatus)
+        #endif
     }
 
     public enum PeakStatus: Equatable {
@@ -64,12 +91,31 @@ public struct App: Reducer {
     @Dependency(\.continuousClock) var clock
     @Dependency(\.userNotificationCenter) var userNotificationCenter
     @Dependency(\.dataManager.save) var saveData
+    @Dependency(\.uuid) var uuid
 
     private enum CancelID { case timer }
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .appliancesButtonTapped:
+                state.destination = .applianceSelection(ApplianceSelection.State())
+                return .none
+            case .cancel:
+                return .cancel(id: CancelID.timer)
+            case let .deleteNotifications(indexSet):
+                let ids = indexSet.map { state.notifications[$0].id }
+                userNotificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
+                state.notifications.remove(atOffsets: indexSet)
+                return .none
+            case let .destination(.presented(.applianceSelection(.destination(.presented(.selection(.destination(.presented(.optimum(.sendNotification(.delegate(action))))))))))):
+                switch action {
+                case let .notificationAdded(notification):
+                    state.notifications.append(notification)
+                    return .none
+                }
+            case .destination:
+                return .none
             case .task:
                 state.offPeakRanges = .offPeakRanges(state.periods, now: date(), calendar: calendar)
                 return .run { send in
@@ -89,24 +135,45 @@ public struct App: Reducer {
                     state.currentPeakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.lowerBound)))
                     return .none
                 }
-            case .cancel:
-                return .cancel(id: CancelID.timer)
-            case let .deleteNotifications(indexSet):
-                let ids = indexSet.map { state.notifications[$0].id }
-                userNotificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
-                state.notifications.remove(atOffsets: indexSet)
-                return .none
-            case .appliancesButtonTapped:
-                state.destination = .applianceSelection(ApplianceSelection.State())
-                return .none
-            case let .destination(.presented(.applianceSelection(.destination(.presented(.selection(.destination(.presented(.optimum(.sendNotification(.delegate(action))))))))))):
-                switch action {
-                case let .notificationAdded(notification):
-                    state.notifications.append(notification)
-                    return .none
+                #if canImport(NotificationCenter)
+                case .offPeakNotificationButtonTapped:
+                    return .run { send in
+                        let notificationSettings = await userNotificationCenter.notificationSettings()
+                        let status = notificationSettings.authorizationStatus
+                        await send(.notificationStatusChanged(status))
+
+                        if status == .notDetermined {
+                            guard try await self.userNotificationCenter.requestAuthorization(options: [.alert])
+                            else { return }
+                            await send(.notificationStatusChanged(userNotificationCenter.notificationSettings().authorizationStatus))
+                        }
+                    }
+                case let .notificationStatusChanged(status):
+                state.notificationAuthorizationStatus = status
+                guard [.authorized, .ephemeral].contains(status),
+                      case let .peak(durationBeforeOffPeak) = state.currentPeakStatus
+                else { return .none }
+
+                return .run { [state] _ in
+                    let identifier = uuid().uuidString
+                    let content = UNMutableNotificationContent()
+                    content.title = "Off peak period is starting"
+                    content.body = "Optimise your electricity bill by starting your appliance now."
+                    let timeInterval = TimeInterval(durationBeforeOffPeak.components.seconds)
+                    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
+
+                    try await self.userNotificationCenter.add(
+                        .init(
+                            identifier: identifier,
+                            content: content,
+                            trigger: trigger
+                        )
+                    )
+
+                    let date = date().addingTimeInterval(timeInterval)
+                    let notification = UserNotification(id: identifier, message: content.body, date: date)
                 }
-            case .destination:
-                return .none
+                #endif
             }
         }
         .ifLet(\.$destination, action: /App.Action.destination) {

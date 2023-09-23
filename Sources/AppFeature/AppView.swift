@@ -51,9 +51,11 @@ public struct AppView: View {
                             Text("Do you want to be notified when it's the next off peak?")
                                 .multilineTextAlignment(.center)
 
-                            Button { } label: {
+                            #if canImport(NotificationCenter)
+                            Button { viewStore.send(.offPeakNotificationButtonTapped) } label: {
                                 Label("Send me a notification", systemImage: "bell.badge")
                             }
+                            #endif
                         }
                         .padding()
                     }
@@ -61,6 +63,7 @@ public struct AppView: View {
                     Divider()
                         .padding()
 
+                    #if canImport(NotificationCenter)
                     Section("Planned Notifications") {
                         if viewStore.notifications.isEmpty {
                             Text("""
@@ -97,6 +100,7 @@ public struct AppView: View {
                             .listStyle(.plain)
                         }
                     }
+                    #endif
                 }
 
                 Button { viewStore.send(.appliancesButtonTapped) } label: {
