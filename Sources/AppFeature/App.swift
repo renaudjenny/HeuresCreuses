@@ -73,8 +73,9 @@ public struct App: Reducer {
         case task
         case timeChanged(Date)
         #if canImport(NotificationCenter)
-        case offPeakNotificationButtonTapped
         case notificationStatusChanged(UNAuthorizationStatus)
+        case offPeakNotificationAdded(UserNotification)
+        case offPeakNotificationButtonTapped
         #endif
     }
 
@@ -91,7 +92,6 @@ public struct App: Reducer {
     @Dependency(\.continuousClock) var clock
     @Dependency(\.userNotificationCenter) var userNotificationCenter
     @Dependency(\.dataManager.save) var saveData
-    @Dependency(\.uuid) var uuid
 
     private enum CancelID { case timer }
 
@@ -135,27 +135,18 @@ public struct App: Reducer {
                     state.currentPeakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.lowerBound)))
                     return .none
                 }
-                #if canImport(NotificationCenter)
-                case .offPeakNotificationButtonTapped:
-                    return .run { send in
-                        let notificationSettings = await userNotificationCenter.notificationSettings()
-                        let status = notificationSettings.authorizationStatus
-                        await send(.notificationStatusChanged(status))
-
-                        if status == .notDetermined {
-                            guard try await self.userNotificationCenter.requestAuthorization(options: [.alert])
-                            else { return }
-                            await send(.notificationStatusChanged(userNotificationCenter.notificationSettings().authorizationStatus))
-                        }
-                    }
-                case let .notificationStatusChanged(status):
+            #if canImport(NotificationCenter)
+            case let .notificationStatusChanged(status):
                 state.notificationAuthorizationStatus = status
                 guard [.authorized, .ephemeral].contains(status),
                       case let .peak(durationBeforeOffPeak) = state.currentPeakStatus
                 else { return .none }
 
-                return .run { [state] _ in
-                    let identifier = uuid().uuidString
+                return .run { send in
+                    let identifier = "com.renaudjenny.heures-creuses.notification.next-off-peak"
+                    let requests = await userNotificationCenter.pendingNotificationRequests()
+                    guard !requests.contains(where: { $0.identifier == identifier }) else { return }
+
                     let content = UNMutableNotificationContent()
                     content.title = "Off peak period is starting"
                     content.body = "Optimise your electricity bill by starting your appliance now."
@@ -172,8 +163,26 @@ public struct App: Reducer {
 
                     let date = date().addingTimeInterval(timeInterval)
                     let notification = UserNotification(id: identifier, message: content.body, date: date)
+                    await send(.offPeakNotificationAdded(notification))
                 }
-                #endif
+
+            case let .offPeakNotificationAdded(notification):
+                state.notifications.append(notification)
+                return .none
+
+            case .offPeakNotificationButtonTapped:
+                return .run { send in
+                    let notificationSettings = await userNotificationCenter.notificationSettings()
+                    let status = notificationSettings.authorizationStatus
+                    await send(.notificationStatusChanged(status))
+
+                    if status == .notDetermined {
+                        guard try await self.userNotificationCenter.requestAuthorization(options: [.alert])
+                        else { return }
+                        await send(.notificationStatusChanged(userNotificationCenter.notificationSettings().authorizationStatus))
+                    }
+                }
+            #endif
             }
         }
         .ifLet(\.$destination, action: /App.Action.destination) {
