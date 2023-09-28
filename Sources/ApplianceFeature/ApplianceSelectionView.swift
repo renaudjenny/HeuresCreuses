@@ -30,6 +30,7 @@ public struct ApplianceSelectionView: View {
                     action: { .selection($0) },
                     destination: ProgramSelectionView.init
                 )
+                #if os(iOS) || os(macOS)
                 .sheet(
                     store: store.scope(state: \.$destination, action: { .destination($0) }),
                     state: /ApplianceSelection.Destination.State.addAppliance,
@@ -51,6 +52,7 @@ public struct ApplianceSelectionView: View {
                                 }
                         }
                     }
+                #endif
             }
             .navigationTitle("Choose your appliance")
             .toolbar {

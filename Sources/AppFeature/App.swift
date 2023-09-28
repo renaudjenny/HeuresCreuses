@@ -108,12 +108,14 @@ public struct App: Reducer {
                 userNotificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
                 state.notifications.remove(atOffsets: indexSet)
                 return .none
+            #if canImport(NotificationCenter)
             case let .destination(.presented(.applianceSelection(.destination(.presented(.selection(.destination(.presented(.optimum(.sendNotification(.delegate(action))))))))))):
                 switch action {
                 case let .notificationAdded(notification):
                     state.notifications.append(notification)
                     return .none
                 }
+            #endif
             case .destination:
                 return .none
             case .task:

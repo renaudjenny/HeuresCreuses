@@ -1,3 +1,4 @@
+#if os(iOS) || os(macOS)
 import ComposableArchitecture
 import SwiftUI
 
@@ -78,4 +79,5 @@ struct ApplianceFormView_Previews: PreviewProvider {
         })
     }
 }
+#endif
 #endif

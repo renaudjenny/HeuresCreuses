@@ -50,6 +50,7 @@ public struct ProgramSelectionView: View {
                         action: ProgramSelection.Destination.Action.delays,
                         destination: DelaysView.init
                     )
+                    #if os(iOS) || os(macOS)
                     .sheet(
                         store: store.scope(
                             state: \.$destination,
@@ -76,6 +77,7 @@ public struct ProgramSelectionView: View {
                             }
                         }
                     )
+                    #endif
                     .alert(
                         store: store.scope(
                             state: \.$destination,

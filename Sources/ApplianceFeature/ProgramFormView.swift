@@ -1,3 +1,4 @@
+#if os(iOS) || os(macOS)
 import ComposableArchitecture
 import SwiftUI
 
@@ -30,6 +31,7 @@ struct ProgramFormView: View {
                         Label("Duration in minutes", systemImage: "timer")
                     }
                     .keyboardType(.numberPad)
+
                 }
             } label: {
                 if viewStore.program.name.isEmpty {
@@ -48,3 +50,4 @@ private extension Duration {
         set { self = .seconds(newValue * 60) }
     }
 }
+#endif
