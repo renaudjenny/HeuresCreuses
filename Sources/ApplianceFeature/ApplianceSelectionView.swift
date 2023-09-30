@@ -55,6 +55,7 @@ public struct ApplianceSelectionView: View {
                 #endif
             }
             .navigationTitle("Choose your appliance")
+            #if os(iOS) || os(macOS)
             .toolbar {
                 ToolbarItem {
                     Button { viewStore.send(.addApplianceButtonTapped) } label: {
@@ -62,6 +63,7 @@ public struct ApplianceSelectionView: View {
                     }
                 }
             }
+            #endif
         }
     }
 }

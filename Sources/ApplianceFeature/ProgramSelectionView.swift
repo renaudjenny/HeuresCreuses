@@ -88,11 +88,13 @@ public struct ProgramSelectionView: View {
                     )
                 }
                 .toolbar {
+                    #if os(iOS) || os(macOS)
                     ToolbarItem {
                         Button { viewStore.send(.editApplianceButtonTapped) } label: {
                             Label("Edit", systemImage: "pencil")
                         }
                     }
+                    #endif
 
                     ToolbarItem(placement: .destructiveAction) {
                         Button(role: .destructive) { viewStore.send(.deleteButtonTapped) } label: {

@@ -46,6 +46,7 @@ public struct AppView: View {
                         .background { viewStore.backgroundColor }
                         .clipShape(RoundedRectangle(cornerRadius: 10))
 
+                    #if canImport(NotificationCenter)
                     if case .peak = viewStore.peakStatus {
                         VStack {
                             Text("Do you want to be notified when it's the next off peak?")
@@ -63,7 +64,6 @@ public struct AppView: View {
                     Divider()
                         .padding()
 
-                    #if canImport(NotificationCenter)
                     Section("Planned Notifications") {
                         if viewStore.notifications.isEmpty {
                             Text("""
