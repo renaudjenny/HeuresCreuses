@@ -10,6 +10,7 @@ let package = Package(
         .library(name: "ApplianceFeature", targets: ["ApplianceFeature"]),
         .library(name: "AppFeature", targets: ["AppFeature"]),
         .library(name: "DataManagerDependency", targets: ["DataManagerDependency"]),
+        .library(name: "HomeWidget", targets: ["HomeWidget"]),
         .library(name: "Models", targets: ["Models"]),
     ],
     dependencies: [
@@ -46,6 +47,7 @@ let package = Package(
             name: "DataManagerDependency",
             dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]
         ),
+        .target(name: "HomeWidget"),
         .target(
             name: "Models",
             dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]
