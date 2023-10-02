@@ -38,6 +38,19 @@ public struct AppView: View {
     }
 
     private var content: some View {
+        List {
+            AppliancesHomeWidgetView(store: store.scope(
+                state: \.applianceHomeWidget,
+                action: { .applianceHomeWidget($0) }
+            ))
+
+            legacyContent
+        }
+        .listRowSpacing(8)
+        .navigationTitle("Summary")
+    }
+
+    private var legacyContent: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
             VStack {
                 ScrollView {

@@ -30,6 +30,7 @@ public struct HomeWidgetView<Description: View>: View {
         }
         .padding(.vertical)
         .clipShape(RoundedRectangle(cornerRadius: 10))
+        .contentShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 

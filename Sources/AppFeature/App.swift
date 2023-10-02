@@ -10,6 +10,7 @@ import NotificationCenter
 
 public struct App: Reducer {
     public struct State: Equatable {
+        public var applianceHomeWidget = ApplianceHomeWidget.State()
         public var periods: [Period] = .example
         public var currentPeakStatus: PeakStatus = .unavailable
         public var offPeakRanges: [ClosedRange<Date>] = []
@@ -20,6 +21,7 @@ public struct App: Reducer {
         var notificationAuthorizationStatus: UNAuthorizationStatus
 
         public init(
+            applianceHomeWidget: ApplianceHomeWidget.State = ApplianceHomeWidget.State(),
             periods: [Period] = .example,
             currentPeakStatus: PeakStatus = .unavailable,
             offPeakRanges: [ClosedRange<Date>] = [],
@@ -27,6 +29,7 @@ public struct App: Reducer {
             destination: Destination.State? = nil,
             notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
         ) {
+            self.applianceHomeWidget = applianceHomeWidget
             self.currentPeakStatus = currentPeakStatus
             self.offPeakRanges = offPeakRanges
             self.notifications = notifications
@@ -35,12 +38,14 @@ public struct App: Reducer {
         }
         #else
         public init(
+            applianceHomeWidget: ApplianceHomeWidget.State = ApplianceHomeWidget.State(),
             periods: [Period] = .example,
             currentPeakStatus: PeakStatus = .unavailable,
             offPeakRanges: [ClosedRange<Date>] = [],
             notifications: [UserNotification] = [],
             destination: Destination.State? = nil
         ) {
+            self.applianceHomeWidget = applianceHomeWidget
             self.currentPeakStatus = currentPeakStatus
             self.offPeakRanges = offPeakRanges
             self.notifications = notifications
@@ -67,6 +72,7 @@ public struct App: Reducer {
 
     public enum Action: Equatable {
         case appliancesButtonTapped
+        case applianceHomeWidget(ApplianceHomeWidget.Action)
         case cancel
         case deleteNotifications(IndexSet)
         case destination(PresentationAction<Destination.Action>)
@@ -96,8 +102,15 @@ public struct App: Reducer {
     private enum CancelID { case timer }
 
     public var body: some ReducerOf<Self> {
+        Scope(state: \.applianceHomeWidget, action: /App.Action.applianceHomeWidget) {
+            ApplianceHomeWidget()
+        }
+
         Reduce { state, action in
             switch action {
+            case .applianceHomeWidget:
+                return .none
+
             case .appliancesButtonTapped:
                 state.destination = .applianceSelection(ApplianceSelection.State())
                 return .none
