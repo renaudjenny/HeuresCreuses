@@ -33,9 +33,12 @@ public struct ApplianceHomeWidget: Reducer {
                 return .none
             }
         }
+        .ifLet(\.$destination, action: /Action.destination) {
+            ApplianceSelection()
+        }
         .onChange(of: \.destination?.appliances) { oldValue, newValue in
             Reduce { state, _ in
-                state.appliances = newValue ?? []
+                state.appliances = newValue ?? state.appliances
                 return .none
             }
         }
@@ -74,11 +77,13 @@ public struct AppliancesHomeWidgetView: View {
 }
 
 #Preview {
-    List {
-        AppliancesHomeWidgetView(
-            store: Store(initialState: ApplianceHomeWidget.State(appliances: [.dishwasher, .washingMachine])) {
-                ApplianceHomeWidget()
-            }
-        )
+    NavigationStack {
+        List {
+            AppliancesHomeWidgetView(
+                store: Store(initialState: ApplianceHomeWidget.State(appliances: [.dishwasher, .washingMachine])) {
+                    ApplianceHomeWidget()
+                }
+            )
+        }
     }
 }

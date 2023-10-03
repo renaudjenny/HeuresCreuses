@@ -124,7 +124,7 @@ public struct AppView: View {
             .padding(.vertical)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background { viewStore.backgroundColor.ignoresSafeArea(.all) }
-            .task { await viewStore.send(.task).finish() }
+            .task { @MainActor in await viewStore.send(.task).finish() }
         }
     }
 }
