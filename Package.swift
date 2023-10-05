@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "AppFeature", targets: ["AppFeature"]),
         .library(name: "DataManagerDependency", targets: ["DataManagerDependency"]),
         .library(name: "HomeWidget", targets: ["HomeWidget"]),
+        .library(name: "OffPeak", targets: ["OffPeak"]),
         .library(name: "Models", targets: ["Models"]),
     ],
     dependencies: [
@@ -49,6 +50,14 @@ let package = Package(
             dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]
         ),
         .target(name: "HomeWidget"),
+        .target(
+            name: "OffPeak",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "HomeWidget",
+                "Models",
+            ]
+        ),
         .target(
             name: "Models",
             dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]

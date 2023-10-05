@@ -39,7 +39,7 @@ public struct HomeWidgetView<Description: View>: View {
         Button {} label: {
             HomeWidgetView(title: "Off peak hours",icon: Image(systemName: "arrow.up.circle.badge.clock")) {
                 VStack(alignment: .leading) {
-                    Text("Current **peak** hour")
+                    Text("Currently **peak** hour")
                     Text("Until 11 hours, 4 minutes")
                 }
             }
