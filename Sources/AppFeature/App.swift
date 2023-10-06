@@ -3,6 +3,7 @@ import ComposableArchitecture
 import DataManagerDependency
 import Foundation
 import Models
+import OffPeak
 
 #if canImport(NotificationCenter)
 import NotificationCenter
@@ -13,6 +14,7 @@ public struct App: Reducer {
         public var applianceHomeWidget = ApplianceHomeWidget.State()
         public var periods: [Period] = .example
         public var currentPeakStatus: PeakStatus = .unavailable
+        public var offPeakHomeWidget = OffPeakHomeWidget.State()
         public var offPeakRanges: [ClosedRange<Date>] = []
         public var notifications: [UserNotification] = []
         @PresentationState public var destination: Destination.State?
@@ -24,6 +26,7 @@ public struct App: Reducer {
             applianceHomeWidget: ApplianceHomeWidget.State = ApplianceHomeWidget.State(),
             periods: [Period] = .example,
             currentPeakStatus: PeakStatus = .unavailable,
+            offPeakHomeWidget: OffPeakHomeWidget.State = OffPeakHomeWidget.State(),
             offPeakRanges: [ClosedRange<Date>] = [],
             notifications: [UserNotification] = [],
             destination: Destination.State? = nil,
@@ -31,6 +34,7 @@ public struct App: Reducer {
         ) {
             self.applianceHomeWidget = applianceHomeWidget
             self.currentPeakStatus = currentPeakStatus
+            self.offPeakHomeWidget = offPeakHomeWidget
             self.offPeakRanges = offPeakRanges
             self.notifications = notifications
             self.destination = destination
@@ -41,12 +45,14 @@ public struct App: Reducer {
             applianceHomeWidget: ApplianceHomeWidget.State = ApplianceHomeWidget.State(),
             periods: [Period] = .example,
             currentPeakStatus: PeakStatus = .unavailable,
+            offPeakHomeWidget: OffPeakHomeWidget.State = OffPeakHomeWidget.State(),
             offPeakRanges: [ClosedRange<Date>] = [],
             notifications: [UserNotification] = [],
             destination: Destination.State? = nil
         ) {
             self.applianceHomeWidget = applianceHomeWidget
             self.currentPeakStatus = currentPeakStatus
+            self.offPeakHomeWidget = offPeakHomeWidget
             self.offPeakRanges = offPeakRanges
             self.notifications = notifications
             self.destination = destination
@@ -76,6 +82,7 @@ public struct App: Reducer {
         case cancel
         case deleteNotifications(IndexSet)
         case destination(PresentationAction<Destination.Action>)
+        case offPeakHomeWidget(OffPeakHomeWidget.Action)
         case task
         case timeChanged(Date)
         #if canImport(NotificationCenter)
@@ -130,6 +137,8 @@ public struct App: Reducer {
                 }
             #endif
             case .destination:
+                return .none
+            case .offPeakHomeWidget:
                 return .none
             case .task:
                 state.offPeakRanges = .offPeakRanges(state.periods, now: date(), calendar: calendar)

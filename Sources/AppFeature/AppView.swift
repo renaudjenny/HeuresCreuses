@@ -1,6 +1,7 @@
 import ApplianceFeature
 import ComposableArchitecture
 import Models
+import OffPeak
 import SwiftUI
 
 public struct AppView: View {
@@ -42,6 +43,11 @@ public struct AppView: View {
             AppliancesHomeWidgetView(store: store.scope(
                 state: \.applianceHomeWidget,
                 action: { .applianceHomeWidget($0) }
+            ))
+
+            OffPeakHomeWidgetView(store: store.scope(
+                state: \.offPeakHomeWidget,
+                action: { .offPeakHomeWidget($0) }
             ))
 
             legacyContent

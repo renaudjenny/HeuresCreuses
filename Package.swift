@@ -39,6 +39,7 @@ let package = Package(
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 "DataManagerDependency",
                 "Models",
+                "OffPeak",
             ]
         ),
         .testTarget(
