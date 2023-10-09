@@ -113,6 +113,10 @@ public struct App: Reducer {
             ApplianceHomeWidget()
         }
 
+        Scope(state: \.offPeakHomeWidget, action: /App.Action.offPeakHomeWidget) {
+            OffPeakHomeWidget()
+        }
+
         Reduce { state, action in
             switch action {
             case .applianceHomeWidget:

@@ -1,23 +1,63 @@
 import ComposableArchitecture
 import HomeWidget
+import Models
 import SwiftUI
 
 public struct OffPeakHomeWidget: Reducer {
     public struct State: Equatable {
         var peakStatus = PeakStatus.unavailable
+        var offPeakRanges: [ClosedRange<Date>] = []
+        var periods: [Period] = .example
 
-        public init(peakStatus: PeakStatus = PeakStatus.unavailable) {
+        public init(
+            peakStatus: PeakStatus = PeakStatus.unavailable,
+            offPeakRanges: [ClosedRange<Date>] = [],
+            periods: [Period] = .example
+        ) {
             self.peakStatus = peakStatus
+            self.offPeakRanges = offPeakRanges
+            self.periods = periods
         }
     }
+    
     public enum Action: Equatable {
-
+        case task
+        case timeChanged(Date)
     }
+    
+    private enum CancelID { case timer }
+
+    @Dependency(\.date) var date
+    @Dependency(\.calendar) var calendar
+    @Dependency(\.continuousClock) var clock
 
     public init() {}
 
     public var body: some ReducerOf<Self> {
-        EmptyReducer()
+        Reduce { state, action in
+            switch action {
+            case .task:
+                state.offPeakRanges = .offPeakRanges(state.periods, now: date(), calendar: calendar)
+                return .run { send in
+                    for await _ in clock.timer(interval: .seconds(1)) {
+                        await send(.timeChanged(date()), animation: .default)
+                    }
+                }
+                .cancellable(id: CancelID.timer)
+
+            case let .timeChanged(date):
+                if let currentOffPeak = state.offPeakRanges.first(where: { $0.contains(self.date()) }) {
+                    state.peakStatus = .offPeak(until: .seconds(date.distance(to: currentOffPeak.upperBound)))
+                    return .none
+                } else {
+                    guard let closestOffPeak = state.offPeakRanges
+                        .first(where: { date.distance(to: $0.lowerBound) > 0 })
+                    else { return .none }
+                    state.peakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.lowerBound)))
+                    return .none
+                }
+            }
+        }
     }
 }
 
@@ -57,6 +97,7 @@ public struct OffPeakHomeWidgetView: View {
                 }
             }
             .listRowBackground(color(for: viewStore.peakStatus))
+            .task { @MainActor in await viewStore.send(.task).finish() }
         }
     }
 
@@ -75,17 +116,29 @@ public struct OffPeakHomeWidgetView: View {
 
 #Preview {
     List {
-        OffPeakHomeWidgetView(store: Store(initialState: OffPeakHomeWidget.State()) {
-            OffPeakHomeWidget()
-        })
         OffPeakHomeWidgetView(
-            store: Store(initialState: OffPeakHomeWidget.State(peakStatus: .peak(until: .seconds(2 * 60 * 60)))) {
+            store: Store(initialState: OffPeakHomeWidget.State()) {
                 OffPeakHomeWidget()
             }
         )
+        OffPeakHomeWidgetView(store: Store(initialState: OffPeakHomeWidget.State()) {
+            OffPeakHomeWidget()
+                .dependency(\.continuousClock, TestClock())
+        })
         OffPeakHomeWidgetView(
-            store: Store(initialState: OffPeakHomeWidget.State(peakStatus: .offPeak(until: .seconds(2.1 * 60 * 60)))) {
+            store: Store(initialState: OffPeakHomeWidget.State()) {
                 OffPeakHomeWidget()
+                    .dependency(\.date, .constant(
+                        try! Date("2023-10-09T04:00:00+02:00", strategy: .iso8601)
+                    ))
+            }
+        )
+        OffPeakHomeWidgetView(
+            store: Store(initialState: OffPeakHomeWidget.State()) {
+                OffPeakHomeWidget()
+                    .dependency(\.date, .constant(
+                        try! Date("2023-10-09T22:00:00+02:00", strategy: .iso8601)
+                    ))
             }
         )
     }
