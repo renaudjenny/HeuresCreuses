@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "HomeWidget", targets: ["HomeWidget"]),
         .library(name: "OffPeak", targets: ["OffPeak"]),
         .library(name: "Models", targets: ["Models"]),
+        .library(name: "UserNotification", targets: ["UserNotification"]),
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.0.0"),
@@ -40,6 +41,7 @@ let package = Package(
                 "DataManagerDependency",
                 "Models",
                 "OffPeak",
+                "UserNotification",
             ]
         ),
         .testTarget(
@@ -62,6 +64,13 @@ let package = Package(
         .target(
             name: "Models",
             dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]
+        ),
+        .target(
+            name: "UserNotification",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "HomeWidget",
+            ]
         ),
     ]
 )
