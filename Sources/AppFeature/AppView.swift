@@ -3,7 +3,7 @@ import ComposableArchitecture
 import Models
 import OffPeak
 import SwiftUI
-import UserNotification
+//import UserNotification
 
 public struct AppView: View {
     struct ViewState: Equatable {
@@ -51,7 +51,7 @@ public struct AppView: View {
                 action: { .offPeakHomeWidget($0) }
             ))
 
-            UserNotificationHomeWidgetView()
+//            UserNotificationHomeWidgetView()
 
             legacyContent
         }

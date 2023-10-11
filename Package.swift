@@ -69,6 +69,7 @@ let package = Package(
             name: "UserNotification",
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "HomeWidget",
             ]
         ),
