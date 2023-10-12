@@ -20,30 +20,38 @@ public struct UserNotificationHomeWidget: Reducer {
     }
 
     public enum Action: Equatable {
-        case notificationsUpdated([UNNotificationContent])
+        case notificationsUpdated([UNNotificationRequest])
         case task
     }
+
+    enum CancelID { case timer }
 
     public init () {}
 
     @Dependency(\.userNotificationCenter) var userNotificationCenter
+    @Dependency(\.continuousClock) var clock
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case let .notificationsUpdated(notificationsContents):
                 state.notifications = notificationsContents.compactMap {
-                    guard 
-                        let id = $0.userInfo["heures-creuses-id"] as? String,
-                        let date = $0.userInfo["heures-creuses-date"] as? Date
+                    guard
+                        let trigger = $0.trigger as? UNTimeIntervalNotificationTrigger,
+                        let date = trigger.nextTriggerDate()
                     else { return nil }
-                    return UserNotification(id: id, message: $0.body, date: date)
+                    return UserNotification(id: $0.identifier, message: $0.content.body, date: date)
                 }
                 return .none
             case .task:
                 return .run { send in
-                    await send(.notificationsUpdated([]))
+                    // TODO: replace this regular polling per something smarter with an extension of this dependency
+                    for await _ in clock.timer(interval: .seconds(5)) {
+                        let notifications = await userNotificationCenter.pendingNotificationRequests()
+                        await send(.notificationsUpdated(notifications))
+                    }
                 }
+                .cancellable(id: CancelID.timer)
             }
         }
     }

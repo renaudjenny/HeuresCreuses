@@ -3,7 +3,10 @@ import ComposableArchitecture
 import Models
 import OffPeak
 import SwiftUI
-//import UserNotification
+import UserNotification
+
+// TODO: eventually remove this
+public typealias UserNotification = Models.UserNotification
 
 public struct AppView: View {
     struct ViewState: Equatable {
@@ -51,7 +54,10 @@ public struct AppView: View {
                 action: { .offPeakHomeWidget($0) }
             ))
 
-//            UserNotificationHomeWidgetView()
+            UserNotificationHomeWidgetView(store: store.scope(
+                state: \.userNotificationHomeWidget,
+                action: { .userNotificationHomeWidget($0) }
+            ))
 
             legacyContent
         }

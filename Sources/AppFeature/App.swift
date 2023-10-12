@@ -4,6 +4,7 @@ import DataManagerDependency
 import Foundation
 import Models
 import OffPeak
+import UserNotification
 
 #if canImport(NotificationCenter)
 import NotificationCenter
@@ -18,6 +19,7 @@ public struct App: Reducer {
         public var offPeakRanges: [ClosedRange<Date>] = []
         public var notifications: [UserNotification] = []
         @PresentationState public var destination: Destination.State?
+        var userNotificationHomeWidget = UserNotificationHomeWidget.State()
 
         #if canImport(NotificationCenter)
         var notificationAuthorizationStatus: UNAuthorizationStatus
@@ -30,7 +32,8 @@ public struct App: Reducer {
             offPeakRanges: [ClosedRange<Date>] = [],
             notifications: [UserNotification] = [],
             destination: Destination.State? = nil,
-            notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
+            notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined,
+            userNotificationHomeWidget: UserNotificationHomeWidget.State = UserNotificationHomeWidget.State()
         ) {
             self.applianceHomeWidget = applianceHomeWidget
             self.currentPeakStatus = currentPeakStatus
@@ -39,6 +42,7 @@ public struct App: Reducer {
             self.notifications = notifications
             self.destination = destination
             self.notificationAuthorizationStatus = notificationAuthorizationStatus
+            self.userNotificationHomeWidget = userNotificationHomeWidget
         }
         #else
         public init(
@@ -90,6 +94,7 @@ public struct App: Reducer {
         case offPeakNotificationAdded(UserNotification)
         case offPeakNotificationButtonTapped
         #endif
+        case userNotificationHomeWidget(UserNotificationHomeWidget.Action)
     }
 
     public enum PeakStatus: Equatable {
@@ -115,6 +120,10 @@ public struct App: Reducer {
 
         Scope(state: \.offPeakHomeWidget, action: /App.Action.offPeakHomeWidget) {
             OffPeakHomeWidget()
+        }
+
+        Scope(state: \.userNotificationHomeWidget, action: /App.Action.userNotificationHomeWidget) {
+            UserNotificationHomeWidget()
         }
 
         Reduce { state, action in
@@ -211,6 +220,8 @@ public struct App: Reducer {
                     }
                 }
             #endif
+            case .userNotificationHomeWidget:
+                return .none
             }
         }
         .ifLet(\.$destination, action: /App.Action.destination) {
