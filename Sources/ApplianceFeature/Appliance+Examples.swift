@@ -17,6 +17,16 @@ public extension Appliance {
                 duration: .seconds(190 * 60)
             ),
             Program(
+                id: UUID(uuidString: "4EB700D7-DF41-47F4-9F2A-12F98238F1B2")!,
+                name: "Cotton 60º",
+                duration: .seconds(200 * 60)
+            ),
+            Program(
+                id: UUID(uuidString: "0FC5EE68-9422-48C4-AE6D-D8A39321EAE8")!,
+                name: "Cotton 90º",
+                duration: .seconds(194 * 60)
+            ),
+            Program(
                 id: UUID(uuidString: "904701A5-78E1-4065-801B-C54CDC2A9FFF")!,
                 name: "Hand wash",
                 duration: .seconds(91 * 60)
@@ -25,6 +35,36 @@ public extension Appliance {
                 id: UUID(uuidString: "08C1B039-C444-4DBB-B81C-C6B1F88AC373")!,
                 name: "Mixed",
                 duration: .seconds(87 * 60)
+            ),
+            Program(
+                id: UUID(uuidString: "BAC5364C-260E-43E1-BD03-9E90A07BFF86")!,
+                name: "Intensive",
+                duration: .seconds(160 * 60)
+            ),
+            Program(
+                id: UUID(uuidString: "6234CA3B-8993-457A-9E3C-E1014FCB3ED1")!,
+                name: "Synthetics",
+                duration: .seconds(89 * 60)
+            ),
+            Program(
+                id: UUID(uuidString: "AD371E7C-0454-4524-B3B7-2A8C74531377")!,
+                name: "Synthetics",
+                duration: .seconds(40 * 60)
+            ),
+            Program(
+                id: UUID(uuidString: "43EC2978-DF4F-42BB-9031-736DF5589676")!,
+                name: "Rinse",
+                duration: .seconds(36 * 60)
+            ),
+            Program(
+                id: UUID(uuidString: "6524C78B-B0AA-4765-BA71-9D3DEB1CE83A")!,
+                name: "Spin",
+                duration: .seconds(15 * 60)
+            ),
+            Program(
+                id: UUID(uuidString: "6524C78B-B0AA-4765-BA71-9D3DEB1CE83A")!,
+                name: "Sports wear",
+                duration: .seconds(80 * 60)
             ),
         ],
         delays: [
