@@ -2,12 +2,12 @@ import ComposableArchitecture
 import DependenciesAdditions
 import SwiftUI
 
-struct UserNotificationsList: Reducer {
-    struct State: Equatable {
+public struct UserNotificationsList: Reducer {
+    public struct State: Equatable {
         var notifications: IdentifiedArrayOf<UserNotification> = []
     }
 
-    enum Action: Equatable {
+    public enum Action: Equatable {
         case notificationsUpdated([UNNotificationRequest])
         case task
     }
@@ -17,7 +17,7 @@ struct UserNotificationsList: Reducer {
 
     private enum CancelID { case timer }
 
-    var body: some ReducerOf<Self> {
+    public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case let .notificationsUpdated(notifications):
