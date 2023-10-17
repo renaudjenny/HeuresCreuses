@@ -1,6 +1,6 @@
 import Foundation
 
-extension Duration {
+public extension Duration {
     var hourMinute: String { formatted(.units(allowed: [.hours, .minutes], width: .wide)) }
 }
 

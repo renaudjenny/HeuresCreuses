@@ -5,9 +5,6 @@ import OffPeak
 import SwiftUI
 import UserNotification
 
-// TODO: eventually remove this
-public typealias UserNotification = Models.UserNotification
-
 public struct AppView: View {
     struct ViewState: Equatable {
         let peakStatus: App.PeakStatus
@@ -53,6 +50,15 @@ public struct AppView: View {
                 state: \.offPeakHomeWidget,
                 action: { .offPeakHomeWidget($0) }
             ))
+
+            WithViewStore(store, observe: \.currentPeakStatus) { viewState in
+                if case .peak = viewState.state {
+                    SendNotificationButtonView(store: store.scope(
+                        state: \.sendNotification,
+                        action: { .sendNotification($0) }
+                    ))
+                }
+            }
 
             UserNotificationHomeWidgetView(store: store.scope(
                 state: \.userNotificationHomeWidget,

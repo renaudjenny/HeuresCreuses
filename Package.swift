@@ -27,6 +27,7 @@ let package = Package(
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "HomeWidget",
                 "Models",
+                "UserNotification",
             ]
         ),
         .testTarget(
@@ -71,6 +72,7 @@ let package = Package(
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "HomeWidget",
+                "Models",
             ]
         ),
     ]

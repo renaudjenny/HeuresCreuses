@@ -19,6 +19,7 @@ public struct App: Reducer {
         public var offPeakRanges: [ClosedRange<Date>] = []
         public var notifications: [UserNotification] = []
         @PresentationState public var destination: Destination.State?
+        var sendNotification = SendNotification.State()
         var userNotificationHomeWidget = UserNotificationHomeWidget.State()
 
         #if canImport(NotificationCenter)
@@ -87,6 +88,7 @@ public struct App: Reducer {
         case deleteNotifications(IndexSet)
         case destination(PresentationAction<Destination.Action>)
         case offPeakHomeWidget(OffPeakHomeWidget.Action)
+        case sendNotification(SendNotification.Action)
         case task
         case timeChanged(Date)
         #if canImport(NotificationCenter)
@@ -122,6 +124,10 @@ public struct App: Reducer {
             OffPeakHomeWidget()
         }
 
+        Scope(state: \.sendNotification, action: /Action.sendNotification) {
+            SendNotification()
+        }
+
         Scope(state: \.userNotificationHomeWidget, action: /App.Action.userNotificationHomeWidget) {
             UserNotificationHomeWidget()
         }
@@ -153,6 +159,8 @@ public struct App: Reducer {
                 return .none
             case .offPeakHomeWidget:
                 return .none
+            case .sendNotification:
+                return .none
             case .task:
                 state.offPeakRanges = .offPeakRanges(state.periods, now: date(), calendar: calendar)
                 return .run { send in
@@ -164,12 +172,17 @@ public struct App: Reducer {
             case let .timeChanged(date):
                 if let currentOffPeak = state.offPeakRanges.first(where: { $0.contains(self.date()) }) {
                     state.currentPeakStatus = .offPeak(until: .seconds(date.distance(to: currentOffPeak.upperBound)))
+                    state.sendNotification = SendNotification.State(intent: nil)
                     return .none
                 } else {
                     guard let closestOffPeak = state.offPeakRanges
                         .first(where: { date.distance(to: $0.lowerBound) > 0 })
                     else { return .none }
-                    state.currentPeakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.lowerBound)))
+                    let durationBeforeOffPeak = Duration.seconds(date.distance(to: closestOffPeak.lowerBound))
+                    state.currentPeakStatus = .peak(until: durationBeforeOffPeak)
+                    state.sendNotification = SendNotification.State(intent: .offPeakStart(
+                        durationBeforeOffPeak: durationBeforeOffPeak
+                    ))
                     return .none
                 }
             #if canImport(NotificationCenter)

@@ -1,9 +1,6 @@
 import ComposableArchitecture
 import Foundation
-#if canImport(NotificationCenter)
-import NotificationCenter
-#endif
-import UserNotificationsDependency
+import UserNotification
 
 public struct Optimum: Reducer {
     public struct State: Equatable {
@@ -12,23 +9,7 @@ public struct Optimum: Reducer {
         var delay = Duration.zero
         var ratio: Double = 0
         var durationBeforeStart: Duration = .zero
-        #if canImport(NotificationCenter)
-        var sendNotificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
-        var sendNotification: SendNotification.State {
-            get {
-                SendNotification.State(
-                    program: program,
-                    appliance: appliance,
-                    delay: delay,
-                    durationBeforeStart: durationBeforeStart,
-                    notificationAuthorizationStatus: sendNotificationAuthorizationStatus
-                )
-            }
-            set {
-                sendNotificationAuthorizationStatus = newValue.notificationAuthorizationStatus
-            }
-        }
-        #endif
+        var sendNotification = SendNotification.State()
 
         public init(program: Program, appliance: Appliance) {
             self.program = program
@@ -38,24 +19,19 @@ public struct Optimum: Reducer {
     public enum Action: Equatable {
         case delaysTapped(Program)
         case computationFinished(delay: Duration, ratio: Double, durationBeforeStart: Duration)
-        #if canImport(NotificationCenter)
         case sendNotification(SendNotification.Action)
-        #endif
         case task
     }
 
     @Dependency(\.calendar) var calendar
     @Dependency(\.date) var date
     @Dependency(\.periodProvider) var periodProvider
-    @Dependency(\.userNotificationCenter) var userNotificationCenter
     @Dependency(\.uuid) var uuid
 
     public var body: some ReducerOf<Self> {
-        #if canImport(NotificationCenter)
         Scope(state: \.sendNotification, action: /Action.sendNotification) {
             SendNotification()
         }
-        #endif
 
         Reduce { state, action in
             switch action {
@@ -65,11 +41,18 @@ public struct Optimum: Reducer {
                 state.delay = delay
                 state.ratio = ratio
                 state.durationBeforeStart = durationBeforeStart
+                state.sendNotification = SendNotification.State(intent: .applianceToProgram(
+                    body: """
+                    \(state.appliance.name)
+                    Program \(state.program.name)
+                    Delay \(state.delay.hourMinute)
+                    """,
+                    delay: state.delay,
+                    durationBeforeStart: state.durationBeforeStart
+                ))
                 return .none
-            #if canImport(NotificationCenter)
             case .sendNotification:
                 return .none
-            #endif
             case .task:
                 return .run { [state] send in
                     let operations = [Operation].nextOperations(

@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import UserNotification
 import SwiftUI
 
 struct OptimumView: View {
@@ -37,11 +38,9 @@ struct OptimumView: View {
                         """)
                         .padding(.horizontal)
 
-                        #if canImport(NotificationCenter)
                         SendNotificationButtonView(
                             store: store.scope(state: \.sendNotification, action: Optimum.Action.sendNotification)
                         )
-                        #endif
                     } else {
                         Text("""
                         You can start your appliance with the **\(viewStore.delay) delay** now and have an off peak of \
