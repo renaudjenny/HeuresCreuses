@@ -6,21 +6,6 @@ import SwiftUI
 import UserNotification
 
 public struct AppView: View {
-    struct ViewState: Equatable {
-        let peakStatus: App.PeakStatus
-        let duration: Duration
-        let notifications: [UserNotification]
-
-        init(_ state: App.State) {
-            self.peakStatus = state.currentPeakStatus
-            self.notifications = state.notifications
-            switch state.currentPeakStatus {
-            case .unavailable: self.duration = .zero
-            case let .offPeak(duration), let .peak(until: duration): self.duration = duration
-            }
-        }
-    }
-
     let store: StoreOf<App>
 
     public init(store: StoreOf<App>) {
@@ -29,162 +14,35 @@ public struct AppView: View {
 
     public var body: some View {
         NavigationStack {
-            content
-                .navigationDestination(
-                    store: store.scope(state: \.$destination, action: { .destination($0) }),
-                    state: /App.Destination.State.applianceSelection,
-                    action: { .applianceSelection($0) },
-                    destination: ApplianceSelectionView.init
-                )
-        }
-    }
+            List {
+                AppliancesHomeWidgetView(store: store.scope(
+                    state: \.applianceHomeWidget,
+                    action: { .applianceHomeWidget($0) }
+                ))
 
-    private var content: some View {
-        List {
-            AppliancesHomeWidgetView(store: store.scope(
-                state: \.applianceHomeWidget,
-                action: { .applianceHomeWidget($0) }
-            ))
+                OffPeakHomeWidgetView(store: store.scope(
+                    state: \.offPeakHomeWidget,
+                    action: { .offPeakHomeWidget($0) }
+                ))
 
-            OffPeakHomeWidgetView(store: store.scope(
-                state: \.offPeakHomeWidget,
-                action: { .offPeakHomeWidget($0) }
-            ))
-
-            WithViewStore(store, observe: \.currentPeakStatus) { viewState in
-                if case .peak = viewState.state {
-                    SendNotificationButtonView(store: store.scope(
-                        state: \.sendNotification,
-                        action: { .sendNotification($0) }
-                    ))
-                }
-            }
-
-            UserNotificationHomeWidgetView(store: store.scope(
-                state: \.userNotificationHomeWidget,
-                action: { .userNotificationHomeWidget($0) }
-            ))
-
-            legacyContent
-        }
-        .listRowSpacing(8)
-        .navigationTitle("Summary")
-    }
-
-    private var legacyContent: some View {
-        WithViewStore(store, observe: ViewState.init) { viewStore in
-            VStack {
-                ScrollView {
-                    viewStore.peakStatusView
-                        .padding()
-                        .background { viewStore.backgroundColor }
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                    #if canImport(NotificationCenter)
-                    if case .peak = viewStore.peakStatus {
-                        VStack {
-                            Text("Do you want to be notified when it's the next off peak?")
-                                .multilineTextAlignment(.center)
-
-                            #if canImport(NotificationCenter)
-                            Button { viewStore.send(.offPeakNotificationButtonTapped) } label: {
-                                Label("Send me a notification", systemImage: "bell.badge")
-                            }
-                            #endif
-                        }
-                        .padding()
+                // This thing should be integrated somehow with OffPeakHomeWidgetView instead of leaking to App directly
+                WithViewStore(store, observe: \.offPeakHomeWidget.peakStatus) { viewState in
+                    if case .peak = viewState.state {
+                        SendNotificationButtonView(store: store.scope(
+                            state: \.sendNotification,
+                            action: { .sendNotification($0) }
+                        ))
                     }
-
-                    Divider()
-                        .padding()
-
-                    Section("Planned Notifications") {
-                        if viewStore.notifications.isEmpty {
-                            Text("""
-                        When you want to be rembered by a notification to when it's optimum to start your appliance.
-                        You'll find here all the "to be sent" notifications. You'll also be able to remove them, so \
-                        you won't be spammed.
-                        """)
-                            .font(.caption)
-                            .multilineTextAlignment(.leading)
-                            .padding()
-                        } else {
-                            List {
-                                ForEach(viewStore.notifications) { notification in
-                                    HStack {
-                                        HStack(alignment: .top) {
-                                            Text(notification.message)
-                                                .font(.caption)
-                                                .frame(maxWidth: .infinity, alignment: .leading)
-
-
-                                            let relativeDateFormatted = notification.date
-                                                .formatted(.relative(presentation: .numeric))
-                                            Text("Will be sent \(relativeDateFormatted)")
-                                                .font(.caption.bold())
-                                                .frame(maxWidth: .infinity, alignment: .leading)
-                                        }
-                                        .padding()
-                                    }
-                                }
-                                .onDelete { viewStore.send(.deleteNotifications($0)) }
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(Color.clear)
-                            }
-                            .listStyle(.plain)
-                        }
-                    }
-                    #endif
                 }
 
-                Button { viewStore.send(.appliancesButtonTapped) } label: {
-                    Text("Appliance Selection")
-                }
-                .buttonStyle(.borderedProminent)
+                UserNotificationHomeWidgetView(store: store.scope(
+                    state: \.userNotificationHomeWidget,
+                    action: { .userNotificationHomeWidget($0) }
+                ))
             }
-            .padding(.vertical)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background { viewStore.backgroundColor.ignoresSafeArea(.all) }
-            .task { @MainActor in await viewStore.send(.task).finish() }
+            .listRowSpacing(8)
+            .navigationTitle("Summary")
         }
-    }
-}
-
-private extension AppView.ViewState {
-    var backgroundColor: Color {
-        switch peakStatus {
-        case .unavailable: return Color.clear
-        case .peak: return Color.red.opacity(20/100)
-        case .offPeak:  return Color.green.opacity(20/100)
-        }
-    }
-
-    @ViewBuilder
-    var peakStatusView: some View {
-        let relativeNextChange = "Until \(duration.formatted(.units(allowed: [.hours, .minutes], width: .wide)))"
-        Group {
-            switch peakStatus {
-            case .unavailable:
-                Text("Wait a sec...")
-                    .font(.body)
-            case .offPeak:
-                VStack {
-                    Text("Currently **off peak**")
-                        .font(.title3)
-                    Text(relativeNextChange)
-                        .font(.headline)
-                }
-            case .peak:
-                VStack {
-                    Text("Currently **peak** hour")
-                        .font(.title3)
-                    Text(relativeNextChange)
-                        .font(.headline)
-                }
-            }
-        }
-        .multilineTextAlignment(.center)
-        .padding()
     }
 }
 
@@ -213,21 +71,20 @@ struct AppView_Previews: PreviewProvider {
         .previewDisplayName("At 16:00")
 
         Preview(
-            store: Store(
-                initialState: App.State(notifications: [
-                    UserNotification(
-                        id: "0",
-                        message: "White Dishwasher\nProgram Eco\nDelay 3 hour",
-                        date: Date().addingTimeInterval(60 * 60)
-                    ),
-                    UserNotification(
-                        id: "1",
-                        message: "Gray Washing machine\nProgram Intense\nDelay 4 hours",
-                        date: Date().addingTimeInterval(2 * 60 * 60 + 15 * 60)
-                    )
-                ])
-            ) {
-                App()
+            store: Store(initialState: App.State()) {
+                App().transformDependency(\.userNotificationCenter) {
+                    $0.$pendingNotificationRequests = { @Sendable in
+                        let content1 = UNMutableNotificationContent()
+                        content1.body = "White Dishwasher\nProgram Eco\nDelay 3 hour"
+                        let content2 = UNMutableNotificationContent()
+                        content2.body = "Gray Washing machine\nProgram Intense\nDelay 4 hours"
+                        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 123456, repeats: false)
+                        return [
+                            UNNotificationRequest(identifier: "1", content: content1, trigger: trigger),
+                            UNNotificationRequest(identifier: "2", content: content2, trigger: trigger),
+                        ]
+                    }
+                }
             }
         )
         .previewDisplayName("With Notifications")

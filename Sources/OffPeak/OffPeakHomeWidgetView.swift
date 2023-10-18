@@ -5,7 +5,7 @@ import SwiftUI
 
 public struct OffPeakHomeWidget: Reducer {
     public struct State: Equatable {
-        var peakStatus = PeakStatus.unavailable
+        public var peakStatus = PeakStatus.unavailable
         var offPeakRanges: [ClosedRange<Date>] = []
         var periods: [Period] = .example
 
