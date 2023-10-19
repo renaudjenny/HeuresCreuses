@@ -96,6 +96,17 @@ public struct OffPeakHomeWidgetView: View {
                     }
                 }
             }
+            .background(alignment: .bottomTrailing) {
+                if case .peak = viewStore.peakStatus {
+                    Button { } label: {
+                        Label("Send me a notification in \(Duration.seconds(65 * 60).hourMinute)", systemImage: "bell.badge")
+                    }
+                    .labelStyle(.iconOnly)
+                    .padding(.vertical)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .contentShape(RoundedRectangle(cornerRadius: 10))
+                }
+            }
             .listRowBackground(color(for: viewStore.peakStatus))
             .task { @MainActor in await viewStore.send(.task).finish() }
         }
