@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "HomeWidget", targets: ["HomeWidget"]),
         .library(name: "OffPeak", targets: ["OffPeak"]),
         .library(name: "Models", targets: ["Models"]),
+        .library(name: "SendNotification", targets: ["SendNotification"]),
         .library(name: "UserNotification", targets: ["UserNotification"]),
     ],
     dependencies: [
@@ -27,7 +28,7 @@ let package = Package(
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "HomeWidget",
                 "Models",
-                "UserNotification",
+                "SendNotification",
             ]
         ),
         .testTarget(
@@ -60,11 +61,20 @@ let package = Package(
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 "HomeWidget",
                 "Models",
+                "SendNotification",
             ]
         ),
         .target(
             name: "Models",
             dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]
+        ),
+        .target(
+            name: "SendNotification",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
+                "Models",
+            ]
         ),
         .target(
             name: "UserNotification",
@@ -73,6 +83,7 @@ let package = Package(
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "HomeWidget",
                 "Models",
+                "SendNotification",
             ]
         ),
     ]

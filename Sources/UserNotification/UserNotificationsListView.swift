@@ -1,6 +1,7 @@
 import ComposableArchitecture
-import DependenciesAdditions
+import SendNotification
 import SwiftUI
+import UserNotificationsDependency
 
 public struct UserNotificationsList: Reducer {
     public struct State: Equatable {

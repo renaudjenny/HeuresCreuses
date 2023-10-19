@@ -25,16 +25,6 @@ public struct AppView: View {
                     action: { .offPeakHomeWidget($0) }
                 ))
 
-                // This thing should be integrated somehow with OffPeakHomeWidgetView instead of leaking to App directly
-                WithViewStore(store, observe: \.offPeakHomeWidget.peakStatus) { viewState in
-                    if case .peak = viewState.state {
-                        SendNotificationButtonView(store: store.scope(
-                            state: \.sendNotification,
-                            action: { .sendNotification($0) }
-                        ))
-                    }
-                }
-
                 UserNotificationHomeWidgetView(store: store.scope(
                     state: \.userNotificationHomeWidget,
                     action: { .userNotificationHomeWidget($0) }

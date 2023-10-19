@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import HomeWidget
 import Models
+import SendNotification
 import SwiftUI
 
 public struct OffPeakHomeWidget: Reducer {
@@ -8,6 +9,7 @@ public struct OffPeakHomeWidget: Reducer {
         public var peakStatus = PeakStatus.unavailable
         var offPeakRanges: [ClosedRange<Date>] = []
         var periods: [Period] = .example
+        var sendNotification = SendNotification.State()
 
         public init(
             peakStatus: PeakStatus = PeakStatus.unavailable,
@@ -21,6 +23,7 @@ public struct OffPeakHomeWidget: Reducer {
     }
     
     public enum Action: Equatable {
+        case sendNotification(SendNotification.Action)
         case task
         case timeChanged(Date)
     }
@@ -34,8 +37,14 @@ public struct OffPeakHomeWidget: Reducer {
     public init() {}
 
     public var body: some ReducerOf<Self> {
+        Scope(state: \.sendNotification, action: /Action.sendNotification) {
+            SendNotification()
+        }
+
         Reduce { state, action in
             switch action {
+            case .sendNotification:
+                return .none
             case .task:
                 state.offPeakRanges = .offPeakRanges(state.periods, now: date(), calendar: calendar)
                 return .run { send in
@@ -98,9 +107,9 @@ public struct OffPeakHomeWidgetView: View {
             }
             .background(alignment: .bottomTrailing) {
                 if case .peak = viewStore.peakStatus {
-                    Button { } label: {
-                        Label("Send me a notification in \(Duration.seconds(65 * 60).hourMinute)", systemImage: "bell.badge")
-                    }
+                    SendNotificationButtonView(
+                        store: store.scope(state: \.sendNotification, action: { .sendNotification($0) })
+                    )
                     .labelStyle(.iconOnly)
                     .padding(.vertical)
                     .clipShape(RoundedRectangle(cornerRadius: 10))

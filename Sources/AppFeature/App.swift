@@ -10,18 +10,15 @@ public struct App: Reducer {
     public struct State: Equatable {
         var applianceHomeWidget = ApplianceHomeWidget.State()
         var offPeakHomeWidget = OffPeakHomeWidget.State()
-        var sendNotification = SendNotification.State()
         var userNotificationHomeWidget = UserNotificationHomeWidget.State()
 
         public init(
             applianceHomeWidget: ApplianceHomeWidget.State = ApplianceHomeWidget.State(),
             offPeakHomeWidget: OffPeakHomeWidget.State = OffPeakHomeWidget.State(),
-            sendNotification: SendNotification.State = SendNotification.State(),
             userNotificationHomeWidget: UserNotificationHomeWidget.State = UserNotificationHomeWidget.State()
         ) {
             self.applianceHomeWidget = applianceHomeWidget
             self.offPeakHomeWidget = offPeakHomeWidget
-            self.sendNotification = sendNotification
             self.userNotificationHomeWidget = userNotificationHomeWidget
         }
     }
@@ -29,7 +26,6 @@ public struct App: Reducer {
     public enum Action: Equatable {
         case applianceHomeWidget(ApplianceHomeWidget.Action)
         case offPeakHomeWidget(OffPeakHomeWidget.Action)
-        case sendNotification(SendNotification.Action)
         case userNotificationHomeWidget(UserNotificationHomeWidget.Action)
     }
 
@@ -52,10 +48,6 @@ public struct App: Reducer {
             OffPeakHomeWidget()
         }
 
-        Scope(state: \.sendNotification, action: /Action.sendNotification) {
-            SendNotification()
-        }
-
         Scope(state: \.userNotificationHomeWidget, action: /App.Action.userNotificationHomeWidget) {
             UserNotificationHomeWidget()
         }
@@ -65,8 +57,6 @@ public struct App: Reducer {
             case .applianceHomeWidget:
                 return .none
             case .offPeakHomeWidget:
-                return .none
-            case .sendNotification:
                 return .none
             case .userNotificationHomeWidget:
                 return .none

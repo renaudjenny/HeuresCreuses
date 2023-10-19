@@ -35,9 +35,8 @@ public struct SendNotificationButtonView: View {
 
                     Label("Send me a notification in \(duration.hourMinute)", systemImage: "bell.badge")
                 }
-                .padding()
             } else if viewStore.isNotificationAuthorized {
-                Label("Notification is programmed", systemImage: "bell").padding()
+                Label("Notification is programmed", systemImage: "bell")
             } else {
                 Label("""
                 Notification has been denied, please go to settings and allow Heures Creuses \
@@ -45,7 +44,6 @@ public struct SendNotificationButtonView: View {
                 """,
                       systemImage: "bell.slash"
                 )
-                .padding()
             }
         }
     }

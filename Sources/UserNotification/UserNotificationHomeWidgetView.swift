@@ -1,9 +1,10 @@
 #if canImport(NotificationCenter)
 import ComposableArchitecture
-import DependenciesAdditions
 import HomeWidget
 import NotificationCenter
+import SendNotification
 import SwiftUI
+import UserNotificationsDependency
 
 public struct UserNotificationHomeWidget: Reducer {
     public struct State: Equatable {

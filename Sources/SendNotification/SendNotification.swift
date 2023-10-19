@@ -2,6 +2,7 @@
 import ComposableArchitecture
 import NotificationCenter
 import Models
+import UserNotificationsDependency
 
 public struct SendNotification: Reducer {
     public struct State: Equatable {

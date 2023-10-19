@@ -1,6 +1,6 @@
 import ComposableArchitecture
 import Foundation
-import UserNotification
+import SendNotification
 
 public struct Optimum: Reducer {
     public struct State: Equatable {
