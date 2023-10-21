@@ -30,6 +30,7 @@ public struct ProgramSelectionView: View {
                                 )
                             }
                         }
+                        .frame(maxWidth: .infinity)
                         .padding()
                     }
                     .sheet(

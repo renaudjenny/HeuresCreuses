@@ -1,5 +1,11 @@
 import Foundation
 
+/*
+ Chemise
+ Quotidien 60 min
+ Rapide 15 min
+*/
+
 public extension Appliance {
     static let washingMachine = Self(
         id: UUID(uuidString: "11746DF1-C676-48D4-BD97-F5770A386604")!,
@@ -48,7 +54,7 @@ public extension Appliance {
             ),
             Program(
                 id: UUID(uuidString: "AD371E7C-0454-4524-B3B7-2A8C74531377")!,
-                name: "Synthetics",
+                name: "Wool",
                 duration: .seconds(40 * 60)
             ),
             Program(
@@ -62,9 +68,24 @@ public extension Appliance {
                 duration: .seconds(15 * 60)
             ),
             Program(
-                id: UUID(uuidString: "6524C78B-B0AA-4765-BA71-9D3DEB1CE83A")!,
+                id: UUID(uuidString: "B721886B-2925-441D-9B96-2335F2E0A4CF")!,
                 name: "Sports wear",
                 duration: .seconds(80 * 60)
+            ),
+            Program(
+                id: UUID(uuidString: "883091A8-32F4-44C7-AB23-FC2FE513CDA4")!,
+                name: "Shirts",
+                duration: .seconds(106 * 60)
+            ),
+            Program(
+                id: UUID(uuidString: "12256FAE-03F1-4F88-807E-25E6BA47E6D8")!,
+                name: "Daily 60'",
+                duration: .seconds(60 * 60)
+            ),
+            Program(
+                id: UUID(uuidString: "FCBD1E1F-1696-4681-8901-F8137C80C69A")!,
+                name: "Quick 15'",
+                duration: .seconds(15 * 60)
             ),
         ],
         delays: [
