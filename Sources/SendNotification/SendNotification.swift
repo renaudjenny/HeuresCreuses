@@ -6,8 +6,9 @@ import UserNotificationsDependency
 
 public struct SendNotification: Reducer {
     public struct State: Equatable {
-        var intent: Intent?
+        public var intent: Intent?
         var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
+        var userNotificationStatus: UserNotificationStatus = .loading
 
         public init(intent: Intent? = nil) {
             self.intent = intent
@@ -18,6 +19,8 @@ public struct SendNotification: Reducer {
         case buttonTapped(Intent?)
         case delegate(Delegate)
         case notificationStatusChanged(UNAuthorizationStatus)
+        case updateUserNotificationStatus(UserNotificationStatus, authorizationStatus: UNAuthorizationStatus)
+        case task
 
         public enum Delegate: Equatable {
             case notificationAdded(UserNotification)
@@ -27,6 +30,12 @@ public struct SendNotification: Reducer {
     public enum Intent: Equatable {
         case applianceToProgram(body: String, delay: Duration, durationBeforeStart: Duration)
         case offPeakStart(durationBeforeOffPeak: Duration)
+    }
+
+    public enum UserNotificationStatus {
+        case loading
+        case notSent
+        case alreadySent
     }
 
     @Dependency(\.date) var date
@@ -41,11 +50,14 @@ public struct SendNotification: Reducer {
             case let .buttonTapped(intent):
                 state.intent = intent
                 return checkAuthorization()
+
             case .delegate:
                 return .none
+
             case let .notificationStatusChanged(status):
                 state.notificationAuthorizationStatus = status
-                guard  [.authorized, .ephemeral].contains(status) else { return .none }
+                guard ![.denied, .notDetermined].contains(status) else { return .none }
+                state.userNotificationStatus = .alreadySent
                 switch state.intent {
                 case let .applianceToProgram(body, delay, durationBeforeStart):
                     return sendApplianceToProgramNotification(
@@ -58,6 +70,33 @@ public struct SendNotification: Reducer {
                 case .none:
                     // TODO: log an error?
                     return .none
+                }
+
+            case let .updateUserNotificationStatus(userNotificationStatus, authorizationStatus):
+                state.userNotificationStatus = userNotificationStatus
+                state.notificationAuthorizationStatus = authorizationStatus
+                return .none
+
+            case .task:
+                return .run { [state] send in
+                    let notificationSettings = await userNotificationCenter.notificationSettings()
+                    let authorizationStatus = notificationSettings.authorizationStatus
+
+                    let status: UserNotificationStatus
+                    switch state.intent {
+                    case .applianceToProgram:
+                        // TODO: also sent an ID from the callsite, so we can avoid reprogramming the same notification
+                        status = .notSent
+
+                    case .offPeakStart:
+                        let requests = await userNotificationCenter.pendingNotificationRequests()
+                        status = requests.contains { $0.identifier == .nextOffPeakIdentifier } ? .alreadySent : .notSent
+
+                    case .none:
+                        status = .notSent
+                    }
+
+                    await send(.updateUserNotificationStatus(status, authorizationStatus: authorizationStatus))
                 }
             }
         }
@@ -106,9 +145,8 @@ public struct SendNotification: Reducer {
 
     private func sendOffPeakStartNotification(durationBeforeOffPeak: Duration) -> Effect<Action> {
         .run { send in
-            let identifier = "com.renaudjenny.heures-creuses.notification.next-off-peak"
             let requests = await userNotificationCenter.pendingNotificationRequests()
-            guard !requests.contains(where: { $0.identifier == identifier }) else { return }
+            guard !requests.contains(where: { $0.identifier == .nextOffPeakIdentifier }) else { return }
 
             let content = UNMutableNotificationContent()
             content.title = "Off peak period is starting"
@@ -118,17 +156,21 @@ public struct SendNotification: Reducer {
 
             try await self.userNotificationCenter.add(
                 .init(
-                    identifier: identifier,
+                    identifier: .nextOffPeakIdentifier,
                     content: content,
                     trigger: trigger
                 )
             )
 
             let date = date().addingTimeInterval(timeInterval)
-            let notification = UserNotification(id: identifier, message: content.body, date: date)
+            let notification = UserNotification(id: .nextOffPeakIdentifier, message: content.body, date: date)
             await send(.delegate(.notificationAdded(notification)))
         }
     }
+}
+
+private extension String {
+    static let nextOffPeakIdentifier = "com.renaudjenny.heures-creuses.notification.next-off-peak"
 }
 #else
 import ComposableArchitecture

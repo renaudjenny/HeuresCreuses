@@ -63,10 +63,16 @@ public struct OffPeakHomeWidget: Reducer {
                         .first(where: { date.distance(to: $0.lowerBound) > 0 })
                     else { return .none }
                     state.peakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.lowerBound)))
-                    return .none
+                    return updateSendNotification(&state)
                 }
             }
         }
+    }
+
+    private func updateSendNotification(_ state: inout State) -> Effect<Action> {
+        guard case let .peak(duration) = state.peakStatus else { return .none }
+        state.sendNotification.intent = .offPeakStart(durationBeforeOffPeak: duration)
+        return .none
     }
 }
 
