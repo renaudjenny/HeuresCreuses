@@ -9,6 +9,7 @@ public struct UserNotificationsList: Reducer {
     }
 
     public enum Action: Equatable {
+        case delete(IndexSet)
         case notificationsUpdated([UNNotificationRequest])
         case task
     }
@@ -21,6 +22,13 @@ public struct UserNotificationsList: Reducer {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case let .delete(indexSet):
+                let ids = indexSet.map { state.notifications[$0].id }
+                userNotificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
+                return .run { send in
+                    let notifications = await userNotificationCenter.pendingNotificationRequests()
+                    await send(.notificationsUpdated(notifications))
+                }
             case let .notificationsUpdated(notifications):
                 state.notifications = IdentifiedArrayOf(uniqueElements: notifications.map(\.userNotification))
                 return .none
@@ -53,14 +61,13 @@ struct UserNotificationsListView: View {
 
     var body: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
-            VStack {
-                Text("Pending notifications: \(viewStore.notifications.count)")
-                List {
-                    ForEach(viewStore.notifications) { notification in
-                        Text(notification.message)
-                    }
+            List {
+                ForEach(viewStore.notifications) { notification in
+                    Text(notification.message)
                 }
+                .onDelete(perform: { viewStore.send(.delete($0)) })
             }
+            .navigationTitle("^[\(viewStore.notifications.count) pending notifications](inflect: true)")
             .task { @MainActor in await viewStore.send(.task).finish() }
         }
     }
@@ -76,15 +83,17 @@ extension UNNotificationRequest {
 }
 
 #Preview {
-    UserNotificationsListView(store: Store(initialState: UserNotificationsList.State()) {
-        UserNotificationsList()
-            .transformDependency(\.userNotificationCenter) { dependency in
-                dependency.$pendingNotificationRequests = { @Sendable in
-                    let content = UNMutableNotificationContent()
-                    content.body = "Test notification body"
-                    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 12345, repeats: false)
-                    return [UNNotificationRequest(identifier: "1234", content: content, trigger: trigger)]
+    NavigationStack {
+        UserNotificationsListView(store: Store(initialState: UserNotificationsList.State()) {
+            UserNotificationsList()
+                .transformDependency(\.userNotificationCenter) { dependency in
+                    dependency.$pendingNotificationRequests = { @Sendable in
+                        let content = UNMutableNotificationContent()
+                        content.body = "Test notification body"
+                        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 12345, repeats: false)
+                        return [UNNotificationRequest(identifier: "1234", content: content, trigger: trigger)]
+                    }
                 }
-            }
-    })
+        })
+    }
 }
