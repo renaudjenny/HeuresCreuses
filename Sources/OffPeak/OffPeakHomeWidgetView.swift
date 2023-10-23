@@ -7,9 +7,9 @@ import SwiftUI
 public struct OffPeakHomeWidget: Reducer {
     public struct State: Equatable {
         public var peakStatus = PeakStatus.unavailable
-        var offPeakRanges: [ClosedRange<Date>] = []
-        var periods: [Period] = .example
-        var sendNotification = SendNotification.State()
+        public var offPeakRanges: [ClosedRange<Date>] = []
+        public var periods: [Period] = .example
+        public var sendNotification = SendNotification.State()
 
         public init(
             peakStatus: PeakStatus = PeakStatus.unavailable,
@@ -23,6 +23,7 @@ public struct OffPeakHomeWidget: Reducer {
     }
     
     public enum Action: Equatable {
+        case cancelTimer
         case sendNotification(SendNotification.Action)
         case task
         case timeChanged(Date)
@@ -43,6 +44,8 @@ public struct OffPeakHomeWidget: Reducer {
 
         Reduce { state, action in
             switch action {
+            case .cancelTimer:
+                return .cancel(id: CancelID.timer)
             case .sendNotification:
                 return .none
             case .task:

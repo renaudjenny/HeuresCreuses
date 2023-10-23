@@ -64,6 +64,7 @@ let package = Package(
                 "SendNotification",
             ]
         ),
+        .testTarget(name: "OffPeakTests", dependencies: ["OffPeak"]),
         .target(
             name: "Models",
             dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]
