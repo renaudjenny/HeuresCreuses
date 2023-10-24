@@ -87,5 +87,6 @@ let package = Package(
                 "SendNotification",
             ]
         ),
+        .testTarget(name: "UserNotificationTests", dependencies: ["UserNotification"]),
     ]
 )

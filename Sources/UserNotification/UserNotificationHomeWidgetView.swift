@@ -8,7 +8,7 @@ import UserNotificationsDependency
 
 public struct UserNotificationHomeWidget: Reducer {
     public struct State: Equatable {
-        var notifications: [UserNotification] = []
+        public var notifications: [UserNotification] = []
         @PresentationState var destination: UserNotificationsList.State?
 
         var nextNotification: UserNotification? {
@@ -35,6 +35,7 @@ public struct UserNotificationHomeWidget: Reducer {
 
     @Dependency(\.userNotificationCenter) var userNotificationCenter
     @Dependency(\.continuousClock) var clock
+    @Dependency(\.date.now) var now
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -43,10 +44,8 @@ public struct UserNotificationHomeWidget: Reducer {
                 return .none
             case let .notificationsUpdated(notificationsContents):
                 state.notifications = notificationsContents.compactMap {
-                    guard
-                        let trigger = $0.trigger as? UNTimeIntervalNotificationTrigger,
-                        let date = trigger.nextTriggerDate()
-                    else { return nil }
+                    guard let trigger = $0.trigger as? UNTimeIntervalNotificationTrigger else { return nil }
+                    let date = now.addingTimeInterval(trigger.timeInterval)
                     return UserNotification(id: $0.identifier, message: $0.content.body, date: date)
                 }
                 return .none
