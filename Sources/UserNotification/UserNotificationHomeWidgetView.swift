@@ -23,6 +23,7 @@ public struct UserNotificationHomeWidget: Reducer {
     }
 
     public enum Action: Equatable {
+        case cancelTimer
         case destination(PresentationAction<UserNotificationsList.Action>)
         case notificationsUpdated([UNNotificationRequest])
         case task
@@ -40,6 +41,8 @@ public struct UserNotificationHomeWidget: Reducer {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .cancelTimer:
+                return .cancel(id: CancelID.timer)
             case .destination:
                 return .none
             case let .notificationsUpdated(notificationsContents):
