@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import DataManagerDependency
 import HomeWidget
 import SwiftUI
 
@@ -20,6 +21,9 @@ public struct ApplianceHomeWidget: Reducer {
         case widgetTapped
     }
 
+    @Dependency(\.continuousClock) var clock
+    @Dependency(\.dataManager.save) var saveData
+
     public init() {}
 
     public var body: some ReducerOf<Self> {
@@ -40,6 +44,16 @@ public struct ApplianceHomeWidget: Reducer {
             Reduce { state, _ in
                 state.appliances = newValue ?? state.appliances
                 return .none
+            }
+        }
+
+        Reduce { state, _ in
+                .run { [appliances = state.appliances] _ in
+                enum CancelID { case saveDebounce }
+                try await withTaskCancellation(id: CancelID.saveDebounce, cancelInFlight: true) {
+                    try await self.clock.sleep(for: .seconds(1))
+                    try self.saveData(try JSONEncoder().encode(appliances), .appliances)
+                }
             }
         }
     }

@@ -8,7 +8,7 @@ import UserNotificationsDependency
 
 public struct UserNotificationHomeWidget: Reducer {
     public struct State: Equatable {
-        public var notifications: [UserNotification] = []
+        var notifications: [UserNotification] = []
         @PresentationState var destination: UserNotificationsList.State?
 
         var nextNotification: UserNotification? {

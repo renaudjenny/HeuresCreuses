@@ -1,6 +1,6 @@
 import ComposableArchitecture
 import SendNotification
-import UserNotification
+@testable import UserNotification
 import XCTest
 
 @MainActor
@@ -37,5 +37,19 @@ final class UserNotificationsHomeWidgetTests: XCTestCase {
         }
         await store.send(.cancelTimer)
         await store.finish()
+    }
+
+    func testNavigatingToList() async throws {
+        let notifications: IdentifiedArrayOf<UserNotification> = [
+            UserNotification(id: "1234", message: "Test", date: Date()),
+            UserNotification(id: "1235", message: "Test 2", date: Date())
+        ]
+        let store = TestStore(initialState: UserNotificationHomeWidget.State(notifications: notifications.elements)) {
+            UserNotificationHomeWidget()
+        }
+
+        await store.send(.widgetTapped) {
+            $0.destination = UserNotificationsList.State(notifications: notifications)
+        }
     }
 }
