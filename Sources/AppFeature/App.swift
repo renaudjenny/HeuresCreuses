@@ -4,7 +4,8 @@ import Models
 import OffPeak
 import UserNotification
 
-public struct App: Reducer {
+@Reducer
+public struct App {
     public struct State: Equatable {
         var applianceHomeWidget = ApplianceHomeWidget.State()
         var offPeakHomeWidget = OffPeakHomeWidget.State()
@@ -30,15 +31,15 @@ public struct App: Reducer {
     public init() {}
 
     public var body: some ReducerOf<Self> {
-        Scope(state: \.applianceHomeWidget, action: /App.Action.applianceHomeWidget) {
+        Scope(state: \.applianceHomeWidget, action: \.applianceHomeWidget) {
             ApplianceHomeWidget()
         }
 
-        Scope(state: \.offPeakHomeWidget, action: /App.Action.offPeakHomeWidget) {
+        Scope(state: \.offPeakHomeWidget, action: \.offPeakHomeWidget) {
             OffPeakHomeWidget()
         }
 
-        Scope(state: \.userNotificationHomeWidget, action: /App.Action.userNotificationHomeWidget) {
+        Scope(state: \.userNotificationHomeWidget, action: \.userNotificationHomeWidget) {
             UserNotificationHomeWidget()
         }
 

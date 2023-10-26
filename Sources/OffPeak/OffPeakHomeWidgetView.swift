@@ -4,7 +4,8 @@ import Models
 import SendNotification
 import SwiftUI
 
-public struct OffPeakHomeWidget: Reducer {
+@Reducer
+public struct OffPeakHomeWidget {
     public struct State: Equatable {
         public var peakStatus = PeakStatus.unavailable
         public var offPeakRanges: [ClosedRange<Date>] = []
@@ -38,7 +39,7 @@ public struct OffPeakHomeWidget: Reducer {
     public init() {}
 
     public var body: some ReducerOf<Self> {
-        Scope(state: \.sendNotification, action: /Action.sendNotification) {
+        Scope(state: \.sendNotification, action: \.sendNotification) {
             SendNotification()
         }
 

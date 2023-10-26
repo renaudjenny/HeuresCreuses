@@ -17,7 +17,7 @@ let package = Package(
         .library(name: "UserNotification", targets: ["UserNotification"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.0.0"),
+        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", branch: "case-key-paths"),
         .package(url: "https://github.com/tgrapperon/swift-dependencies-additions", from: "1.0.0"),
     ],
     targets: [
@@ -25,6 +25,7 @@ let package = Package(
             name: "ApplianceFeature",
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "DataManagerDependency",
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "HomeWidget",
                 "Models",
@@ -40,7 +41,6 @@ let package = Package(
             dependencies: [
                 "ApplianceFeature",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                "DataManagerDependency",
                 "Models",
                 "OffPeak",
                 "UserNotification",

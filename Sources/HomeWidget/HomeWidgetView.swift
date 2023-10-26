@@ -58,5 +58,7 @@ public struct HomeWidgetView<Description: View>: View {
             Text("No notifications planned")
         }
     }
+    #if os(iOS)
     .listRowSpacing(8)
+    #endif
 }

@@ -1,7 +1,8 @@
 import ComposableArchitecture
 import Foundation
 
-public struct ApplianceForm: Reducer {
+@Reducer
+public struct ApplianceForm {
     public struct State: Equatable {
         @BindingState public var appliance: Appliance
         public var programs: IdentifiedArrayOf<ProgramForm.State>
@@ -48,7 +49,7 @@ public struct ApplianceForm: Reducer {
                 return .none
             }
         }
-        .forEach(\.programs, action: /Action.programs) {
+        .forEach(\.programs, action: \.programs) {
             ProgramForm()
         }
         .onChange(of: \.appliance.programs) { _, newValue in

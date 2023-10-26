@@ -4,7 +4,8 @@ import NotificationCenter
 import Models
 import UserNotificationsDependency
 
-public struct SendNotification: Reducer {
+@Reducer
+public struct SendNotification {
     public struct State: Equatable {
         public var intent: Intent?
         var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined

@@ -1,6 +1,7 @@
 import ComposableArchitecture
 
-public struct ProgramForm: Reducer {
+@Reducer
+public struct ProgramForm {
     public struct State: Equatable, Identifiable {
         @BindingState var program: Program
         @BindingState var isExtended: Bool

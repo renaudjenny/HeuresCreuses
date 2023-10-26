@@ -2,7 +2,8 @@ import ComposableArchitecture
 import Foundation
 import SendNotification
 
-public struct Optimum: Reducer {
+@Reducer
+public struct Optimum {
     public struct State: Equatable {
         let program: Program
         let appliance: Appliance
@@ -29,7 +30,7 @@ public struct Optimum: Reducer {
     @Dependency(\.uuid) var uuid
 
     public var body: some ReducerOf<Self> {
-        Scope(state: \.sendNotification, action: /Action.sendNotification) {
+        Scope(state: \.sendNotification, action: \.sendNotification) {
             SendNotification()
         }
 
