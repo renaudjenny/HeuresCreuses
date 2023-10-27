@@ -25,6 +25,7 @@ let package = Package(
             name: "ApplianceFeature",
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "DataManagerDependency",
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "HomeWidget",
                 "Models",
@@ -40,7 +41,6 @@ let package = Package(
             dependencies: [
                 "ApplianceFeature",
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                "DataManagerDependency",
                 "Models",
                 "OffPeak",
                 "UserNotification",

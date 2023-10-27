@@ -49,12 +49,12 @@ public struct ApplianceHomeWidget: Reducer {
 
         Reduce { state, _ in
                 .run { [appliances = state.appliances] _ in
-                enum CancelID { case saveDebounce }
-                try await withTaskCancellation(id: CancelID.saveDebounce, cancelInFlight: true) {
-                    try await self.clock.sleep(for: .seconds(1))
-                    try self.saveData(try JSONEncoder().encode(appliances), .appliances)
+                    enum CancelID { case saveDebounce }
+                    try await withTaskCancellation(id: CancelID.saveDebounce, cancelInFlight: true) {
+                        try await self.clock.sleep(for: .seconds(1))
+                        try self.saveData(try JSONEncoder().encode(appliances), .appliances)
+                    }
                 }
-            }
         }
     }
 }
