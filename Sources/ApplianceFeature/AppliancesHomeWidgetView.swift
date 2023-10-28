@@ -18,10 +18,12 @@ public struct ApplianceHomeWidget: Reducer {
     }
     public enum Action: Equatable {
         case destination(PresentationAction<ApplianceSelection.Action>)
+        case task
         case widgetTapped
     }
 
     @Dependency(\.continuousClock) var clock
+    @Dependency(\.dataManager.load) var loadData
     @Dependency(\.dataManager.save) var saveData
 
     public init() {}
@@ -30,6 +32,14 @@ public struct ApplianceHomeWidget: Reducer {
         Reduce { state, action in
             switch action {
             case .destination:
+                return .none
+
+            case .task:
+                // TODO: add logs and error screen if it fails?
+                state.appliances = (try? JSONDecoder().decode(
+                    IdentifiedArrayOf<Appliance>.self,
+                    from: loadData(.appliances)
+                )) ?? state.appliances
                 return .none
 
             case .widgetTapped:
@@ -86,6 +96,7 @@ public struct AppliancesHomeWidgetView: View {
                 store: store.scope(state: \.$destination, action: { .destination($0) }),
                 destination: ApplianceSelectionView.init
             )
+            .task { await viewStore.send(.task).finish() }
         }
     }
 }
