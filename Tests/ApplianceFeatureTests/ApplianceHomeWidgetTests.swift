@@ -49,4 +49,29 @@ final class ApplianceHomeWidgetTests: XCTestCase {
         await fulfillment(of: [saveExpectation])
         await store.finish()
     }
+
+    func testTask() async throws {
+        let savedAppliances: IdentifiedArrayOf<Appliance> = [
+            .dishwasher,
+            .washingMachine,
+            Appliance(
+                id: UUID(),
+                name: "Test",
+                type: .dishWasher,
+                programs: [Program(id: UUID(), duration: .seconds(120 * 60))],
+                delays: [.seconds(2 * 60 * 60), .seconds(4 * 60 * 60)]
+            )
+        ]
+        let store = TestStore(initialState: ApplianceHomeWidget.State()) {
+            ApplianceHomeWidget()
+        } withDependencies: {
+            $0.continuousClock = ImmediateClock()
+            $0.dataManager.load = { _ in try JSONEncoder().encode(savedAppliances) }
+        }
+
+        await store.send(.task) {
+            $0.appliances = savedAppliances
+        }
+        await store.finish()
+    }
 }
