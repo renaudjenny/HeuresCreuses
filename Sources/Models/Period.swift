@@ -1,9 +1,10 @@
 import Foundation
 import Dependencies
 
-public struct Period: Equatable {
+public struct Period: Equatable, Hashable, Identifiable {
     public let start: DateComponents
     public let end: DateComponents
+    public var id: Int { hashValue }
 
     public init(start: DateComponents, end: DateComponents) {
         self.start = start
