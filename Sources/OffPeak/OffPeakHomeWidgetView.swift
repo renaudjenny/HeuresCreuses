@@ -6,6 +6,7 @@ import SwiftUI
 
 public struct OffPeakHomeWidget: Reducer {
     public struct State: Equatable {
+        @PresentationState public var destination: OffPeakSelection.State?
         public var peakStatus = PeakStatus.unavailable
         public var offPeakRanges: [ClosedRange<Date>] = []
         public var periods: [Period] = .example
@@ -24,9 +25,11 @@ public struct OffPeakHomeWidget: Reducer {
     
     public enum Action: Equatable {
         case cancelTimer
+        case destination(PresentationAction<OffPeakSelection.Action>)
         case sendNotification(SendNotification.Action)
         case task
         case timeChanged(Date)
+        case widgetTapped
     }
     
     private enum CancelID { case timer }
@@ -46,6 +49,10 @@ public struct OffPeakHomeWidget: Reducer {
             switch action {
             case .cancelTimer:
                 return .cancel(id: CancelID.timer)
+
+            case .destination:
+                return .none
+
             case .sendNotification:
                 return .none
             case .task:
@@ -68,7 +75,14 @@ public struct OffPeakHomeWidget: Reducer {
                     state.peakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.lowerBound)))
                     return updateSendNotification(&state)
                 }
+
+            case .widgetTapped:
+                state.destination = OffPeakSelection.State()
+                return .none
             }
+        }
+        .ifLet(\.$destination, action: /Action.destination) {
+            OffPeakSelection()
         }
     }
 
@@ -96,24 +110,27 @@ public struct OffPeakHomeWidgetView: View {
 
     public var body: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
-            HomeWidgetView(title: "Off Peak hours", icon: Image(systemName: "arrow.up.circle.badge.clock")) {
-                VStack {
-                    switch viewStore.peakStatus {
-                    case .unavailable:
-                        Text("Wait a sec...").font(.body)
-                    case let .offPeak(duration):
-                        VStack(alignment: .leading) {
-                            Text("Currently **off peak**")
-                            Text(relativeNextChange(duration)).font(.headline)
-                        }
-                    case let .peak(duration):
-                        VStack(alignment: .leading) {
-                            Text("Currently **peak** hour")
-                            Text(relativeNextChange(duration)).font(.headline)
+            Button { viewStore.send(.widgetTapped) } label: {
+                HomeWidgetView(title: "Off Peak hours", icon: Image(systemName: "arrow.up.circle.badge.clock")) {
+                    VStack {
+                        switch viewStore.peakStatus {
+                        case .unavailable:
+                            Text("Wait a sec...").font(.body)
+                        case let .offPeak(duration):
+                            VStack(alignment: .leading) {
+                                Text("Currently **off peak**")
+                                Text(relativeNextChange(duration)).font(.headline)
+                            }
+                        case let .peak(duration):
+                            VStack(alignment: .leading) {
+                                Text("Currently **peak** hour")
+                                Text(relativeNextChange(duration)).font(.headline)
+                            }
                         }
                     }
                 }
             }
+            .buttonStyle(.plain)
             .background(alignment: .bottomTrailing) {
                 if case .peak = viewStore.peakStatus {
                     SendNotificationButtonView(
@@ -126,6 +143,10 @@ public struct OffPeakHomeWidgetView: View {
                 }
             }
             .listRowBackground(color(for: viewStore.peakStatus))
+            .navigationDestination(
+                store: store.scope(state: \.$destination, action: { .destination($0) }),
+                destination: OffPeakSelectionView.init
+            )
             .task { @MainActor in await viewStore.send(.task).finish() }
         }
     }
@@ -144,32 +165,34 @@ public struct OffPeakHomeWidgetView: View {
 }
 
 #Preview {
-    List {
-        OffPeakHomeWidgetView(
-            store: Store(initialState: OffPeakHomeWidget.State()) {
+    NavigationStack {
+        List {
+            OffPeakHomeWidgetView(
+                store: Store(initialState: OffPeakHomeWidget.State()) {
+                    OffPeakHomeWidget()
+                }
+            )
+            OffPeakHomeWidgetView(store: Store(initialState: OffPeakHomeWidget.State()) {
                 OffPeakHomeWidget()
-            }
-        )
-        OffPeakHomeWidgetView(store: Store(initialState: OffPeakHomeWidget.State()) {
-            OffPeakHomeWidget()
-                .dependency(\.continuousClock, TestClock())
-        })
-        OffPeakHomeWidgetView(
-            store: Store(initialState: OffPeakHomeWidget.State()) {
-                OffPeakHomeWidget()
-                    .dependency(\.date, .constant(
-                        try! Date("2023-10-09T04:00:00+02:00", strategy: .iso8601)
-                    ))
-            }
-        )
-        OffPeakHomeWidgetView(
-            store: Store(initialState: OffPeakHomeWidget.State()) {
-                OffPeakHomeWidget()
-                    .dependency(\.date, .constant(
-                        try! Date("2023-10-09T22:00:00+02:00", strategy: .iso8601)
-                    ))
-            }
-        )
+                    .dependency(\.continuousClock, TestClock())
+            })
+            OffPeakHomeWidgetView(
+                store: Store(initialState: OffPeakHomeWidget.State()) {
+                    OffPeakHomeWidget()
+                        .dependency(\.date, .constant(
+                            try! Date("2023-10-09T04:00:00+02:00", strategy: .iso8601)
+                        ))
+                }
+            )
+            OffPeakHomeWidgetView(
+                store: Store(initialState: OffPeakHomeWidget.State()) {
+                    OffPeakHomeWidget()
+                        .dependency(\.date, .constant(
+                            try! Date("2023-10-09T22:00:00+02:00", strategy: .iso8601)
+                        ))
+                }
+            )
+        }
+        .listRowSpacing(8)
     }
-    .listRowSpacing(8)
 }
