@@ -5,39 +5,93 @@ import SwiftUI
 public struct OffPeakSelection: Reducer {
     public struct State: Equatable {
         public var periods = IdentifiedArrayOf<Period>(uniqueElements: [Period].example)
+        public var minute: Double = .zero
     }
     public enum Action: Equatable {
-
+        case updateMinute(Double)
+        case task
     }
+
+    @Dependency(\.calendar) var calendar
+    @Dependency(\.continuousClock) var clock
+    @Dependency(\.date.now) var now
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
-            return .none
+            switch action {
+            case let .updateMinute(minute):
+                state.minute = minute
+                return .none
+            case .task:
+                let minute = {
+                    Double(calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now))
+                }
+                return .run { send in
+                    await send(.updateMinute(minute()))
+                    for await _ in clock.timer(interval: .seconds(60)) {
+                        await send(.updateMinute(minute()))
+                    }
+                }
+            }
         }
     }
 }
 
 public struct OffPeakSelectionView: View {
     let store: StoreOf<OffPeakSelection>
+    @Environment(\.colorScheme) private var colorScheme
 
     private struct ViewState: Equatable {
         let periods: IdentifiedArrayOf<Period>
+        let minute: Double
 
         init(_ state: OffPeakSelection.State) {
             periods = state.periods
+            minute = state.minute
         }
     }
 
     public var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewState in
+        WithViewStore(store, observe: ViewState.init) { viewStore in
             Form {
-                ForEach(viewState.periods) { period in
+                clockWidgetView(periods: viewStore.periods.elements, minute: viewStore.minute)
+                ForEach(viewStore.periods) { period in
                     period.clockView
                 }
             }
             .navigationTitle("Off peak periods")
+            .task { await viewStore.send(.task).finish() }
         }
     }
+
+    private func clockWidgetView(periods: [Period], minute: Double) -> some View {
+        ZStack {
+            Circle()
+                .fill(Color.primary.opacity(15/100))
+            Circle()
+                .scale(75/100)
+                .fill(backgroundColor)
+
+            GeometryReader { geometryProxy in
+                Rectangle()
+                    .size(CGSize(width: 2, height: 10))
+                    .offset(CGSize(width: geometryProxy.size.width / 2, height: geometryProxy.size.width / 5))
+                    .rotation(.degrees(360 * (minute / (24 * 60))))
+                    .fill(Color.accentColor)
+
+                ForEach(0..<96) { i in
+                    Rectangle()
+                        .size(CGSize(width: 1, height: i % 4 == 0 ? 6 : 2))
+                        .offset(CGSize(width: geometryProxy.size.width / 2, height: geometryProxy.size.width / 6))
+                        .rotation(.degrees(360 / 96 * Double(i)))
+                        .fill(Color.primary.opacity(50/100))
+                }
+            }
+        }
+        .padding()
+    }
+
+    private var backgroundColor: Color { colorScheme == .dark ? .black : .white }
 }
 
 private extension DateComponents {
