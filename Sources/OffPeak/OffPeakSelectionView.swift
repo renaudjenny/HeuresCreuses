@@ -86,6 +86,14 @@ public struct OffPeakSelectionView: View {
                         .rotation(.degrees(360 / 96 * Double(i)))
                         .fill(Color.primary.opacity(50/100))
                 }
+
+                Group {
+                    Text("0").position(x: geometryProxy.size.width/2, y: geometryProxy.size.height * 2/9)
+                    Text("6").position(x: geometryProxy.size.width * 7/9, y: geometryProxy.size.height/2)
+                    Text("12").position(x: geometryProxy.size.width/2, y: geometryProxy.size.height * 7/9)
+                    Text("18").position(x: geometryProxy.size.width * 2/9, y: geometryProxy.size.height/2)
+                }
+                .bold()
             }
         }
         .padding()
