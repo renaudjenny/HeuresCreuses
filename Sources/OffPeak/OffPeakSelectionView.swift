@@ -72,31 +72,46 @@ public struct OffPeakSelectionView: View {
                 .scale(75/100)
                 .fill(backgroundColor)
 
-            GeometryReader { geometryProxy in
-                Rectangle()
-                    .size(CGSize(width: 2, height: 10))
-                    .offset(CGSize(width: geometryProxy.size.width / 2, height: geometryProxy.size.width / 5))
-                    .rotation(.degrees(360 * (minute / (24 * 60))))
-                    .fill(Color.accentColor)
-
-                ForEach(0..<96) { i in
-                    Rectangle()
-                        .size(CGSize(width: 1, height: i % 4 == 0 ? 6 : 2))
-                        .offset(CGSize(width: geometryProxy.size.width / 2, height: geometryProxy.size.width / 6))
-                        .rotation(.degrees(360 / 96 * Double(i)))
-                        .fill(Color.primary.opacity(50/100))
-                }
-
-                Group {
-                    Text("0").position(x: geometryProxy.size.width/2, y: geometryProxy.size.height * 2/9)
-                    Text("6").position(x: geometryProxy.size.width * 7/9, y: geometryProxy.size.height/2)
-                    Text("12").position(x: geometryProxy.size.width/2, y: geometryProxy.size.height * 7/9)
-                    Text("18").position(x: geometryProxy.size.width * 2/9, y: geometryProxy.size.height/2)
-                }
-                .bold()
-            }
+            clockWidgetIndicators(minute: minute)
+            clockWidgetNumbersView
         }
         .padding()
+    }
+
+    private func clockWidgetIndicators(minute: Double) -> some View {
+        GeometryReader { geometryProxy in
+            Rectangle()
+                .size(CGSize(width: 2, height: 10))
+                .offset(CGSize(width: geometryProxy.size.width * 50/100, height: geometryProxy.size.height * 18/100))
+                .rotation(.degrees(360 * (minute / (24 * 60))))
+                .fill(Color.accentColor)
+
+            ForEach(0..<96) { i in
+                Rectangle()
+                    .size(CGSize(width: 1, height: i % 4 == 0 ? 6 : 2))
+                    .offset(CGSize(width: geometryProxy.size.width / 2, height: geometryProxy.size.width / 6))
+                    .rotation(.degrees(360 / 96 * Double(i)))
+                    .fill(Color.primary.opacity(50/100))
+            }
+        }
+    }
+
+    private var clockWidgetNumbersView: some View {
+        GeometryReader { geometryProxy in
+            ForEach(0..<23) { i in
+                if i % 2 == 0 {
+                    let angle: Double = (2 * .pi)/24 * Double(i) - .pi/2
+                    let radius = min(geometryProxy.size.width, geometryProxy.size.height) * 28/100
+
+                    Text("\(i)")
+                        .position(
+                            x: cos(angle) * radius + geometryProxy.size.width/2,
+                            y: sin(angle) * radius + geometryProxy.size.height/2
+                        )
+                        .foregroundStyle(i % 6 == 0 ? Color.primary : Color.secondary)
+                }
+            }
+        }
     }
 
     private var backgroundColor: Color { colorScheme == .dark ? .black : .white }
