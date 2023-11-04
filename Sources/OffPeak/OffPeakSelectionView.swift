@@ -72,10 +72,24 @@ public struct OffPeakSelectionView: View {
                 .scale(75/100)
                 .fill(backgroundColor)
 
+            ForEach(periods) { period in
+                clockWidgetPeriod(period)
+            }
+
             clockWidgetIndicators(minute: minute)
             clockWidgetNumbersView
         }
         .padding()
+    }
+
+    private func clockWidgetPeriod(_ period: Period) -> some View {
+        GeometryReader { geometryProxy in
+            Circle()
+                .rotation(.radians(-.pi/2))
+                .trim(from: period.start.relativeClockPosition, to: period.end.relativeClockPosition)
+                .stroke(Color.green, style: StrokeStyle(lineWidth: geometryProxy.size.width * 10/100, lineCap: .round))
+                .padding(geometryProxy.size.width * 6.3/100)
+        }
     }
 
     private func clockWidgetIndicators(minute: Double) -> some View {
