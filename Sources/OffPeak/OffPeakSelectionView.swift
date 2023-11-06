@@ -94,11 +94,20 @@ public struct OffPeakSelectionView: View {
 
     private func clockWidgetIndicators(minute: Double) -> some View {
         GeometryReader { geometryProxy in
+            let angle: Double = (2 * .pi)/Double(24 * 60) * Double(minute) - .pi/2
+            let radius = min(geometryProxy.size.width, geometryProxy.size.height) * 40/100
             Rectangle()
-                .size(CGSize(width: 2, height: 10))
-                .offset(CGSize(width: geometryProxy.size.width * 50/100, height: geometryProxy.size.height * 18/100))
-                .rotation(.degrees(360 * (minute / (24 * 60))))
+                .size(CGSize(width: 2, height: geometryProxy.size.height * 7/100))
                 .fill(Color.accentColor)
+                .position(
+                    x: geometryProxy.size.width - 1,
+                    y: geometryProxy.size.height
+                )
+                .rotationEffect(.radians(angle - .pi/2))
+                .position(
+                    x: cos(angle) * radius + geometryProxy.size.width/2,
+                    y: sin(angle) * radius + geometryProxy.size.height/2
+                )
 
             ForEach(0..<96) { i in
                 Rectangle()
