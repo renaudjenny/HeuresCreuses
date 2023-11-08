@@ -1,7 +1,6 @@
 import ComposableArchitecture
 import HomeWidget
 import Models
-import SendNotification
 import SwiftUI
 
 public struct OffPeakHomeWidget: Reducer {
@@ -10,7 +9,6 @@ public struct OffPeakHomeWidget: Reducer {
         public var peakStatus = PeakStatus.unavailable
         public var offPeakRanges: [ClosedRange<Date>] = []
         public var periods: [Period] = .example
-        public var sendNotification = SendNotification.State()
 
         public init(
             peakStatus: PeakStatus = PeakStatus.unavailable,
@@ -26,7 +24,6 @@ public struct OffPeakHomeWidget: Reducer {
     public enum Action: Equatable {
         case cancelTimer
         case destination(PresentationAction<OffPeakSelection.Action>)
-        case sendNotification(SendNotification.Action)
         case task
         case timeChanged(Date)
         case widgetTapped
@@ -41,10 +38,6 @@ public struct OffPeakHomeWidget: Reducer {
     public init() {}
 
     public var body: some ReducerOf<Self> {
-        Scope(state: \.sendNotification, action: /Action.sendNotification) {
-            SendNotification()
-        }
-
         Reduce { state, action in
             switch action {
             case .cancelTimer:
@@ -53,8 +46,6 @@ public struct OffPeakHomeWidget: Reducer {
             case .destination:
                 return .none
 
-            case .sendNotification:
-                return .none
             case .task:
                 state.offPeakRanges = .offPeakRanges(state.periods, now: date(), calendar: calendar)
                 return .run { send in
@@ -73,7 +64,7 @@ public struct OffPeakHomeWidget: Reducer {
                         .first(where: { date.distance(to: $0.lowerBound) > 0 })
                     else { return .none }
                     state.peakStatus = .peak(until: .seconds(date.distance(to: closestOffPeak.lowerBound)))
-                    return updateSendNotification(&state)
+                    return .none
                 }
 
             case .widgetTapped:
@@ -84,12 +75,6 @@ public struct OffPeakHomeWidget: Reducer {
         .ifLet(\.$destination, action: /Action.destination) {
             OffPeakSelection()
         }
-    }
-
-    private func updateSendNotification(_ state: inout State) -> Effect<Action> {
-        guard case let .peak(duration) = state.peakStatus else { return .none }
-        state.sendNotification.intent = .offPeakStart(durationBeforeOffPeak: duration)
-        return .none
     }
 }
 
@@ -131,17 +116,6 @@ public struct OffPeakHomeWidgetView: View {
                 }
             }
             .buttonStyle(.plain)
-            .background(alignment: .bottomTrailing) {
-                if case .peak = viewStore.peakStatus {
-                    SendNotificationButtonView(
-                        store: store.scope(state: \.sendNotification, action: { .sendNotification($0) })
-                    )
-                    .labelStyle(.iconOnly)
-                    .padding(.vertical)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .contentShape(RoundedRectangle(cornerRadius: 10))
-                }
-            }
             .listRowBackground(color(for: viewStore.peakStatus))
             .navigationDestination(
                 store: store.scope(state: \.$destination, action: { .destination($0) }),

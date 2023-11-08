@@ -1,14 +1,18 @@
 import ComposableArchitecture
 import Models
+import SendNotification
 import SwiftUI
 
 public struct OffPeakSelection: Reducer {
     public struct State: Equatable {
+        public var peakStatus: PeakStatus = .unavailable
         public var periods = IdentifiedArrayOf<Period>(uniqueElements: [Period].example)
         public var minute: Double = .zero
+        public var sendNotification = SendNotification.State()
     }
     public enum Action: Equatable {
         case updateMinute(Double)
+        case sendNotification(SendNotification.Action)
         case task
     }
 
@@ -17,11 +21,19 @@ public struct OffPeakSelection: Reducer {
     @Dependency(\.date.now) var now
 
     public var body: some ReducerOf<Self> {
+        Scope(state: \.sendNotification, action: /Action.sendNotification) {
+            SendNotification()
+        }
+
         Reduce { state, action in
             switch action {
             case let .updateMinute(minute):
                 state.minute = minute
+                return .concatenate(updatePeakStatus(&state), updateSendNotification(&state))
+
+            case .sendNotification:
                 return .none
+
             case .task:
                 let minute = {
                     Double(calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now))
@@ -35,6 +47,25 @@ public struct OffPeakSelection: Reducer {
             }
         }
     }
+
+    private func updatePeakStatus(_ state: inout State) -> Effect<Action> {
+        let offPeakRanges = [ClosedRange<Date>].offPeakRanges(state.periods.elements, now: now, calendar: calendar)
+        state.peakStatus = if let currentOffPeak = offPeakRanges.first(where: { $0.contains(now) }) {
+            .offPeak(until: .seconds(now.distance(to: currentOffPeak.upperBound)))
+        } else if let closestOffPeak = offPeakRanges.first(where: { now.distance(to: $0.lowerBound) > 0 }) {
+            .peak(until: .seconds(now.distance(to: closestOffPeak.lowerBound)))
+        } else {
+            .unavailable
+        }
+        return .none
+    }
+
+    private func updateSendNotification(_ state: inout State) -> Effect<Action> {
+        // TODO: send different notification in case it's not a peak?
+        guard case let .peak(duration) = state.peakStatus else { return .none }
+        state.sendNotification.intent = .offPeakStart(durationBeforeOffPeak: duration)
+        return .none
+    }
 }
 
 public struct OffPeakSelectionView: View {
@@ -42,10 +73,12 @@ public struct OffPeakSelectionView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private struct ViewState: Equatable {
+        let peakStatus: PeakStatus
         let periods: IdentifiedArrayOf<Period>
         let minute: Double
 
         init(_ state: OffPeakSelection.State) {
+            peakStatus = state.peakStatus
             periods = state.periods
             minute = state.minute
         }
@@ -54,9 +87,29 @@ public struct OffPeakSelectionView: View {
     public var body: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
             Form {
-                clockWidgetView(periods: viewStore.periods.elements, minute: viewStore.minute)
-                ForEach(viewStore.periods) { period in
-                    period.clockView
+                Section("Periods") {
+                    clockWidgetView(periods: viewStore.periods.elements, minute: viewStore.minute)
+                    ForEach(viewStore.periods) { period in
+                        period.clockView
+                    }
+                }
+
+                Section("Peak status") {
+                    VStack(alignment: .leading) {
+                        switch viewStore.peakStatus {
+                        case .offPeak:
+                            Text("Currently off peak")
+                        case .peak:
+                            Text("Currently peak hours")
+                            SendNotificationButtonView(store: store.scope(
+                                state: \.sendNotification,
+                                action: { .sendNotification($0) }
+                            ))
+                            .padding(.vertical)
+                        case .unavailable:
+                            Text("Calculating status...").redacted(reason: .placeholder)
+                        }
+                    }
                 }
             }
             .navigationTitle("Off peak periods")

@@ -22,7 +22,6 @@ final class OffPeakTests: XCTestCase {
         await store.send(.cancelTimer)
         await store.send(.timeChanged(date)) {
             let duration: Duration = .seconds(date.distance(to: closestOffPeak.lowerBound))
-            $0.sendNotification.intent = .offPeakStart(durationBeforeOffPeak: duration)
             $0.peakStatus = .peak(until: duration)
         }
         await store.finish()
