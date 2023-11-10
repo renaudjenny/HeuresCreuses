@@ -74,7 +74,6 @@ struct UserNotificationsListView: View {
         VStack(alignment: .leading) {
             Text(notification.message)
                 .font(.headline)
-//            let distance: String = notification.date.formatted(.relative(presentation: .named, unitsStyle: .abbreviated))
             TimelineView(.periodic(from: .now, by: 1)) { _ in
                 let duration = Duration.seconds(Date.now.distance(to: notification.date))
                 let distance: String = duration.formatted(.time(pattern: .hourMinuteSecond))

@@ -61,10 +61,16 @@ public struct OffPeakSelection: Reducer {
     }
 
     private func updateSendNotification(_ state: inout State) -> Effect<Action> {
-        // TODO: send different notification in case it's not a peak?
-        guard case let .peak(duration) = state.peakStatus else { return .none }
-        state.sendNotification.intent = .offPeakStart(durationBeforeOffPeak: duration)
-        return .none
+        switch state.peakStatus {
+        case let .offPeak(until):
+            state.sendNotification.intent = .offPeakEnd(durationBeforePeak: until)
+            return .none
+        case let .peak(until):
+            state.sendNotification.intent = .offPeakStart(durationBeforeOffPeak: until)
+            return .none
+        case .unavailable:
+            return .none
+        }
     }
 }
 
@@ -99,6 +105,11 @@ public struct OffPeakSelectionView: View {
                         switch viewStore.peakStatus {
                         case .offPeak:
                             Text("Currently off peak")
+                            SendNotificationButtonView(store: store.scope(
+                                state: \.sendNotification,
+                                action: { .sendNotification($0) }
+                            ))
+                            .padding(.vertical)
                         case .peak:
                             Text("Currently peak hours")
                             SendNotificationButtonView(store: store.scope(
@@ -234,6 +245,14 @@ private extension Period {
     NavigationStack {
         OffPeakSelectionView(store: Store(initialState: OffPeakSelection.State()) {
             OffPeakSelection()
+        })
+    }
+}
+
+#Preview {
+    NavigationStack {
+        OffPeakSelectionView(store: Store(initialState: OffPeakSelection.State()) {
+            OffPeakSelection().dependency(\.date, .constant(Date(timeIntervalSince1970: 5000)))
         })
     }
 }
