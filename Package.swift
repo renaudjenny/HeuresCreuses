@@ -64,10 +64,17 @@ let package = Package(
                 "SendNotification",
             ]
         ),
-        .testTarget(name: "OffPeakTests", dependencies: ["OffPeak"]),
+        .testTarget(
+            name: "OffPeakTests",
+            dependencies: ["OffPeak"]
+        ),
         .target(
             name: "Models",
             dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]
+        ),
+        .testTarget(
+            name: "ModelsTests",
+            dependencies: ["Models"]
         ),
         .target(
             name: "SendNotification",
