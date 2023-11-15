@@ -61,16 +61,20 @@ public extension [ClosedRange<Date>] {
         let currentDayMinutes = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
         let periodsMinutes = periods.flatMap(\.periodMinutes)
 
-        return periodsMinutes.flatMap { period -> [ClosedRange<Date>] in
+        let ranges = periodsMinutes.flatMap { period -> [ClosedRange<Date>] in
             guard period.end > currentDayMinutes else { return [] }
-            var ranges: [ClosedRange<Date>] = []
+            var periodRanges: [ClosedRange<Date>] = []
 
             if (period.start...period.end).contains(currentDayMinutes) {
-                period.range(from: now, calendar: calendar, direction: .backward).map { ranges.append($0) }
+                period.range(from: now, calendar: calendar, direction: .backward).map { periodRanges.append($0) }
             }
 
-            return ranges
+            period.range(from: now, calendar: calendar).map { periodRanges.append($0) }
+
+            return periodRanges
         }
+
+        return Self(ranges.prefix(2))
     }
 }
 

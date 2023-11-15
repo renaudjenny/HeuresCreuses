@@ -44,4 +44,15 @@ final class ClosedRangeDateOffPeakRangesTests: XCTestCase {
 
         XCTAssertEqual(ranges.count, 1)
     }
+
+    func testOffPeakRangesIncludingCurrentOne() throws {
+        let periods = [Period].example
+        let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-14T07:00:00+02:00"))
+        var calendar = Calendar.current
+        calendar.timeZone = try XCTUnwrap(TimeZone(abbreviation: "CEST"))
+
+        let ranges = [ClosedRange<Date>].nextOffPeakRanges(periods, now: now, calendar: calendar)
+
+        XCTAssertEqual(ranges.count, 2)
+    }
 }
