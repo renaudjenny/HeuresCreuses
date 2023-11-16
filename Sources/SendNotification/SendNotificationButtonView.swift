@@ -31,6 +31,7 @@ public struct SendNotificationButtonView: View {
                         let duration = switch viewStore.intent {
                         case let .applianceToProgram(_, _, durationBeforeStart): durationBeforeStart
                         case let .offPeakStart(durationBeforeOffPeak): durationBeforeOffPeak
+                        case let .offPeakEnd(durationBeforePeak): durationBeforePeak
                         case .none: Duration.zero
                         }
 

@@ -22,16 +22,20 @@ public struct ProgramSelectionView: View {
                     ForEach(viewStore.appliance.programs) { program in
                         Button { viewStore.send(.programTapped(program)) } label: {
                             VStack(alignment: .leading) {
-                                Text(program.name).font(.title3)
+                                Text(program.name)
+                                    .font(.title3)
                                 Label(
                                     program.duration
                                         .formatted(.units(allowed: [.minutes], width: .wide)),
                                     systemImage: "timer"
                                 )
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(Material.thin)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.horizontal)
                     }
                     .sheet(
                         store: store.scope(
@@ -109,14 +113,10 @@ public struct ProgramSelectionView: View {
     }
 }
 
-#if DEBUG
-struct ProgramSelectionView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            ProgramSelectionView(store: Store(initialState: ProgramSelection.State(appliance: .dishwasher)) {
-                ProgramSelection()
-            })
-        }
+#Preview {
+    NavigationStack {
+        ProgramSelectionView(store: Store(initialState: ProgramSelection.State(appliance: .dishwasher)) {
+            ProgramSelection()
+        })
     }
 }
-#endif

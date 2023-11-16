@@ -63,13 +63,25 @@ struct UserNotificationsListView: View {
     var body: some View {
         WithViewStore(store, observe: ViewState.init) { viewStore in
             List {
-                ForEach(viewStore.notifications) { notification in
-                    Text(notification.message)
-                }
-                .onDelete(perform: { viewStore.send(.delete($0)) })
+                ForEach(viewStore.notifications, content: notificationView)
+                    .onDelete(perform: { viewStore.send(.delete($0)) })
             }
             .navigationTitle("^[\(viewStore.notifications.count) pending notifications](inflect: true)")
             .task { @MainActor in await viewStore.send(.task).finish() }
+        }
+    }
+
+    private func notificationView(_ notification: UserNotification) -> some View {
+        VStack(alignment: .leading) {
+            Text(notification.message)
+                .font(.headline)
+            TimelineView(.periodic(from: .now, by: 1)) { _ in
+                let duration = Duration.seconds(Date.now.distance(to: notification.date))
+                let distance: String = duration.formatted(.time(pattern: .hourMinuteSecond))
+                Label(distance, systemImage: "clock.badge")
+                    .foregroundStyle(.secondary)
+                    .font(.body)
+            }
         }
     }
 }
@@ -91,8 +103,12 @@ extension UNNotificationRequest {
                     dependency.$pendingNotificationRequests = { @Sendable in
                         let content = UNMutableNotificationContent()
                         content.body = "Test notification body"
-                        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 12345, repeats: false)
-                        return [UNNotificationRequest(identifier: "1234", content: content, trigger: trigger)]
+                        let trigger1 = UNTimeIntervalNotificationTrigger(timeInterval: 12345, repeats: false)
+                        let trigger2 = UNTimeIntervalNotificationTrigger(timeInterval: 23456, repeats: false)
+                        return [
+                            UNNotificationRequest(identifier: "1234", content: content, trigger: trigger1),
+                            UNNotificationRequest(identifier: "1235", content: content, trigger: trigger2)
+                        ]
                     }
                 }
         })
