@@ -49,7 +49,7 @@ public struct ApplianceForm {
                 return .none
             }
         }
-        .forEach(\.programs, action: \.programs) {
+        .forEach(\.programs, action: /Action.programs) {
             ProgramForm()
         }
         .onChange(of: \.appliance.programs) { _, newValue in
