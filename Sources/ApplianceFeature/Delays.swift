@@ -2,7 +2,8 @@ import ComposableArchitecture
 import Foundation
 import Models
 
-public struct Delays: Reducer {
+@Reducer
+public struct Delays {
     public struct State: Equatable {
         var program: Program
         var appliance: Appliance

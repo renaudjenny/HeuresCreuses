@@ -1,6 +1,7 @@
 import ComposableArchitecture
 
-public struct ProgramSelection: Reducer {
+@Reducer
+public struct ProgramSelection {
     public struct State: Equatable {
         public var appliance: Appliance
         @PresentationState public var destination: Destination.State?
@@ -25,7 +26,8 @@ public struct ProgramSelection: Reducer {
         }
     }
 
-    public struct Destination: Reducer {
+    @Reducer
+    public struct Destination {
         public enum State: Equatable {
             case alert(AlertState<Action.Alert>)
             case delays(Delays.State)
@@ -44,13 +46,13 @@ public struct ProgramSelection: Reducer {
         }
 
         public var body: some ReducerOf<Self> {
-            Scope(state: /State.delays, action: /Action.delays) {
+            Scope(state: \.delays, action: \.delays) {
                 Delays()
             }
-            Scope(state: /State.edit, action: /Action.edit) {
+            Scope(state: \.edit, action: \.edit) {
                 ApplianceForm()
             }
-            Scope(state: /State.optimum, action: /Action.optimum) {
+            Scope(state: \.optimum, action: \.optimum) {
                 Optimum()
             }
         }
@@ -103,7 +105,7 @@ public struct ProgramSelection: Reducer {
                 return .none
             }
         }
-        .ifLet(\.$destination, action: /Action.destination) {
+        .ifLet(\.$destination, action: \.destination) {
             Destination()
         }
         .onChange(of: \.appliance) { oldValue, newValue in

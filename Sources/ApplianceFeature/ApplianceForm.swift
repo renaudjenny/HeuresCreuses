@@ -1,7 +1,8 @@
 import ComposableArchitecture
 import Foundation
 
-public struct ApplianceForm: Reducer {
+@Reducer
+public struct ApplianceForm {
     public struct State: Equatable {
         @BindingState public var appliance: Appliance
         public var programs: IdentifiedArrayOf<ProgramForm.State>

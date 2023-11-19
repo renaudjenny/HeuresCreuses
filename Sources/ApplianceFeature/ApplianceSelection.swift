@@ -1,6 +1,7 @@
 import ComposableArchitecture
 
-public struct ApplianceSelection: Reducer {
+@Reducer
+public struct ApplianceSelection {
     public struct State: Equatable {
         public var appliances: IdentifiedArrayOf<Appliance>
         @PresentationState public var destination: Destination.State?
@@ -56,14 +57,15 @@ public struct ApplianceSelection: Reducer {
                 return .none
             }
         }
-        .ifLet(\.$destination, action: /ApplianceSelection.Action.destination) {
+        .ifLet(\.$destination, action: \.destination) {
             Destination()
         }
     }
 }
 
 extension ApplianceSelection {
-    public struct Destination: Reducer {
+    @Reducer
+    public struct Destination {
         public enum State: Equatable {
             case selection(ProgramSelection.State)
             case addAppliance(ApplianceForm.State)
@@ -73,10 +75,10 @@ extension ApplianceSelection {
             case addAppliance(ApplianceForm.Action)
         }
         public var body: some ReducerOf<Self> {
-            Scope(state: /State.selection, action: /Action.selection) {
+            Scope(state: \.selection, action: \.selection) {
                 ProgramSelection()
             }
-            Scope(state: /State.addAppliance, action: /Action.addAppliance) {
+            Scope(state: \.addAppliance, action: \.addAppliance) {
                 ApplianceForm()
             }
         }

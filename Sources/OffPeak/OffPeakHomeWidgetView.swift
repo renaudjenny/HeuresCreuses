@@ -3,7 +3,8 @@ import HomeWidget
 import Models
 import SwiftUI
 
-public struct OffPeakHomeWidget: Reducer {
+@Reducer
+public struct OffPeakHomeWidget {
     public struct State: Equatable {
         @PresentationState public var destination: OffPeakSelection.State?
         public var peakStatus = PeakStatus.unavailable
@@ -72,7 +73,7 @@ public struct OffPeakHomeWidget: Reducer {
                 return .none
             }
         }
-        .ifLet(\.$destination, action: /Action.destination) {
+        .ifLet(\.$destination, action: \.destination) {
             OffPeakSelection()
         }
     }

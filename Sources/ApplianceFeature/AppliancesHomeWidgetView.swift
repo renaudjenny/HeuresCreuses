@@ -3,7 +3,8 @@ import DataManagerDependency
 import HomeWidget
 import SwiftUI
 
-public struct ApplianceHomeWidget: Reducer {
+@Reducer
+public struct ApplianceHomeWidget {
     public struct State: Equatable {
         public var appliances: IdentifiedArrayOf<Appliance>
         @PresentationState public var destination: ApplianceSelection.State?
@@ -47,12 +48,12 @@ public struct ApplianceHomeWidget: Reducer {
                 return .none
             }
         }
-        .ifLet(\.$destination, action: /Action.destination) {
+        .ifLet(\.$destination, action: \.destination) {
             ApplianceSelection()
         }
-        .onChange(of: \.destination?.appliances) { oldValue, newValue in
+        .onChange(of: \.destination?.appliances, removeDuplicates: { $0 == $1 || $1 == nil }) { oldValue, newValue in
             Reduce { state, _ in
-                state.appliances = newValue ?? state.appliances
+                state.appliances = newValue ?? []
                 return .none
             }
         }

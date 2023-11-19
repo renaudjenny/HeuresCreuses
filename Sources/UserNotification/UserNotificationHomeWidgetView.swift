@@ -6,7 +6,8 @@ import SendNotification
 import SwiftUI
 import UserNotificationsDependency
 
-public struct UserNotificationHomeWidget: Reducer {
+@Reducer
+public struct UserNotificationHomeWidget {
     public struct State: Equatable {
         var notifications: [UserNotification] = []
         @PresentationState var destination: UserNotificationsList.State?
@@ -70,7 +71,7 @@ public struct UserNotificationHomeWidget: Reducer {
                 return .none
             }
         }
-        .ifLet(\.$destination, action: /Action.destination) {
+        .ifLet(\.$destination, action: \.destination) {
             UserNotificationsList()
         }
     }

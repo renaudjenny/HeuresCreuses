@@ -3,7 +3,8 @@ import SendNotification
 import SwiftUI
 import UserNotificationsDependency
 
-public struct UserNotificationsList: Reducer {
+@Reducer
+public struct UserNotificationsList {
     public struct State: Equatable {
         var notifications: IdentifiedArrayOf<UserNotification> = []
     }
