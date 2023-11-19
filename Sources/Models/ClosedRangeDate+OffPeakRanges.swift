@@ -10,7 +10,8 @@ public struct PeriodMinute {
         calendar: Calendar,
         direction: Calendar.SearchDirection = .forward
     ) -> ClosedRange<Date>? {
-        guard 
+        guard start >= 0 else { return rangeWithNegativeStart(from: date, calendar: calendar, direction: direction) }
+        guard
             let start = calendar.date(
                 bySettingHour: start/60,
                 minute: start % 60,
@@ -25,6 +26,39 @@ public struct PeriodMinute {
                 of: date,
                 direction: direction
             )
+        else { return nil }
+
+        if end < date,
+           let nextStart = calendar.date(byAdding: .day, value: 1, to: start),
+           let nextEnd = calendar.date(byAdding: .day, value: 1, to: end) {
+            return nextStart...nextEnd
+        }
+
+        return start...end
+    }
+
+    func rangeWithNegativeStart(
+        from date: Date,
+        calendar: Calendar,
+        direction: Calendar.SearchDirection = .forward
+    ) -> ClosedRange<Date>? {
+        let start = 60 * 24 + start
+        guard
+            let startWithAnExtraDay = calendar.date(
+                bySettingHour: start/60,
+                minute: start % 60,
+                second: 0,
+                of: date,
+                direction: direction
+            ),
+            let end = calendar.date(
+                bySettingHour: end/60,
+                minute: end % 60,
+                second: 0,
+                of: date,
+                direction: direction
+            ),
+            let start = calendar.date(byAdding: .day, value: -1, to: startWithAnExtraDay)
         else { return nil }
         return start...end
     }
@@ -62,11 +96,11 @@ public extension [ClosedRange<Date>] {
         let periodsMinutes = periods.flatMap(\.periodMinutes)
 
         let ranges = periodsMinutes.flatMap { period -> [ClosedRange<Date>] in
-            guard period.end > currentDayMinutes else { return [] }
             var periodRanges: [ClosedRange<Date>] = []
-
-            if (period.start...period.end).contains(currentDayMinutes) {
-                period.range(from: now, calendar: calendar, direction: .backward).map { periodRanges.append($0) }
+            if period.end > currentDayMinutes {
+                if (period.start...period.end).contains(currentDayMinutes) {
+                    period.range(from: now, calendar: calendar).map { periodRanges.append($0) }
+                }
             }
 
             period.range(from: now, calendar: calendar).map { periodRanges.append($0) }
@@ -74,7 +108,16 @@ public extension [ClosedRange<Date>] {
             return periodRanges
         }
 
-        return Self(ranges.prefix(2))
+        return ranges.sorted { $0.lowerBound < $1.lowerBound }
+    }
+}
+
+extension PeriodMinute: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        [
+            "Minute (start: \(start), end: \(end)",
+            range(from: .now, calendar: .autoupdatingCurrent)?.debugDescription ?? "Period not suitable for a range",
+        ].joined(separator: " - ")
     }
 }
 
