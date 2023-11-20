@@ -97,9 +97,13 @@ public extension [ClosedRange<Date>] {
 
         let ranges = periodsMinutes.flatMap { period -> [ClosedRange<Date>] in
             var periodRanges: [ClosedRange<Date>] = []
-            if period.end > currentDayMinutes {
-                if (period.start...period.end).contains(currentDayMinutes) {
-                    period.range(from: now, calendar: calendar).map { periodRanges.append($0) }
+            var now = now
+
+            if period.end > currentDayMinutes && (period.start...period.end).contains(currentDayMinutes) {
+                period.range(from: now, calendar: calendar).map { periodRanges.append($0) }
+                if let lastRangeEndDate = periodRanges.last?.upperBound,
+                   let end = calendar.date(byAdding: .minute, value: 1, to: lastRangeEndDate) {
+                    now = end
                 }
             }
 
