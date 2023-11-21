@@ -83,5 +83,11 @@ final class ClosedRangeDateOffPeakRangesTests: XCTestCase {
         let ranges = [ClosedRange<Date>].nextOffPeakRanges([period], now: now, calendar: calendar)
 
         XCTAssertEqual(ranges.count, 2)
+        let firstDateStart = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-13T23:02:00+02:00"))
+        let firstDateEnd = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-14T06:02:00+02:00"))
+        XCTAssertEqual(ranges[0], firstDateStart...firstDateEnd)
+        let secondDateStart = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-14T23:02:00+02:00"))
+        let secondDateEnd = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-15T06:02:00+02:00"))
+        XCTAssertEqual(ranges[1], secondDateStart...secondDateEnd)
     }
 }

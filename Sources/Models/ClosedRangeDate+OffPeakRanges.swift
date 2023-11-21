@@ -44,21 +44,21 @@ public struct PeriodMinute {
     ) -> ClosedRange<Date>? {
         let start = 60 * 24 + start
         guard
-            let startWithAnExtraDay = calendar.date(
+            let start = calendar.date(
                 bySettingHour: start/60,
                 minute: start % 60,
                 second: 0,
                 of: date,
                 direction: direction
             ),
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: date),
             let end = calendar.date(
                 bySettingHour: end/60,
                 minute: end % 60,
                 second: 0,
-                of: date,
+                of: tomorrow,
                 direction: direction
-            ),
-            let start = calendar.date(byAdding: .day, value: -1, to: startWithAnExtraDay)
+            )
         else { return nil }
         return start...end
     }
@@ -100,7 +100,7 @@ public extension [ClosedRange<Date>] {
             var now = now
 
             if period.end > currentDayMinutes && (period.start...period.end).contains(currentDayMinutes) {
-                period.range(from: now, calendar: calendar).map { periodRanges.append($0) }
+                period.range(from: now, calendar: calendar, direction: .backward).map { periodRanges.append($0) }
                 if let lastRangeEndDate = periodRanges.last?.upperBound,
                    let end = calendar.date(byAdding: .minute, value: 1, to: lastRangeEndDate) {
                     now = end
