@@ -9,12 +9,12 @@ public struct OffPeakHomeWidget {
         @PresentationState public var destination: OffPeakSelection.State?
         public var peakStatus = PeakStatus.unavailable
         public var offPeakRanges: [ClosedRange<Date>] = []
-        public var periods: [Period] = .example
+        public var periods: [PeriodMinute] = .example
 
         public init(
             peakStatus: PeakStatus = PeakStatus.unavailable,
             offPeakRanges: [ClosedRange<Date>] = [],
-            periods: [Period] = .example
+            periods: [PeriodMinute] = .example
         ) {
             self.peakStatus = peakStatus
             self.offPeakRanges = offPeakRanges
@@ -48,7 +48,7 @@ public struct OffPeakHomeWidget {
                 return .none
 
             case .task:
-                state.offPeakRanges = .offPeakRanges(state.periods, now: date(), calendar: calendar)
+                state.offPeakRanges = .nextOffPeakRanges(state.periods, now: date(), calendar: calendar)
                 return .run { send in
                     for await _ in clock.timer(interval: .seconds(1)) {
                         await send(.timeChanged(date()), animation: .default)

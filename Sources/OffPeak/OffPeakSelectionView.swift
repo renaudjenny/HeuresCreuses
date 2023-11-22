@@ -6,7 +6,7 @@ import SwiftUI
 public struct OffPeakSelection: Reducer {
     public struct State: Equatable {
         public var peakStatus: PeakStatus = .unavailable
-        public var periods = IdentifiedArrayOf<Period>(uniqueElements: [Period].example)
+        public var periods = IdentifiedArrayOf<PeriodMinute>(uniqueElements: [PeriodMinute].example)
         public var minute: Double = .zero
         public var sendNotification = SendNotification.State()
     }
@@ -49,7 +49,7 @@ public struct OffPeakSelection: Reducer {
     }
 
     private func updatePeakStatus(_ state: inout State) -> Effect<Action> {
-        let offPeakRanges = [ClosedRange<Date>].offPeakRanges(state.periods.elements, now: now, calendar: calendar)
+        let offPeakRanges = [ClosedRange<Date>].nextOffPeakRanges(state.periods.elements, now: now, calendar: calendar)
         state.peakStatus = if let currentOffPeak = offPeakRanges.first(where: { $0.contains(now) }) {
             .offPeak(until: .seconds(now.distance(to: currentOffPeak.upperBound)))
         } else if let closestOffPeak = offPeakRanges.first(where: { now.distance(to: $0.lowerBound) > 0 }) {
@@ -80,7 +80,7 @@ public struct OffPeakSelectionView: View {
 
     private struct ViewState: Equatable {
         let peakStatus: PeakStatus
-        let periods: IdentifiedArrayOf<Period>
+        let periods: IdentifiedArrayOf<PeriodMinute>
         let minute: Double
 
         init(_ state: OffPeakSelection.State) {
@@ -128,7 +128,7 @@ public struct OffPeakSelectionView: View {
         }
     }
 
-    private func clockWidgetView(periods: [Period], minute: Double) -> some View {
+    private func clockWidgetView(periods: [PeriodMinute], minute: Double) -> some View {
         ZStack {
             Circle()
                 .fill(Color.primary.opacity(15/100))
@@ -146,7 +146,7 @@ public struct OffPeakSelectionView: View {
         .padding()
     }
 
-    private func clockWidgetPeriod(_ period: Period) -> some View {
+    private func clockWidgetPeriod(_ period: PeriodMinute) -> some View {
         GeometryReader { geometryProxy in
             Circle()
                 .rotation(.radians(-.pi/2))
@@ -204,21 +204,21 @@ public struct OffPeakSelectionView: View {
     private var backgroundColor: Color { colorScheme == .dark ? .black : .white }
 }
 
-private extension DateComponents {
-    var formatted: String {
+private extension Int {
+    var dateFormatted: String {
         @Dependency(\.calendar) var calendar
-        guard let date = calendar.date(from: self) else { return "" }
+        let components = DateComponents(hour: self/60, minute: self % 60)
+        guard let date = calendar.date(from: components) else { return "" }
         return date.formatted(date: .omitted, time: .shortened)
     }
 
     var relativeClockPosition: Double {
         let maxMinutes = 24.0 * 60.0
-        let minutes = Double(hour ?? 0) * 60 + Double(minute ?? 0)
-        return minutes/maxMinutes
+        return Double(self)/maxMinutes
     }
 }
 
-private extension Period {
+private extension PeriodMinute {
     var clockView: some View {
         HStack {
             ZStack {
@@ -231,12 +231,12 @@ private extension Period {
                     .stroke(Color.green, lineWidth: 5)
                     .frame(width: 40, height: 40)
             }
-            Text(start.formatted).monospacedDigit()
+            Text(start.dateFormatted).monospacedDigit()
             Image(systemName: "arrowshape.forward")
-            Text(end.formatted).monospacedDigit()
+            Text(end.dateFormatted).monospacedDigit()
         }
         .accessibilityLabel(
-            Text("\(start.formatted) to \(end.formatted)", comment: "<Hour:Minutes> to <Hour:Minutes>")
+            Text("\(start.dateFormatted) to \(end.dateFormatted)", comment: "<Hour:Minutes> to <Hour:Minutes>")
         )
     }
 }

@@ -1,7 +1,10 @@
 import Foundation
 import Dependencies
 
-public struct Period: Equatable, Hashable, Identifiable {
+@available(*, deprecated, message: "Replace by PeriodMinute")
+public typealias Period = PeriodLegacy
+
+public struct PeriodLegacy: Equatable, Hashable, Identifiable {
     public let start: DateComponents
     public let end: DateComponents
     public var id: Int { hashValue }
@@ -12,28 +15,23 @@ public struct Period: Equatable, Hashable, Identifiable {
     }
 }
 
-public extension [Period] {
+public extension [PeriodMinute] {
     static let example: Self = [
-        Period(start: DateComponents(hour: 2, minute: 2), end: DateComponents(hour: 8, minute: 2)),
-        Period(start: DateComponents(hour: 15, minute: 2), end: DateComponents(hour: 17, minute: 2)),
+        PeriodMinute(start: 2 * 60 + 2, end: 8 * 60 + 2),
+        PeriodMinute(start: 15 * 60 + 2, end: 17 * 60 + 2),
     ]
 }
 
 public struct PeriodProvider {
-    public var get: () -> [Period]
+    public var get: () -> [PeriodMinute]
 
-    public func callAsFunction() -> [Period] {
+    public func callAsFunction() -> [PeriodMinute] {
         return get()
     }
 }
 
 extension PeriodProvider: DependencyKey {
-    static public var liveValue = PeriodProvider {
-        [
-            Period(start: DateComponents(hour: 2, minute: 2), end: DateComponents(hour: 8, minute: 2)),
-            Period(start: DateComponents(hour: 15, minute: 2), end: DateComponents(hour: 17, minute: 2)),
-        ]
-    }
+    static public var liveValue = PeriodProvider { .example }
 }
 
 public extension DependencyValues {

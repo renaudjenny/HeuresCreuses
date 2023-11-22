@@ -33,13 +33,13 @@ struct Operation: Identifiable, Equatable {
 
 extension [Operation] {
     static func nextOperations(
-        periods: [Period],
+        periods: [PeriodMinute],
         program: Program,
         delays: [Duration],
         now: Date,
         calendar: Calendar
     ) -> Self {
-        let ranges = [ClosedRange<Date>].offPeakRanges(periods, now: now, calendar: calendar)
+        let ranges = [ClosedRange<Date>].nextOffPeakRanges(periods, now: now, calendar: calendar)
         return delays.map {
             let start = now.addingTimeInterval(Double($0.components.seconds))
             let end = start.addingTimeInterval(Double(program.duration.components.seconds))

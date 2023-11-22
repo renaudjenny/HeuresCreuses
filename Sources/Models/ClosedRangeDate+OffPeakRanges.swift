@@ -1,9 +1,11 @@
 import Foundation
 
 // TODO: dance of PeriodLegacy and rename this one to Period
-public struct PeriodMinute {
+public struct PeriodMinute: Equatable, Hashable, Identifiable {
     public let start: Int
     public let end: Int
+
+    public var id: Int { hashValue }
 
     func range(
         from date: Date,
@@ -91,11 +93,10 @@ public extension [ClosedRange<Date>] {
         }
     }
 
-    static func nextOffPeakRanges(_ periods: [Period], now: Date, calendar: Calendar) -> Self {
+    static func nextOffPeakRanges(_ periods: [PeriodMinute], now: Date, calendar: Calendar) -> Self {
         let currentDayMinutes = calendar.component(.hour, from: now) * 60 + calendar.component(.minute, from: now)
-        let periodsMinutes = periods.flatMap(\.periodMinutes)
 
-        let ranges = periodsMinutes.flatMap { period -> [ClosedRange<Date>] in
+        let ranges = periods.flatMap { period -> [ClosedRange<Date>] in
             var periodRanges: [ClosedRange<Date>] = []
             var now = now
 
