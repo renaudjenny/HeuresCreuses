@@ -51,9 +51,10 @@ public struct ApplianceHomeWidget {
         .ifLet(\.$destination, action: \.destination) {
             ApplianceSelection()
         }
-        .onChange(of: \.destination?.appliances, removeDuplicates: { $0 == $1 || $1 == nil }) { oldValue, newValue in
+        .onChange(of: \.destination?.appliances) { oldValue, newValue in
             Reduce { state, _ in
-                state.appliances = newValue ?? []
+                guard let newValue else { return .none }
+                state.appliances = newValue
                 return .none
             }
         }

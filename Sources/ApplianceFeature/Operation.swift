@@ -33,7 +33,7 @@ struct Operation: Identifiable, Equatable {
 
 extension [Operation] {
     static func nextOperations(
-        periods: [PeriodMinute],
+        periods: [Period],
         program: Program,
         delays: [Duration],
         now: Date,

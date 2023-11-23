@@ -9,12 +9,12 @@ public struct OffPeakHomeWidget {
         @PresentationState public var destination: OffPeakSelection.State?
         public var peakStatus = PeakStatus.unavailable
         public var offPeakRanges: [ClosedRange<Date>] = []
-        public var periods: [PeriodMinute] = .example
+        public var periods: [Period] = .example
 
         public init(
             peakStatus: PeakStatus = PeakStatus.unavailable,
             offPeakRanges: [ClosedRange<Date>] = [],
-            periods: [PeriodMinute] = .example
+            periods: [Period] = .example
         ) {
             self.peakStatus = peakStatus
             self.offPeakRanges = offPeakRanges

@@ -6,7 +6,7 @@ import SwiftUI
 public struct OffPeakSelection: Reducer {
     public struct State: Equatable {
         public var peakStatus: PeakStatus = .unavailable
-        public var periods = IdentifiedArrayOf<PeriodMinute>(uniqueElements: [PeriodMinute].example)
+        public var periods = IdentifiedArrayOf<Period>(uniqueElements: [Period].example)
         public var minute: Double = .zero
         public var sendNotification = SendNotification.State()
     }
@@ -80,7 +80,7 @@ public struct OffPeakSelectionView: View {
 
     private struct ViewState: Equatable {
         let peakStatus: PeakStatus
-        let periods: IdentifiedArrayOf<PeriodMinute>
+        let periods: IdentifiedArrayOf<Period>
         let minute: Double
 
         init(_ state: OffPeakSelection.State) {
@@ -128,7 +128,7 @@ public struct OffPeakSelectionView: View {
         }
     }
 
-    private func clockWidgetView(periods: [PeriodMinute], minute: Double) -> some View {
+    private func clockWidgetView(periods: [Period], minute: Double) -> some View {
         ZStack {
             Circle()
                 .fill(Color.primary.opacity(15/100))
@@ -146,11 +146,11 @@ public struct OffPeakSelectionView: View {
         .padding()
     }
 
-    private func clockWidgetPeriod(_ period: PeriodMinute) -> some View {
+    private func clockWidgetPeriod(_ period: Period) -> some View {
         GeometryReader { geometryProxy in
             Circle()
                 .rotation(.radians(-.pi/2))
-                .trim(from: period.start.relativeClockPosition, to: period.end.relativeClockPosition)
+                .trim(from: period.relativeClockPosition.start, to: period.relativeClockPosition.end)
                 .stroke(Color.green, style: StrokeStyle(lineWidth: geometryProxy.size.width * 10/100, lineCap: .round))
                 .padding(geometryProxy.size.width * 6.3/100)
         }
@@ -204,21 +204,38 @@ public struct OffPeakSelectionView: View {
     private var backgroundColor: Color { colorScheme == .dark ? .black : .white }
 }
 
-private extension Int {
-    var dateFormatted: String {
+private extension Period {
+    var dateFormatted: (start: String, end: String) {
         @Dependency(\.calendar) var calendar
-        let components = DateComponents(hour: self/60, minute: self % 60)
-        guard let date = calendar.date(from: components) else { return "" }
-        return date.formatted(date: .omitted, time: .shortened)
+        @Dependency(\.date.now) var now
+
+        guard let range = ranges(from: now, calendar: calendar).first else { return ("", "") }
+        return (
+            start: range.lowerBound.formatted(date: .omitted, time: .shortened),
+            end: range.upperBound.formatted(date: .omitted, time: .shortened)
+        )
     }
 
-    var relativeClockPosition: Double {
+    var relativeClockPosition: (start: Double, end: Double) {
+        @Dependency(\.calendar) var calendar
+        @Dependency(\.date.now) var now
+
         let maxMinutes = 24.0 * 60.0
-        return Double(self)/maxMinutes
+        guard let range = ranges(from: now, calendar: calendar).first else { return (0, 0) }
+        return (
+            start: range.lowerBound.minutes(calendar: calendar)/maxMinutes,
+            end: range.upperBound.minutes(calendar: calendar)/maxMinutes
+        )
     }
 }
 
-private extension PeriodMinute {
+private extension Date {
+    func minutes(calendar: Calendar) -> Double {
+        Double(calendar.component(.hour, from: self)) * 60 + Double(calendar.component(.minute, from: self))
+    }
+}
+
+private extension Period {
     var clockView: some View {
         HStack {
             ZStack {
@@ -227,16 +244,16 @@ private extension PeriodMinute {
                     .frame(width: 40, height: 40)
                 Circle()
                     .rotation(.radians(-.pi/2))
-                    .trim(from: start.relativeClockPosition, to: end.relativeClockPosition)
+                    .trim(from: relativeClockPosition.start, to: relativeClockPosition.end)
                     .stroke(Color.green, lineWidth: 5)
                     .frame(width: 40, height: 40)
             }
-            Text(start.dateFormatted).monospacedDigit()
+            Text(dateFormatted.start).monospacedDigit()
             Image(systemName: "arrowshape.forward")
-            Text(end.dateFormatted).monospacedDigit()
+            Text(dateFormatted.end).monospacedDigit()
         }
         .accessibilityLabel(
-            Text("\(start.dateFormatted) to \(end.dateFormatted)", comment: "<Hour:Minutes> to <Hour:Minutes>")
+            Text("\(dateFormatted.start) to \(dateFormatted.end)", comment: "<Hour:Minutes> to <Hour:Minutes>")
         )
     }
 }
