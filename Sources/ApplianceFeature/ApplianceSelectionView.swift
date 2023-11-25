@@ -26,14 +26,14 @@ public struct ApplianceSelectionView: View {
                 }
                 .navigationDestination(
                     store: store.scope(state: \.$destination, action: { .destination($0) }),
-                    state: /ApplianceSelection.Destination.State.selection,
+                    state: \.selection,
                     action: { .selection($0) },
                     destination: ProgramSelectionView.init
                 )
                 #if os(iOS) || os(macOS)
                 .sheet(
                     store: store.scope(state: \.$destination, action: { .destination($0) }),
-                    state: /ApplianceSelection.Destination.State.addAppliance,
+                    state: \.addAppliance,
                     action: { .addAppliance($0) }) { store in
                         NavigationStack {
                             ApplianceFormView(store: store)

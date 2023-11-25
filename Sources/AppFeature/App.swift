@@ -7,9 +7,9 @@ import UserNotification
 @Reducer
 public struct App {
     public struct State: Equatable {
-        var applianceHomeWidget = ApplianceHomeWidget.State()
-        var offPeakHomeWidget = OffPeakHomeWidget.State()
-        var userNotificationHomeWidget = UserNotificationHomeWidget.State()
+        var applianceHomeWidget: ApplianceHomeWidget.State
+        var offPeakHomeWidget: OffPeakHomeWidget.State
+        var userNotificationHomeWidget: UserNotificationHomeWidget.State
 
         public init(
             applianceHomeWidget: ApplianceHomeWidget.State = ApplianceHomeWidget.State(),

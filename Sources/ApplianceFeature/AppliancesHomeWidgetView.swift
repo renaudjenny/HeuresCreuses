@@ -13,6 +13,7 @@ public struct ApplianceHomeWidget {
             appliances: IdentifiedArrayOf<Appliance> = [.washingMachine, .dishwasher],
             destination: ApplianceSelection.State? = nil
         ) {
+            print("init")
             self.appliances = appliances
             self.destination = destination
         }
@@ -32,7 +33,14 @@ public struct ApplianceHomeWidget {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .destination(.dismiss):
+                print("dismiss!")
+                return .none
+            case .destination(.presented):
+                print("presented destination trigger an action")
+                return .none
             case .destination:
+                print("is destination nil", state.destination == nil)
                 return .none
 
             case .task:
@@ -44,6 +52,7 @@ public struct ApplianceHomeWidget {
                 return .none
 
             case .widgetTapped:
+                print("Widget tapped!")
                 state.destination = ApplianceSelection.State(appliances: state.appliances)
                 return .none
             }
