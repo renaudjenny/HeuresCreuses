@@ -17,17 +17,17 @@ public struct AppView: View {
             List {
                 AppliancesHomeWidgetView(store: store.scope(
                     state: \.applianceHomeWidget,
-                    action: { .applianceHomeWidget($0) }
+                    action: \.applianceHomeWidget
                 ))
 
                 OffPeakHomeWidgetView(store: store.scope(
                     state: \.offPeakHomeWidget,
-                    action: { .offPeakHomeWidget($0) }
+                    action: \.offPeakHomeWidget
                 ))
 
                 UserNotificationHomeWidgetView(store: store.scope(
                     state: \.userNotificationHomeWidget,
-                    action: { .userNotificationHomeWidget($0) }
+                    action: \.userNotificationHomeWidget
                 ))
             }
             .listRowSpacing(8)

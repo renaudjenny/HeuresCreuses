@@ -3,6 +3,7 @@ import Models
 import SendNotification
 import SwiftUI
 
+@Reducer
 public struct OffPeakSelection: Reducer {
     public struct State: Equatable {
         public var peakStatus: PeakStatus = .unavailable
@@ -105,17 +106,15 @@ public struct OffPeakSelectionView: View {
                         switch viewStore.peakStatus {
                         case .offPeak:
                             Text("Currently off peak")
-                            SendNotificationButtonView(store: store.scope(
-                                state: \.sendNotification,
-                                action: { .sendNotification($0) }
-                            ))
+                            SendNotificationButtonView(
+                                store: store.scope(state: \.sendNotification, action: \.sendNotification)
+                            )
                             .padding(.vertical)
                         case .peak:
                             Text("Currently peak hours")
-                            SendNotificationButtonView(store: store.scope(
-                                state: \.sendNotification,
-                                action: { .sendNotification($0) }
-                            ))
+                            SendNotificationButtonView(
+                                store: store.scope(state: \.sendNotification, action: \.sendNotification)
+                            )
                             .padding(.vertical)
                         case .unavailable:
                             Text("Calculating status...").redacted(reason: .placeholder)

@@ -98,7 +98,7 @@ public struct AppliancesHomeWidgetView: View {
                 }
             }
             .buttonStyle(.plain)
-            .sheet(store: store.scope(state: \.$destination, action: { .destination($0) })) { store in
+            .sheet(store: store.scope(state: \.$destination, action: \.destination)) { store in
                 NavigationStack {
                     ApplianceSelectionView(store: store)
                 }

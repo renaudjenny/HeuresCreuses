@@ -119,7 +119,7 @@ public struct OffPeakHomeWidgetView: View {
             .buttonStyle(.plain)
             .listRowBackground(color(for: viewStore.peakStatus))
             .navigationDestination(
-                store: store.scope(state: \.$destination, action: { .destination($0) }),
+                store: store.scope(state: \.$destination, action: \.destination),
                 destination: OffPeakSelectionView.init
             )
             .task { @MainActor in await viewStore.send(.task).finish() }

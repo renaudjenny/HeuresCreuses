@@ -39,7 +39,7 @@ struct OptimumView: View {
                         .padding(.horizontal)
 
                         SendNotificationButtonView(
-                            store: store.scope(state: \.sendNotification, action: Optimum.Action.sendNotification)
+                            store: store.scope(state: \.sendNotification, action: \.sendNotification)
                         )
                         .padding()
                     } else {

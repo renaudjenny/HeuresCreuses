@@ -25,33 +25,31 @@ public struct ApplianceSelectionView: View {
                     }
                 }
                 .navigationDestination(
-                    store: store.scope(state: \.$destination, action: { .destination($0) }),
-                    state: \.selection,
-                    action: { .selection($0) },
+                    store: store.scope(state: \.$destination.selection, action: \.destination.selection),
                     destination: ProgramSelectionView.init
                 )
                 #if os(iOS) || os(macOS)
-                .sheet(
-                    store: store.scope(state: \.$destination, action: { .destination($0) }),
-                    state: \.addAppliance,
-                    action: { .addAppliance($0) }) { store in
-                        NavigationStack {
-                            ApplianceFormView(store: store)
-                                .navigationTitle("New appliance")
-                                .toolbar {
-                                    ToolbarItem {
-                                        Button { viewStore.send(.addApplianceSaveButtonTapped) } label: {
-                                            Text("Save")
-                                        }
-                                    }
-                                    ToolbarItem(placement: .cancellationAction) {
-                                        Button { viewStore.send(.addApplianceCancelButtonTapped) } label: {
-                                            Text("Cancel")
-                                        }
+                .sheet(store: store.scope(
+                    state: \.$destination.addAppliance,
+                    action: \.destination.addAppliance
+                )) { store in
+                    NavigationStack {
+                        ApplianceFormView(store: store)
+                            .navigationTitle("New appliance")
+                            .toolbar {
+                                ToolbarItem {
+                                    Button { viewStore.send(.addApplianceSaveButtonTapped) } label: {
+                                        Text("Save")
                                     }
                                 }
-                        }
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button { viewStore.send(.addApplianceCancelButtonTapped) } label: {
+                                        Text("Cancel")
+                                    }
+                                }
+                            }
                     }
+                }
                 #endif
             }
             .navigationTitle("Choose your appliance")

@@ -38,31 +38,16 @@ public struct ProgramSelectionView: View {
                         .padding(.horizontal)
                     }
                     .sheet(
-                        store: store.scope(
-                            state: \.$destination,
-                            action: ProgramSelection.Action.destination
-                        ),
-                        state: /ProgramSelection.Destination.State.optimum,
-                        action: ProgramSelection.Destination.Action.optimum,
+                        store: store.scope(state: \.$destination.optimum, action: \.destination.optimum),
                         content: OptimumView.init
                     )
                     .navigationDestination(
-                        store: store.scope(
-                            state: \.$destination,
-                            action: ProgramSelection.Action.destination
-                        ),
-                        state: /ProgramSelection.Destination.State.delays,
-                        action: ProgramSelection.Destination.Action.delays,
+                        store: store.scope(state: \.$destination.delays, action: \.destination.delays),
                         destination: DelaysView.init
                     )
                     #if os(iOS) || os(macOS)
                     .sheet(
-                        store: store.scope(
-                            state: \.$destination,
-                            action: ProgramSelection.Action.destination
-                        ),
-                        state: /ProgramSelection.Destination.State.edit,
-                        action: ProgramSelection.Destination.Action.edit,
+                        store: store.scope(state: \.$destination.edit, action: \.destination.edit),
                         content: { store in
                             NavigationStack {
                                 ApplianceFormView(store: store)
@@ -83,14 +68,7 @@ public struct ProgramSelectionView: View {
                         }
                     )
                     #endif
-                    .alert(
-                        store: store.scope(
-                            state: \.$destination,
-                            action: ProgramSelection.Action.destination
-                        ),
-                        state: /ProgramSelection.Destination.State.alert,
-                        action: ProgramSelection.Destination.Action.alert
-                    )
+                    .alert(store: store.scope(state: \.$destination.alert, action: \.destination.alert))
                 }
                 .toolbar {
                     #if os(iOS) || os(macOS)

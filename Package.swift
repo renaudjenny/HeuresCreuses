@@ -17,7 +17,7 @@ let package = Package(
         .library(name: "UserNotification", targets: ["UserNotification"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.4.2"),
+        .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.5.0"),
         .package(url: "https://github.com/tgrapperon/swift-dependencies-additions", from: "1.0.1"),
     ],
     targets: [
