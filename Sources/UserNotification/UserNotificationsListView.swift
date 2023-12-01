@@ -37,7 +37,7 @@ public struct UserNotificationsList {
                 return .run { send in
                     let notifications = await userNotificationCenter.pendingNotificationRequests()
                     await send(.notificationsUpdated(notifications))
-                    
+
                     for await _ in clock.timer(interval: .seconds(5)) {
                         let notifications = await userNotificationCenter.pendingNotificationRequests()
                         await send(.notificationsUpdated(notifications))
@@ -76,9 +76,7 @@ struct UserNotificationsListView: View {
             Text(notification.message)
                 .font(.headline)
             TimelineView(.periodic(from: .now, by: 1)) { _ in
-                let duration = Duration.seconds(Date.now.distance(to: notification.date))
-                let distance: String = duration.formatted(.time(pattern: .hourMinuteSecond))
-                Label(distance, systemImage: "clock.badge")
+                Label(notification.formattedDistance, systemImage: "clock.badge")
                     .foregroundStyle(.secondary)
                     .font(.body)
             }
@@ -86,12 +84,19 @@ struct UserNotificationsListView: View {
     }
 }
 
-extension UNNotificationRequest {
-
+private extension UNNotificationRequest {
     var userNotification: UserNotification {
         let date = (trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate()
         @Dependency(\.date.now) var now
         return UserNotification(id: identifier, message: content.body, date: date ?? now)
+    }
+}
+
+private extension UserNotification {
+    var formattedDistance: String {
+        @Dependency(\.date.now) var now
+        let distance = Duration.seconds(now.distance(to: date))
+        return distance.formatted(.time(pattern: .hourMinuteSecond))
     }
 }
 

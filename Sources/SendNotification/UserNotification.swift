@@ -1,6 +1,6 @@
 import Foundation
 
-public struct UserNotification: Equatable, Identifiable {
+public struct UserNotification: Equatable, Identifiable, Hashable, Codable {
     public let id: String
     public let message: String
     public let date: Date
