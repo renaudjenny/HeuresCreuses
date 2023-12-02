@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import SendNotification
 import SwiftUI
-import UserNotificationsDependency
+import UserNotificationsClientDependency
 
 @Reducer
 public struct UserNotificationsList {
@@ -11,12 +11,13 @@ public struct UserNotificationsList {
 
     public enum Action: Equatable {
         case delete(IndexSet)
-        case notificationsUpdated([UNNotificationRequest])
+        case notificationsUpdated([UserNotification])
         case task
     }
 
     @Dependency(\.continuousClock) var clock
     @Dependency(\.userNotificationCenter) var userNotificationCenter
+    @Dependency(\.userNotifications) var userNotifications
 
     private enum CancelID { case timer }
 
@@ -24,22 +25,18 @@ public struct UserNotificationsList {
         Reduce { state, action in
             switch action {
             case let .delete(indexSet):
-                let ids = indexSet.map { state.notifications[$0].id }
-                userNotificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
-                return .run { send in
-                    let notifications = await userNotificationCenter.pendingNotificationRequests()
-                    await send(.notificationsUpdated(notifications))
+                for index in indexSet {
+                    userNotifications.remove(state.notifications[index])
                 }
+                return .none
             case let .notificationsUpdated(notifications):
-                state.notifications = IdentifiedArrayOf(uniqueElements: notifications.map(\.userNotification))
+                for notification in notifications {
+                    state.notifications.updateOrAppend(notification)
+                }
                 return .none
             case .task:
                 return .run { send in
-                    let notifications = await userNotificationCenter.pendingNotificationRequests()
-                    await send(.notificationsUpdated(notifications))
-
-                    for await _ in clock.timer(interval: .seconds(5)) {
-                        let notifications = await userNotificationCenter.pendingNotificationRequests()
+                    for await notifications in userNotifications.notifications {
                         await send(.notificationsUpdated(notifications))
                     }
                 }
@@ -75,20 +72,13 @@ struct UserNotificationsListView: View {
         VStack(alignment: .leading) {
             Text(notification.message)
                 .font(.headline)
+            Text(notification.date.description)
             TimelineView(.periodic(from: .now, by: 1)) { _ in
                 Label(notification.formattedDistance, systemImage: "clock.badge")
                     .foregroundStyle(.secondary)
                     .font(.body)
             }
         }
-    }
-}
-
-private extension UNNotificationRequest {
-    var userNotification: UserNotification {
-        let date = (trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate()
-        @Dependency(\.date.now) var now
-        return UserNotification(id: identifier, message: content.body, date: date ?? now)
     }
 }
 

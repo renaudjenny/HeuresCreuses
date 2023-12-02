@@ -3,6 +3,7 @@ import ComposableArchitecture
 import NotificationCenter
 import Models
 import UserNotificationsDependency
+import UserNotificationsClientDependency
 
 @Reducer
 public struct SendNotification {
@@ -42,6 +43,7 @@ public struct SendNotification {
 
     @Dependency(\.date) var date
     @Dependency(\.userNotificationCenter) var userNotificationCenter
+    @Dependency(\.userNotifications) var userNotifications
     @Dependency(\.uuid) var uuid
 
     public init() {}
@@ -151,54 +153,26 @@ public struct SendNotification {
         }
     }
 
+    // TODO: These two functions can now fit in the reducer without being private func
+
     private func sendOffPeakStartNotification(durationBeforeOffPeak: Duration) -> Effect<Action> {
-        .run { send in
-            let requests = await userNotificationCenter.pendingNotificationRequests()
-            guard !requests.contains(where: { $0.identifier == .nextOffPeakIdentifier }) else { return }
-
-            let content = UNMutableNotificationContent()
-            content.title = "Off peak period is starting"
-            content.body = "Optimise your electricity bill by starting your appliance now."
-            let timeInterval = TimeInterval(durationBeforeOffPeak.components.seconds)
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
-
-            try await self.userNotificationCenter.add(
-                .init(
-                    identifier: .nextOffPeakIdentifier,
-                    content: content,
-                    trigger: trigger
-                )
-            )
-
-            let date = date().addingTimeInterval(timeInterval)
-            let notification = UserNotification(id: .nextOffPeakIdentifier, message: content.body, date: date)
-            await send(.delegate(.notificationAdded(notification)))
-        }
+        userNotifications.add(UserNotification(
+            id: .nextOffPeakIdentifier,
+            title: String(localized: "Off peak period is starting"),
+            body: String(localized: "Optimise your electricity bill by starting your appliance now."),
+            date: date.now
+        ))
+        return .none
     }
 
     private func sendOffPeakEndNotification(durationBeforePeak: Duration) -> Effect<Action> {
-        .run { send in
-            let requests = await userNotificationCenter.pendingNotificationRequests()
-            guard !requests.contains(where: { $0.identifier == .nextOffPeakIdentifier }) else { return }
-
-            let content = UNMutableNotificationContent()
-            content.title = "Off peak period is ending"
-            content.body = "If some of your consuming devices are still, it's time to shut them down."
-            let timeInterval = TimeInterval(durationBeforePeak.components.seconds)
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
-
-            try await self.userNotificationCenter.add(
-                .init(
-                    identifier: .offPeakEndIdentifier,
-                    content: content,
-                    trigger: trigger
-                )
-            )
-
-            let date = date().addingTimeInterval(timeInterval)
-            let notification = UserNotification(id: .nextOffPeakIdentifier, message: content.body, date: date)
-            await send(.delegate(.notificationAdded(notification)))
-        }
+        userNotifications.add(UserNotification(
+            id: .offPeakEndIdentifier,
+            title: String(localized: "Off peak period is ending"),
+            body: String(localized: "If some of your consuming devices are still, it's time to shut them down."),
+            date: date.now
+        ))
+        return .none
     }
 }
 
