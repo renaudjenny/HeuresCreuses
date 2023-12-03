@@ -16,7 +16,11 @@ public struct UserNotificationHomeWidget {
         }
 
         public init(notifications: [UserNotification] = [], destination: UserNotificationsList.State? = nil) {
-            self.notifications = notifications
+            if !notifications.isEmpty {
+                self.notifications = notifications
+            }
+            @Dependency(\.userNotifications) var userNotifications
+            self.notifications = userNotifications.notifications()
             self.destination = destination
         }
     }
@@ -49,7 +53,7 @@ public struct UserNotificationHomeWidget {
                 return .none
             case .task:
                 return .run { send in
-                    for await notifications in userNotifications.notifications {
+                    for await notifications in userNotifications.stream() {
                         await send(.notificationsUpdated(notifications))
                     }
                 }

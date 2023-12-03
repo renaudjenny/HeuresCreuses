@@ -3,7 +3,8 @@ import Dependencies
 import UserNotificationsDependency
 
 public struct UserNotificationsClient {
-    public var notifications: AsyncStream<[UserNotification]>
+    public var notifications: () -> [UserNotification]
+    public var stream: () -> AsyncStream<[UserNotification]>
     public var add: (UserNotification) -> Void
     public var remove: (UserNotification) -> Void
 }
@@ -36,7 +37,8 @@ extension UserNotificationsClient: DependencyKey {
     public static let liveValue: UserNotificationsClient = {
         let combine = UserNotificationCombine()
         return UserNotificationsClient(
-            notifications: combine.$notifications.values.eraseToStream(),
+            notifications: { combine.notifications },
+            stream: { combine.$notifications.values.eraseToStream() },
             add: combine.add(notification:),
             remove: combine.remove(notification:)
         )
@@ -45,6 +47,7 @@ extension UserNotificationsClient: DependencyKey {
     public static var testValue: UserNotificationsClient {
         UserNotificationsClient(
             notifications: unimplemented("UserNotificationClient.notifications"),
+            stream: unimplemented("UserNotificationClient.stream"),
             add: unimplemented("UserNotificationClient.add"),
             remove: unimplemented("UserNotificationClient.remove")
         )

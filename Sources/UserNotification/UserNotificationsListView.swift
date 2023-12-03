@@ -7,6 +7,15 @@ import UserNotificationsClientDependency
 public struct UserNotificationsList {
     public struct State: Equatable {
         var notifications: IdentifiedArrayOf<UserNotification> = []
+
+        init(notifications: IdentifiedArrayOf<UserNotification> = []) {
+            guard notifications.isEmpty else {
+                self.notifications = notifications
+                return
+            }
+            @Dependency(\.userNotifications) var userNotifications
+            self.notifications = IdentifiedArrayOf(uniqueElements: userNotifications.notifications())
+        }
     }
 
     public enum Action: Equatable {
@@ -36,7 +45,7 @@ public struct UserNotificationsList {
                 return .none
             case .task:
                 return .run { send in
-                    for await notifications in userNotifications.notifications {
+                    for await notifications in userNotifications.stream() {
                         await send(.notificationsUpdated(notifications))
                     }
                 }
