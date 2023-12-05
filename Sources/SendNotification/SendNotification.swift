@@ -160,7 +160,8 @@ public struct SendNotification {
             id: .nextOffPeakIdentifier,
             title: String(localized: "Off peak period is starting"),
             body: String(localized: "Optimise your electricity bill by starting your appliance now."),
-            date: date.now
+            creationDate: date.now,
+            duration: durationBeforeOffPeak
         ))
         return .none
     }
@@ -170,7 +171,8 @@ public struct SendNotification {
             id: .offPeakEndIdentifier,
             title: String(localized: "Off peak period is ending"),
             body: String(localized: "If some of your consuming devices are still, it's time to shut them down."),
-            date: date.now
+            creationDate: date.now,
+            duration: durationBeforePeak
         ))
         return .none
     }

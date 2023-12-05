@@ -101,6 +101,7 @@ let package = Package(
         .target(
             name: "UserNotificationsClientDependency",
             dependencies: [
+                "DataManagerDependency",
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
             ]
         )

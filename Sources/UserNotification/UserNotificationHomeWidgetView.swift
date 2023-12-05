@@ -12,7 +12,7 @@ public struct UserNotificationHomeWidget {
 
         var nextNotification: UserNotification? {
             @Dependency(\.date) var date
-            return notifications.sorted { $0.date < $1.date }.first { $0.date > date() }
+            return notifications.sorted { $0.triggerDate < $1.triggerDate }.first { $0.triggerDate > date() }
         }
 
         public init(notifications: [UserNotification] = [], destination: UserNotificationsList.State? = nil) {

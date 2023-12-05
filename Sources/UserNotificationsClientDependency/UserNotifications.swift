@@ -1,5 +1,7 @@
 import Combine
+import DataManagerDependency
 import Dependencies
+import Foundation
 import UserNotificationsDependency
 
 public struct UserNotificationsClient {
@@ -12,8 +14,11 @@ public struct UserNotificationsClient {
 private final class UserNotificationCombine {
     @Published var notifications: [UserNotification] = []
 
+    @Dependency(\.dataManager.load) private var loadData
+    @Dependency(\.dataManager.save) private var saveData
+
     init() {
-        // TODO: load from JSON
+        notifications = (try? JSONDecoder().decode([UserNotification].self, from: loadData(.userNotifications))) ?? []
     }
 
     func add(notification: UserNotification) {
@@ -28,8 +33,10 @@ private final class UserNotificationCombine {
         save()
     }
 
+    // TODO: auto remove notifications when they are out of dates?
+
     private func save() {
-        // TODO: save to JSON
+        try? saveData(try JSONEncoder().encode(notifications), .userNotifications)
     }
 }
 
@@ -63,4 +70,8 @@ public extension DependencyValues {
         get { self[UserNotificationsClient.self] }
         set { self[UserNotificationsClient.self] = newValue }
     }
+}
+
+private extension URL {
+    static let userNotifications = Self.documentsDirectory.appending(component: "userNotifications.json")
 }

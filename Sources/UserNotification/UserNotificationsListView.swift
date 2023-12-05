@@ -79,23 +79,35 @@ struct UserNotificationsListView: View {
 
     private func notificationView(_ notification: UserNotification) -> some View {
         VStack(alignment: .leading) {
-            Text(notification.message)
+            Text(notification.title)
                 .font(.headline)
-            Text(notification.date.description)
+            Text(notification.body)
+                .font(.body)
             TimelineView(.periodic(from: .now, by: 1)) { _ in
-                Label(notification.formattedDistance, systemImage: "clock.badge")
-                    .foregroundStyle(.secondary)
-                    .font(.body)
+                HStack {
+                    Label(notification.formattedRemainingTime, systemImage: "clock.badge")
+                        .foregroundStyle(.secondary)
+                        .font(.body)
+                        .monospacedDigit()
+
+                    ProgressView(
+                        value: max(notification.remainingTime, 0),
+                        total: Double(notification.duration.components.seconds)
+                    )
+                }
             }
         }
     }
 }
 
 private extension UserNotification {
-    var formattedDistance: String {
+    var formattedRemainingTime: String {
+        Duration.seconds(remainingTime).formatted(.time(pattern: .hourMinuteSecond))
+    }
+
+    var remainingTime: Double {
         @Dependency(\.date.now) var now
-        let distance = Duration.seconds(now.distance(to: date))
-        return distance.formatted(.time(pattern: .hourMinuteSecond))
+        return now.distance(to: triggerDate)
     }
 }
 
