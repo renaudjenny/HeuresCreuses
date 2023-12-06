@@ -35,7 +35,7 @@ public struct UserNotificationsList {
             switch action {
             case let .delete(indexSet):
                 for index in indexSet {
-                    userNotifications.remove(state.notifications[index])
+                    try? userNotifications.remove(state.notifications[index])
                 }
                 return .none
             case let .notificationsUpdated(notifications):

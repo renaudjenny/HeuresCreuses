@@ -95,12 +95,12 @@ public struct SendNotification {
                         status = .notSent
 
                     case .offPeakStart:
-                        let requests = await userNotificationCenter.pendingNotificationRequests()
-                        status = requests.contains { $0.identifier == .nextOffPeakIdentifier } ? .alreadySent : .notSent
+                        status = userNotifications.notifications()
+                            .contains { $0.id == .nextOffPeakIdentifier } ? .alreadySent : .notSent
 
                     case .offPeakEnd:
-                        let requests = await userNotificationCenter.pendingNotificationRequests()
-                        status = requests.contains { $0.identifier == .offPeakEndIdentifier } ? .alreadySent : .notSent
+                        status = userNotifications.notifications()
+                            .contains { $0.id == .offPeakEndIdentifier } ? .alreadySent : .notSent
 
                     case .none:
                         status = .notSent
@@ -153,28 +153,28 @@ public struct SendNotification {
         }
     }
 
-    // TODO: These two functions can now fit in the reducer without being private func
-
     private func sendOffPeakStartNotification(durationBeforeOffPeak: Duration) -> Effect<Action> {
-        userNotifications.add(UserNotification(
-            id: .nextOffPeakIdentifier,
-            title: String(localized: "Off peak period is starting"),
-            body: String(localized: "Optimise your electricity bill by starting your appliance now."),
-            creationDate: date.now,
-            duration: durationBeforeOffPeak
-        ))
-        return .none
+        .run { _ in
+            try await userNotifications.add(UserNotification(
+                id: .nextOffPeakIdentifier,
+                title: String(localized: "Off peak period is starting"),
+                body: String(localized: "Optimise your electricity bill by starting your appliance now."),
+                creationDate: date.now,
+                duration: durationBeforeOffPeak
+            ))
+        }
     }
 
     private func sendOffPeakEndNotification(durationBeforePeak: Duration) -> Effect<Action> {
-        userNotifications.add(UserNotification(
-            id: .offPeakEndIdentifier,
-            title: String(localized: "Off peak period is ending"),
-            body: String(localized: "If some of your consuming devices are still, it's time to shut them down."),
-            creationDate: date.now,
-            duration: durationBeforePeak
-        ))
-        return .none
+        .run { _ in
+            try await userNotifications.add(UserNotification(
+                id: .offPeakEndIdentifier,
+                title: String(localized: "Off peak period is ending"),
+                body: String(localized: "If some of your consuming devices are still, it's time to shut them down."),
+                creationDate: date.now,
+                duration: durationBeforePeak
+            ))
+        }
     }
 }
 

@@ -2,41 +2,50 @@ import Combine
 import DataManagerDependency
 import Dependencies
 import Foundation
+import NotificationCenter
 import UserNotificationsDependency
 
 public struct UserNotificationsClient {
     public var notifications: () -> [UserNotification]
     public var stream: () -> AsyncStream<[UserNotification]>
-    public var add: (UserNotification) -> Void
-    public var remove: (UserNotification) -> Void
+    public var add: (UserNotification) async throws -> Void
+    public var remove: (UserNotification) throws -> Void
 }
 
 private final class UserNotificationCombine {
     @Published var notifications: [UserNotification] = []
 
     @Dependency(\.dataManager.load) private var loadData
+    @Dependency(\.userNotificationCenter) private var userNotificationCenter
     @Dependency(\.dataManager.save) private var saveData
 
     init() {
         notifications = (try? JSONDecoder().decode([UserNotification].self, from: loadData(.userNotifications))) ?? []
     }
 
-    func add(notification: UserNotification) {
+    func add(notification: UserNotification) async throws {
         notifications.append(notification)
-        // TODO: add a notification in notification center
-        save()
+
+        let content = UNMutableNotificationContent()
+        content.title = notification.title
+        content.body = notification.body
+        let timeInterval = TimeInterval(notification.duration.components.seconds)
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
+        try await userNotificationCenter.add(.init(identifier: notification.id, content: content, trigger: trigger))
+
+        try save()
     }
 
-    func remove(notification: UserNotification) {
+    func remove(notification: UserNotification) throws {
         notifications.removeAll { notification.id == $0.id }
-        // TODO: remove the notification from notification center
-        save()
+        userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [notification.id])
+        try save()
     }
 
     // TODO: auto remove notifications when they are out of dates?
 
-    private func save() {
-        try? saveData(try JSONEncoder().encode(notifications), .userNotifications)
+    private func save() throws {
+        try saveData(try JSONEncoder().encode(notifications), .userNotifications)
     }
 }
 
