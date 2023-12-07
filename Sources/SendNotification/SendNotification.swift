@@ -19,14 +19,9 @@ public struct SendNotification {
 
     public enum Action: Equatable {
         case buttonTapped(Intent?)
-        case delegate(Delegate)
         case notificationStatusChanged(UNAuthorizationStatus)
         case updateUserNotificationStatus(UserNotificationStatus, authorizationStatus: UNAuthorizationStatus)
         case task
-
-        public enum Delegate: Equatable {
-            case notificationAdded(UserNotification)
-        }
     }
 
     public enum Intent: Equatable {
@@ -54,9 +49,6 @@ public struct SendNotification {
             case let .buttonTapped(intent):
                 state.intent = intent
                 return checkAuthorization()
-
-            case .delegate:
-                return .none
 
             case let .notificationStatusChanged(status):
                 state.notificationAuthorizationStatus = status
@@ -131,25 +123,15 @@ public struct SendNotification {
         delay: Duration,
         durationBeforeStart: Duration
     ) -> Effect<Action> {
-        .run { send in
-            let identifier = uuid().uuidString
-            let content = UNMutableNotificationContent()
-            content.title = "Appliance to program"
-            content.body = body
-            let timeInterval = TimeInterval(durationBeforeStart.components.seconds)
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
-
-            try await self.userNotificationCenter.add(
-                .init(
-                    identifier: identifier,
-                    content: content,
-                    trigger: trigger
-                )
-            )
-
-            let date = date().addingTimeInterval(timeInterval)
-            let notification = UserNotification(id: identifier, message: content.body, date: date)
-            await send(.delegate(.notificationAdded(notification)))
+        .run { _ in
+            // TODO: ideally the id shouldn't be a uuid but deterministic so we can know if the notification has already been programmed
+            try await userNotifications.add(UserNotification(
+                id: uuid().uuidString,
+                title: String(localized: "Appliance to program"),
+                body: body,
+                creationDate: date.now,
+                duration: durationBeforeStart
+            ))
         }
     }
 

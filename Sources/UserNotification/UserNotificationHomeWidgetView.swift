@@ -80,7 +80,8 @@ public struct UserNotificationHomeWidgetView: View {
 
         init(_ state: UserNotificationHomeWidget.State) {
             notificationsCount = state.notifications.count
-            nextNotificationMessage = state.nextNotification?.message
+            nextNotificationMessage = state.nextNotification
+                .map { ["\($0.title)", $0.body].joined(separator: "\n") }
         }
     }
 
