@@ -100,10 +100,11 @@ public struct UserNotificationHomeWidgetView: View {
                 }
             }
             .buttonStyle(.plain)
-            .navigationDestination(
-                store: store.scope(state: \.$destination, action: \.destination),
-                destination: UserNotificationsListView.init
-            )
+            .sheet(store: store.scope(state: \.$destination, action: \.destination), content: { store in
+                NavigationStack {
+                    UserNotificationsListView(store: store)
+                }
+            })
             .task { @MainActor in await viewStore.send(.task).finish() }
         }
     }

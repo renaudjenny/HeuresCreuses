@@ -39,9 +39,7 @@ public struct UserNotificationsList {
                 }
                 return .none
             case let .notificationsUpdated(notifications):
-                for notification in notifications {
-                    state.notifications.updateOrAppend(notification)
-                }
+                state.notifications = IdentifiedArrayOf(uniqueElements: notifications)
                 return .none
             case .task:
                 return .run { send in
