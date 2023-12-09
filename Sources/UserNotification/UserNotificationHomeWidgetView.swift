@@ -18,9 +18,10 @@ public struct UserNotificationHomeWidget {
         public init(notifications: [UserNotification] = [], destination: UserNotificationsList.State? = nil) {
             if !notifications.isEmpty {
                 self.notifications = notifications
+            } else {
+                @Dependency(\.userNotifications) var userNotifications
+                self.notifications = userNotifications.notifications()
             }
-            @Dependency(\.userNotifications) var userNotifications
-            self.notifications = userNotifications.notifications()
             self.destination = destination
         }
     }
