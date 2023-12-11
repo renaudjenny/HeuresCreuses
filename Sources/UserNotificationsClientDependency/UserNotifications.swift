@@ -1,4 +1,5 @@
 import Combine
+import ComposableArchitecture
 import DataManagerDependency
 import Dependencies
 import Foundation
@@ -9,12 +10,13 @@ public struct UserNotificationsClient {
     public var notifications: () -> [UserNotification]
     public var stream: () -> AsyncStream<[UserNotification]>
     public var add: (UserNotification) async throws -> Void
-    public var remove: (UserNotification) throws -> Void
+    public var remove: (UserNotification) async throws -> Void
 }
 
 private final class UserNotificationCombine {
     @Published var notifications: [UserNotification] = []
 
+    @Dependency(\.continuousClock) var clock
     @Dependency(\.dataManager.load) private var loadData
     @Dependency(\.userNotificationCenter) private var userNotificationCenter
     @Dependency(\.dataManager.save) private var saveData
@@ -33,19 +35,33 @@ private final class UserNotificationCombine {
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
         try await userNotificationCenter.add(.init(identifier: notification.id, content: content, trigger: trigger))
 
-        try save()
+        try await save()
     }
 
-    func remove(notification: UserNotification) throws {
+    func remove(notification: UserNotification) async throws {
         notifications.removeAll { notification.id == $0.id }
         userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [notification.id])
-        try save()
+        try await save()
     }
 
-    // TODO: auto remove notifications when they are out of dates?
+    // Some logic here, should be done in a feature reducer
+    func filterNotifications() throws {
+        @Dependency(\.date.now) var now
+        let outdatedNotifications = notifications.filter {
+            $0.creationDate.addingTimeInterval(Double($0.duration.components.seconds)) < now
+        }
+        for notification in outdatedNotifications {
+            notifications.removeAll { $0.id == notification.id }
+        }
+        userNotificationCenter.removeAllDeliveredNotifications()
+    }
 
-    private func save() throws {
-        try saveData(try JSONEncoder().encode(notifications), .userNotifications)
+    private func save() async throws {
+        enum CancelID { case saveDebounce }
+        try await withTaskCancellation(id: CancelID.saveDebounce, cancelInFlight: true) { [self] in
+            try await clock.sleep(for: .seconds(1))
+            try saveData(try JSONEncoder().encode(notifications), .userNotifications)
+        }
     }
 }
 
@@ -53,7 +69,10 @@ extension UserNotificationsClient: DependencyKey {
     public static let liveValue: UserNotificationsClient = {
         let combine = UserNotificationCombine()
         return UserNotificationsClient(
-            notifications: { combine.notifications },
+            notifications: {
+                try? combine.filterNotifications()
+                return combine.notifications
+            },
             stream: { combine.$notifications.values.eraseToStream() },
             add: combine.add(notification:),
             remove: combine.remove(notification:)

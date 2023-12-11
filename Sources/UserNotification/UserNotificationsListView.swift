@@ -34,10 +34,11 @@ public struct UserNotificationsList {
         Reduce { state, action in
             switch action {
             case let .delete(indexSet):
-                for index in indexSet {
-                    try? userNotifications.remove(state.notifications[index])
+                return .run { [notifications = state.notifications] _ in
+                    for index in indexSet {
+                        try? await userNotifications.remove(notifications[index])
+                    }
                 }
-                return .none
             case let .notificationsUpdated(notifications):
                 state.notifications = IdentifiedArrayOf(uniqueElements: notifications)
                 return .none
