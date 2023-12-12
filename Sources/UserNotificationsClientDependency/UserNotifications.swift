@@ -10,7 +10,7 @@ public struct UserNotificationsClient {
     public var notifications: () -> [UserNotification]
     public var stream: () -> AsyncStream<[UserNotification]>
     public var add: (UserNotification) async throws -> Void
-    public var remove: (UserNotification) async throws -> Void
+    public var remove: ([UserNotification.ID]) async throws -> Void
 }
 
 private final class UserNotificationCombine {
@@ -38,22 +38,10 @@ private final class UserNotificationCombine {
         try await save()
     }
 
-    func remove(notification: UserNotification) async throws {
-        notifications.removeAll { notification.id == $0.id }
-        userNotificationCenter.removePendingNotificationRequests(withIdentifiers: [notification.id])
+    func remove(ids: [UserNotification.ID]) async throws {
+        notifications.removeAll { ids.contains($0.id) }
+        userNotificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
         try await save()
-    }
-
-    // Some logic here, should be done in a feature reducer
-    func filterNotifications() throws {
-        @Dependency(\.date.now) var now
-        let outdatedNotifications = notifications.filter {
-            $0.creationDate.addingTimeInterval(Double($0.duration.components.seconds)) < now
-        }
-        for notification in outdatedNotifications {
-            notifications.removeAll { $0.id == notification.id }
-        }
-        userNotificationCenter.removeAllDeliveredNotifications()
     }
 
     private func save() async throws {
@@ -69,13 +57,10 @@ extension UserNotificationsClient: DependencyKey {
     public static let liveValue: UserNotificationsClient = {
         let combine = UserNotificationCombine()
         return UserNotificationsClient(
-            notifications: {
-                try? combine.filterNotifications()
-                return combine.notifications
-            },
+            notifications: { combine.notifications },
             stream: { combine.$notifications.values.eraseToStream() },
             add: combine.add(notification:),
-            remove: combine.remove(notification:)
+            remove: combine.remove(ids:)
         )
     }()
 
