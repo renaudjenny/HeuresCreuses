@@ -39,7 +39,10 @@ public struct UserNotificationsList {
         Reduce { state, action in
             switch action {
             case .cancel:
-                return .cancel(id: CancelID.notificationsUpdate)
+                return .merge(
+                    .cancel(id: CancelID.notificationsUpdate),
+                    .cancel(id: CancelID.removeOutdated)
+                )
             case let .delete(indexSet):
                 return .run { [notifications = state.notifications] _ in
                     try? await userNotifications.remove(indexSet.map { notifications[$0].id })
