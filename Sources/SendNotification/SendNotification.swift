@@ -3,6 +3,7 @@ import ComposableArchitecture
 import NotificationCenter
 import Models
 import UserNotificationsDependency
+import UserNotificationsClientDependency
 
 @Reducer
 public struct SendNotification {
@@ -18,14 +19,9 @@ public struct SendNotification {
 
     public enum Action: Equatable {
         case buttonTapped(Intent?)
-        case delegate(Delegate)
         case notificationStatusChanged(UNAuthorizationStatus)
         case updateUserNotificationStatus(UserNotificationStatus, authorizationStatus: UNAuthorizationStatus)
         case task
-
-        public enum Delegate: Equatable {
-            case notificationAdded(UserNotification)
-        }
     }
 
     public enum Intent: Equatable {
@@ -42,6 +38,7 @@ public struct SendNotification {
 
     @Dependency(\.date) var date
     @Dependency(\.userNotificationCenter) var userNotificationCenter
+    @Dependency(\.userNotifications) var userNotifications
     @Dependency(\.uuid) var uuid
 
     public init() {}
@@ -52,9 +49,6 @@ public struct SendNotification {
             case let .buttonTapped(intent):
                 state.intent = intent
                 return checkAuthorization()
-
-            case .delegate:
-                return .none
 
             case let .notificationStatusChanged(status):
                 state.notificationAuthorizationStatus = status
@@ -93,12 +87,12 @@ public struct SendNotification {
                         status = .notSent
 
                     case .offPeakStart:
-                        let requests = await userNotificationCenter.pendingNotificationRequests()
-                        status = requests.contains { $0.identifier == .nextOffPeakIdentifier } ? .alreadySent : .notSent
+                        status = userNotifications.notifications()
+                            .contains { $0.id == .nextOffPeakIdentifier } ? .alreadySent : .notSent
 
                     case .offPeakEnd:
-                        let requests = await userNotificationCenter.pendingNotificationRequests()
-                        status = requests.contains { $0.identifier == .offPeakEndIdentifier } ? .alreadySent : .notSent
+                        status = userNotifications.notifications()
+                            .contains { $0.id == .offPeakEndIdentifier } ? .alreadySent : .notSent
 
                     case .none:
                         status = .notSent
@@ -129,75 +123,39 @@ public struct SendNotification {
         delay: Duration,
         durationBeforeStart: Duration
     ) -> Effect<Action> {
-        .run { send in
-            let identifier = uuid().uuidString
-            let content = UNMutableNotificationContent()
-            content.title = "Appliance to program"
-            content.body = body
-            let timeInterval = TimeInterval(durationBeforeStart.components.seconds)
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
-
-            try await self.userNotificationCenter.add(
-                .init(
-                    identifier: identifier,
-                    content: content,
-                    trigger: trigger
-                )
-            )
-
-            let date = date().addingTimeInterval(timeInterval)
-            let notification = UserNotification(id: identifier, message: content.body, date: date)
-            await send(.delegate(.notificationAdded(notification)))
+        .run { _ in
+            // TODO: ideally the id shouldn't be a uuid but deterministic so we can know if the notification has already been programmed
+            try await userNotifications.add(UserNotification(
+                id: uuid().uuidString,
+                title: String(localized: "Appliance to program"),
+                body: body,
+                creationDate: date.now,
+                duration: durationBeforeStart
+            ))
         }
     }
 
     private func sendOffPeakStartNotification(durationBeforeOffPeak: Duration) -> Effect<Action> {
-        .run { send in
-            let requests = await userNotificationCenter.pendingNotificationRequests()
-            guard !requests.contains(where: { $0.identifier == .nextOffPeakIdentifier }) else { return }
-
-            let content = UNMutableNotificationContent()
-            content.title = "Off peak period is starting"
-            content.body = "Optimise your electricity bill by starting your appliance now."
-            let timeInterval = TimeInterval(durationBeforeOffPeak.components.seconds)
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
-
-            try await self.userNotificationCenter.add(
-                .init(
-                    identifier: .nextOffPeakIdentifier,
-                    content: content,
-                    trigger: trigger
-                )
-            )
-
-            let date = date().addingTimeInterval(timeInterval)
-            let notification = UserNotification(id: .nextOffPeakIdentifier, message: content.body, date: date)
-            await send(.delegate(.notificationAdded(notification)))
+        .run { _ in
+            try await userNotifications.add(UserNotification(
+                id: .nextOffPeakIdentifier,
+                title: String(localized: "Off peak period is starting"),
+                body: String(localized: "Optimise your electricity bill by starting your appliance now."),
+                creationDate: date.now,
+                duration: durationBeforeOffPeak
+            ))
         }
     }
 
     private func sendOffPeakEndNotification(durationBeforePeak: Duration) -> Effect<Action> {
-        .run { send in
-            let requests = await userNotificationCenter.pendingNotificationRequests()
-            guard !requests.contains(where: { $0.identifier == .nextOffPeakIdentifier }) else { return }
-
-            let content = UNMutableNotificationContent()
-            content.title = "Off peak period is ending"
-            content.body = "If some of your consuming devices are still, it's time to shut them down."
-            let timeInterval = TimeInterval(durationBeforePeak.components.seconds)
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
-
-            try await self.userNotificationCenter.add(
-                .init(
-                    identifier: .offPeakEndIdentifier,
-                    content: content,
-                    trigger: trigger
-                )
-            )
-
-            let date = date().addingTimeInterval(timeInterval)
-            let notification = UserNotification(id: .nextOffPeakIdentifier, message: content.body, date: date)
-            await send(.delegate(.notificationAdded(notification)))
+        .run { _ in
+            try await userNotifications.add(UserNotification(
+                id: .offPeakEndIdentifier,
+                title: String(localized: "Off peak period is ending"),
+                body: String(localized: "If some of your consuming devices are still, it's time to shut them down."),
+                creationDate: date.now,
+                duration: durationBeforePeak
+            ))
         }
     }
 }

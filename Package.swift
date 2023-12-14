@@ -15,6 +15,7 @@ let package = Package(
         .library(name: "Models", targets: ["Models"]),
         .library(name: "SendNotification", targets: ["SendNotification"]),
         .library(name: "UserNotification", targets: ["UserNotification"]),
+        .library(name: "UserNotificationsClientDependency", targets: ["UserNotificationsClientDependency"]),
     ],
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.5.0"),
@@ -82,6 +83,7 @@ let package = Package(
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "Models",
+                "UserNotificationsClientDependency",
             ]
         ),
         .target(
@@ -91,9 +93,17 @@ let package = Package(
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "HomeWidget",
                 "Models",
-                "SendNotification",
+                "UserNotificationsClientDependency",
             ]
         ),
         .testTarget(name: "UserNotificationTests", dependencies: ["UserNotification"]),
+        .target(
+            name: "UserNotificationsClientDependency",
+            dependencies: [
+                .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+                "DataManagerDependency",
+                .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
+            ]
+        )
     ]
 )

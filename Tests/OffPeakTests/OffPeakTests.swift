@@ -14,7 +14,7 @@ final class OffPeakTests: XCTestCase {
             $0.continuousClock = ImmediateClock()
             $0.date = .constant(date)
         }
-        let offPeakRanges: [ClosedRange<Date>] = .offPeakRanges(store.state.periods, now: date, calendar: calendar)
+        let offPeakRanges: [ClosedRange<Date>] = .nextOffPeakRanges(store.state.periods, now: date, calendar: calendar)
         let closestOffPeak = try XCTUnwrap(offPeakRanges.first { date.distance(to: $0.lowerBound) > 0 })
         await store.send(.task) {
             $0.offPeakRanges = offPeakRanges
@@ -38,7 +38,7 @@ final class OffPeakTests: XCTestCase {
             $0.date = .constant(date)
         }
 
-        let offPeakRanges: [ClosedRange<Date>] = .offPeakRanges(store.state.periods, now: date, calendar: calendar)
+        let offPeakRanges: [ClosedRange<Date>] = .nextOffPeakRanges(store.state.periods, now: date, calendar: calendar)
         let currentOffPeak = try XCTUnwrap(offPeakRanges.first { $0.contains(date) })
         await store.send(.task) {
             $0.offPeakRanges = offPeakRanges

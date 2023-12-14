@@ -1,10 +1,8 @@
 #if canImport(NotificationCenter)
 import ComposableArchitecture
 import HomeWidget
-import NotificationCenter
-import SendNotification
 import SwiftUI
-import UserNotificationsDependency
+import UserNotificationsClientDependency
 
 @Reducer
 public struct UserNotificationHomeWidget {
@@ -14,11 +12,16 @@ public struct UserNotificationHomeWidget {
 
         var nextNotification: UserNotification? {
             @Dependency(\.date) var date
-            return notifications.sorted { $0.date < $1.date }.first { $0.date > date() }
+            return notifications.sorted { $0.triggerDate < $1.triggerDate }.first { $0.triggerDate > date() }
         }
 
         public init(notifications: [UserNotification] = [], destination: UserNotificationsList.State? = nil) {
-            self.notifications = notifications
+            if !notifications.isEmpty {
+                self.notifications = notifications
+            } else {
+                @Dependency(\.userNotifications) var userNotifications
+                self.notifications = userNotifications.notifications()
+            }
             self.destination = destination
         }
     }
@@ -26,7 +29,7 @@ public struct UserNotificationHomeWidget {
     public enum Action: Equatable {
         case cancelTimer
         case destination(PresentationAction<UserNotificationsList.Action>)
-        case notificationsUpdated([UNNotificationRequest])
+        case notificationsUpdated([UserNotification])
         case task
         case widgetTapped
     }
@@ -35,9 +38,9 @@ public struct UserNotificationHomeWidget {
 
     public init () {}
 
-    @Dependency(\.userNotificationCenter) var userNotificationCenter
     @Dependency(\.continuousClock) var clock
     @Dependency(\.date.now) var now
+    @Dependency(\.userNotifications) var userNotifications
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -46,20 +49,12 @@ public struct UserNotificationHomeWidget {
                 return .cancel(id: CancelID.timer)
             case .destination:
                 return .none
-            case let .notificationsUpdated(notificationsContents):
-                state.notifications = notificationsContents.compactMap {
-                    guard let trigger = $0.trigger as? UNTimeIntervalNotificationTrigger else { return nil }
-                    let date = now.addingTimeInterval(trigger.timeInterval)
-                    return UserNotification(id: $0.identifier, message: $0.content.body, date: date)
-                }
+            case let .notificationsUpdated(notifications):
+                state.notifications = notifications
                 return .none
             case .task:
                 return .run { send in
-                    // TODO: replace this regular polling per something smarter with an extension of this dependency
-                    let notifications = await userNotificationCenter.pendingNotificationRequests()
-                    await send(.notificationsUpdated(notifications))
-                    for await _ in clock.timer(interval: .seconds(5)) {
-                        let notifications = await userNotificationCenter.pendingNotificationRequests()
+                    for await notifications in userNotifications.stream() {
                         await send(.notificationsUpdated(notifications))
                     }
                 }
@@ -86,7 +81,8 @@ public struct UserNotificationHomeWidgetView: View {
 
         init(_ state: UserNotificationHomeWidget.State) {
             notificationsCount = state.notifications.count
-            nextNotificationMessage = state.nextNotification?.message
+            nextNotificationMessage = state.nextNotification
+                .map { ["\($0.title)", $0.body].joined(separator: "\n") }
         }
     }
 
@@ -105,10 +101,11 @@ public struct UserNotificationHomeWidgetView: View {
                 }
             }
             .buttonStyle(.plain)
-            .navigationDestination(
-                store: store.scope(state: \.$destination, action: \.destination),
-                destination: UserNotificationsListView.init
-            )
+            .sheet(store: store.scope(state: \.$destination, action: \.destination), content: { store in
+                NavigationStack {
+                    UserNotificationsListView(store: store)
+                }
+            })
             .task { @MainActor in await viewStore.send(.task).finish() }
         }
     }

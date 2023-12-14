@@ -22,7 +22,7 @@ public struct OffPeakSelection: Reducer {
     @Dependency(\.date.now) var now
 
     public var body: some ReducerOf<Self> {
-        Scope(state: \.sendNotification, action: /Action.sendNotification) {
+        Scope(state: \.sendNotification, action: \.sendNotification) {
             SendNotification()
         }
 
