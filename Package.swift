@@ -93,7 +93,6 @@ let package = Package(
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "HomeWidget",
                 "Models",
-                "SendNotification", // TODO: check if we can get rid of this dependency
                 "UserNotificationsClientDependency",
             ]
         ),

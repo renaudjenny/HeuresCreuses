@@ -1,5 +1,4 @@
 import ComposableArchitecture
-import SendNotification
 import SwiftUI
 import UserNotificationsClientDependency
 
