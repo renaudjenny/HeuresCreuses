@@ -27,14 +27,17 @@ public struct UserNotificationHomeWidget {
     }
 
     public enum Action: Equatable {
-        case cancelTimer
+        case cancel
         case destination(PresentationAction<UserNotificationsList.Action>)
         case notificationsUpdated([UserNotification])
         case task
         case widgetTapped
     }
 
-    enum CancelID { case timer }
+    enum CancelID {
+        case removeOutdated
+        case task
+    }
 
     public init () {}
 
@@ -45,20 +48,22 @@ public struct UserNotificationHomeWidget {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .cancelTimer:
-                return .cancel(id: CancelID.timer)
+            case .cancel:
+                return .merge(.cancel(id: CancelID.task), .cancel(id: CancelID.removeOutdated))
             case .destination:
                 return .none
             case let .notificationsUpdated(notifications):
                 state.notifications = notifications
                 return .none
             case .task:
-                return .run { send in
-                    for await notifications in userNotifications.stream() {
-                        await send(.notificationsUpdated(notifications))
-                    }
-                }
-                .cancellable(id: CancelID.timer)
+                return .merge(
+                    removeOutdated(),
+                    .run { send in
+                        for await notifications in userNotifications.stream() {
+                            await send(.notificationsUpdated(notifications))
+                        }
+                    }.cancellable(id: CancelID.task)
+                )
             case .widgetTapped:
                 state.destination = UserNotificationsList.State(
                     notifications: IdentifiedArray(uniqueElements: state.notifications)
@@ -69,6 +74,24 @@ public struct UserNotificationHomeWidget {
         .ifLet(\.$destination, action: \.destination) {
             UserNotificationsList()
         }
+    }
+
+    private func removeOutdated() -> Effect<Action> {
+        let removeOutdatedNotifications = {
+            let ids = userNotifications.notifications()
+                .filter { $0.creationDate.addingTimeInterval(Double($0.duration.components.seconds)) < now }
+                .map(\.id)
+            guard !ids.isEmpty else { return }
+            try await userNotifications.remove(ids)
+        }
+
+        return .run { _ in
+            try await removeOutdatedNotifications()
+            for await _ in clock.timer(interval: .seconds(1)) {
+                try await removeOutdatedNotifications()
+            }
+        }
+        .cancellable(id: CancelID.removeOutdated)
     }
 }
 

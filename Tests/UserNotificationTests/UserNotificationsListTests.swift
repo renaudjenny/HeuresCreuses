@@ -51,7 +51,7 @@ final class UserNotificationsListTests: XCTestCase {
         await store.receive(.notificationsUpdated([lastNotification])) {
             $0.notifications = [lastNotification]
         }
-        await fulfillment(of: [removalExpectation])
+        await fulfillment(of: [removalExpectation], timeout: 0.1)
         await store.send(.cancel)
         await store.finish()
     }
