@@ -142,6 +142,8 @@ private extension UserNotification {
         UserNotificationsListView(store: Store(initialState: UserNotificationsList.State()) {
             UserNotificationsList()
                 .transformDependency(\.userNotificationCenter) { dependency in
+                    // TODO: fix it for WatchOS, this preview should work without NotificationCenter
+                    #if canImport(NotificationCenter)
                     dependency.$pendingNotificationRequests = { @Sendable in
                         let content = UNMutableNotificationContent()
                         content.body = "Test notification body"
@@ -152,6 +154,7 @@ private extension UserNotification {
                             UNNotificationRequest(identifier: "1235", content: content, trigger: trigger2)
                         ]
                     }
+                    #endif
                 }
         })
     }

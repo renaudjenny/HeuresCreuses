@@ -166,5 +166,29 @@ private extension String {
 }
 #else
 import ComposableArchitecture
-public typealias SendNotification = EmptyReducer
+
+@Reducer
+public struct SendNotification {
+    public struct State: Equatable {
+        public var intent: Intent?
+
+        public init(intent: Intent? = nil) {
+            self.intent = intent
+        }
+    }
+
+    public enum Intent: Equatable {
+        case applianceToProgram(body: String, delay: Duration, durationBeforeStart: Duration)
+        case offPeakStart(durationBeforeOffPeak: Duration)
+        case offPeakEnd(durationBeforePeak: Duration)
+    }
+
+    public enum Action: Equatable {}
+
+    public init() {}
+
+    public var body: some ReducerOf<Self> {
+        EmptyReducer()
+    }
+}
 #endif

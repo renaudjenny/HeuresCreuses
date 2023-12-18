@@ -3,7 +3,9 @@ import ComposableArchitecture
 import DataManagerDependency
 import Dependencies
 import Foundation
+#if canImport(NotificationCenter)
 import NotificationCenter
+#endif
 import UserNotificationsDependency
 
 public struct UserNotificationsClient {
@@ -28,12 +30,14 @@ private final class UserNotificationCombine {
     func add(notification: UserNotification) async throws {
         notifications.append(notification)
 
+        #if canImport(NotificationCenter)
         let content = UNMutableNotificationContent()
         content.title = notification.title
         content.body = notification.body
         let timeInterval = TimeInterval(notification.duration.components.seconds)
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
         try await userNotificationCenter.add(.init(identifier: notification.id, content: content, trigger: trigger))
+        #endif
 
         try await save()
     }
