@@ -1,5 +1,4 @@
 import ComposableArchitecture
-import SendNotification
 @testable import UserNotification
 import UserNotificationsClientDependency
 import XCTest

@@ -32,9 +32,7 @@ public struct ProgramSelectionView: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
-                            #if false
                             .background(Material.thin)
-                            #endif
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                         .padding(.horizontal)

@@ -26,7 +26,6 @@ public struct UserNotificationsList {
 
     @Dependency(\.continuousClock) var clock
     @Dependency(\.date.now) var now
-    @Dependency(\.userNotificationCenter) var userNotificationCenter
     @Dependency(\.userNotifications) var userNotifications
 
     private enum CancelID {
@@ -141,20 +140,25 @@ private extension UserNotification {
     NavigationStack {
         UserNotificationsListView(store: Store(initialState: UserNotificationsList.State()) {
             UserNotificationsList()
-                .transformDependency(\.userNotificationCenter) { dependency in
-                    // TODO: fix it for WatchOS, this preview should work without NotificationCenter
-                    #if canImport(NotificationCenter)
-                    dependency.$pendingNotificationRequests = { @Sendable in
-                        let content = UNMutableNotificationContent()
-                        content.body = "Test notification body"
-                        let trigger1 = UNTimeIntervalNotificationTrigger(timeInterval: 12345, repeats: false)
-                        let trigger2 = UNTimeIntervalNotificationTrigger(timeInterval: 23456, repeats: false)
-                        return [
-                            UNNotificationRequest(identifier: "1234", content: content, trigger: trigger1),
-                            UNNotificationRequest(identifier: "1235", content: content, trigger: trigger2)
-                        ]
-                    }
-                    #endif
+                .transformDependency(\.userNotifications) { dependency in
+                    dependency.stream = { AsyncStream { continuation in
+                        continuation.yield([
+                            UserNotification(
+                                id: "1234",
+                                title: "Test 1",
+                                body: "Test 1 body",
+                                creationDate: Date.now.addingTimeInterval(12),
+                                duration: .seconds(500)
+                            ),
+                            UserNotification(
+                                id: "1235",
+                                title: "Test 2",
+                                body: "Test 2 body",
+                                creationDate: Date.now.addingTimeInterval(123),
+                                duration: .seconds(500)
+                            )
+                        ])
+                    } }
                 }
         })
     }
