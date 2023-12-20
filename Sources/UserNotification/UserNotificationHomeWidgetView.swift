@@ -144,13 +144,8 @@ public struct UserNotificationHomeWidgetView: View {
             UserNotificationHomeWidgetView(
                 store: Store(initialState: UserNotificationHomeWidget.State()) {
                     UserNotificationHomeWidget()
-                        .transformDependency(\.userNotificationCenter) { dependency in
-                            dependency.$pendingNotificationRequests = { @Sendable in
-                                let content = UNMutableNotificationContent()
-                                content.body = "Test notification body"
-                                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 12345, repeats: false)
-                                return [UNNotificationRequest(identifier: "1234", content: content, trigger: trigger)]
-                            }
+                        .transformDependency(\.userNotifications) { dependency in
+                            dependency.stream = { .example }
                         }
                 }
             )

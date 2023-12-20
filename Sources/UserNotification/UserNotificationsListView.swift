@@ -141,24 +141,7 @@ private extension UserNotification {
         UserNotificationsListView(store: Store(initialState: UserNotificationsList.State()) {
             UserNotificationsList()
                 .transformDependency(\.userNotifications) { dependency in
-                    dependency.stream = { AsyncStream { continuation in
-                        continuation.yield([
-                            UserNotification(
-                                id: "1234",
-                                title: "Test 1",
-                                body: "Test 1 body",
-                                creationDate: Date.now.addingTimeInterval(12),
-                                duration: .seconds(500)
-                            ),
-                            UserNotification(
-                                id: "1235",
-                                title: "Test 2",
-                                body: "Test 2 body",
-                                creationDate: Date.now.addingTimeInterval(123),
-                                duration: .seconds(500)
-                            )
-                        ])
-                    } }
+                    dependency.stream = { .example }
                 }
         })
     }

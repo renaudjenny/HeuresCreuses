@@ -62,18 +62,8 @@ struct AppView_Previews: PreviewProvider {
 
         Preview(
             store: Store(initialState: App.State()) {
-                App().transformDependency(\.userNotificationCenter) {
-                    $0.$pendingNotificationRequests = { @Sendable in
-                        let content1 = UNMutableNotificationContent()
-                        content1.body = "White Dishwasher\nProgram Eco\nDelay 3 hour"
-                        let content2 = UNMutableNotificationContent()
-                        content2.body = "Gray Washing machine\nProgram Intense\nDelay 4 hours"
-                        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 123456, repeats: false)
-                        return [
-                            UNNotificationRequest(identifier: "1", content: content1, trigger: trigger),
-                            UNNotificationRequest(identifier: "2", content: content2, trigger: trigger),
-                        ]
-                    }
+                App().transformDependency(\.userNotifications) {
+                    $0.stream = { .example }
                 }
             }
         )
