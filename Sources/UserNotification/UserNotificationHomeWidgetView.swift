@@ -1,9 +1,9 @@
-#if canImport(NotificationCenter)
 import ComposableArchitecture
 import HomeWidget
 import SwiftUI
 import UserNotificationsClientDependency
 
+#if canImport(NotificationCenter)
 @Reducer
 public struct UserNotificationHomeWidget {
     public struct State: Equatable {
@@ -150,6 +150,33 @@ public struct UserNotificationHomeWidgetView: View {
                 }
             )
         }
+    }
+}
+#else
+@Reducer
+public struct UserNotificationHomeWidget {
+    public struct State: Equatable {
+        public init(notifications: [UserNotification] = [], destination: UserNotificationsList.State? = nil) {}
+    }
+
+    public enum Action: Equatable {}
+
+    public init () {}
+
+    public var body: some ReducerOf<Self> {
+        EmptyReducer()
+    }
+}
+
+public struct UserNotificationHomeWidgetView: View {
+    let store: StoreOf<UserNotificationHomeWidget>
+
+    public var body: some View {
+        EmptyView()
+    }
+
+    public init(store: StoreOf<UserNotificationHomeWidget>) {
+        self.store = store
     }
 }
 #endif

@@ -30,7 +30,9 @@ public struct AppView: View {
                     action: \.userNotificationHomeWidget
                 ))
             }
+            #if os(iOS) || os(macOS)
             .listRowSpacing(8)
+            #endif
             .navigationTitle("Summary")
         }
     }
