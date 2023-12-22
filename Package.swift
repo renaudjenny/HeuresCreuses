@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "heures-creuses",
-    platforms: [.iOS(.v16), .macOS(.v13)],
+    platforms: [.iOS(.v17), .macOS(.v14), .watchOS(.v10)],
     products: [
         .library(name: "ApplianceFeature", targets: ["ApplianceFeature"]),
         .library(name: "AppFeature", targets: ["AppFeature"]),

@@ -30,12 +30,12 @@ public struct ProgramSelectionView: View {
                                     systemImage: "timer"
                                 )
                             }
+                            #if os(iOS) || os(macOS)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
-                            #if os(iOS) || os(macOS)
                             .background(Material.thin)
-                            #endif
                             .clipShape(RoundedRectangle(cornerRadius: 10))
+                            #endif
                         }
                         .padding(.horizontal)
                     }
