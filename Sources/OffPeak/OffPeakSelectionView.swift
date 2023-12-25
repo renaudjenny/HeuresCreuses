@@ -186,9 +186,9 @@ public struct OffPeakSelectionView: View {
 
             ForEach(0..<96) { i in
                 let angle: Double = (2.0 * .pi)/(96.0) * Double(i) - .pi/2.0
-                let radius = 85.0/100.0 * radius
+                let radius = 83.0/100.0 * radius
                 Rectangle()
-                    .size(CGSize(width: 1, height: i % 4 == 0 ? 6 : 2))
+                    .size(CGSize(width: 1, height: i % 4 == 0 ? 6 * scale : 2 * scale))
                     .fill(Color.primary.opacity(50/100))
                     .position(x: geometryProxy.size.width, y: geometryProxy.size.height)
                     .rotationEffect(.radians(angle - .pi/2))
