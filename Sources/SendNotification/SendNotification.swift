@@ -1,4 +1,4 @@
-#if canImport(NotificationCenter)
+#if canImport(NotificationCenter) && os(iOS)
 import ComposableArchitecture
 import NotificationCenter
 import Models

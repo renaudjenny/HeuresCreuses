@@ -30,7 +30,9 @@ struct ProgramFormView: View {
                     TextField(value: viewStore.$program.duration.minutes, format: .number) {
                         Label("Duration in minutes", systemImage: "timer")
                     }
+                    #if os(iOS)
                     .keyboardType(.numberPad)
+                    #endif
 
                 }
             } label: {

@@ -168,7 +168,7 @@ public struct OffPeakHomeWidgetView: View {
                 }
             )
         }
-        #if os(iOS) || os(macOS)
+        #if os(iOS)
         .listRowSpacing(8)
         #endif
     }

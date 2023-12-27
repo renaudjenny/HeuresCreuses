@@ -30,7 +30,7 @@ private final class UserNotificationCombine {
     func add(notification: UserNotification) async throws {
         notifications.append(notification)
 
-        #if canImport(NotificationCenter)
+        #if canImport(NotificationCenter) && os(iOS)
         let content = UNMutableNotificationContent()
         content.title = notification.title
         content.body = notification.body
