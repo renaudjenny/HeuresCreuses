@@ -4,65 +4,55 @@ import SwiftUI
 public struct ApplianceSelectionView: View {
     let store: StoreOf<ApplianceSelection>
 
-    struct ViewState: Equatable {
-        let appliances: IdentifiedArrayOf<Appliance>
-
-        init(_ state: ApplianceSelection.State) {
-            self.appliances = state.appliances
-        }
-    }
-
     public init(store: StoreOf<ApplianceSelection>) {
         self.store = store
     }
 
     public var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewStore in
-            List {
-                ForEach(viewStore.appliances) { appliance in
-                    Button { viewStore.send(.applianceTapped(appliance)) } label: {
-                        Label(appliance.name, systemImage: appliance.systemImage)
-                    }
+        List {
+            ForEach(store.appliances) { appliance in
+                Button { store.send(.applianceTapped(appliance)) } label: {
+                    Label(appliance.name, systemImage: appliance.systemImage)
                 }
-                .navigationDestination(
-                    store: store.scope(state: \.$destination.selection, action: \.destination.selection),
-                    destination: ProgramSelectionView.init
-                )
-                #if os(iOS) || os(macOS)
-                .sheet(store: store.scope(
-                    state: \.$destination.addAppliance,
-                    action: \.destination.addAppliance
-                )) { store in
-                    NavigationStack {
-                        ApplianceFormView(store: store)
-                            .navigationTitle("New appliance")
-                            .toolbar {
-                                ToolbarItem {
-                                    Button { viewStore.send(.addApplianceSaveButtonTapped) } label: {
-                                        Text("Save")
-                                    }
-                                }
-                                ToolbarItem(placement: .cancellationAction) {
-                                    Button { viewStore.send(.addApplianceCancelButtonTapped) } label: {
-                                        Text("Cancel")
-                                    }
+            }
+            .navigationDestination(
+                store: store.scope(state: \.$destination.selection, action: \.destination.selection),
+                destination: ProgramSelectionView.init
+            )
+            #if os(iOS) || os(macOS)
+            .sheet(store: store.scope(
+                state: \.$destination.addAppliance,
+                action: \.destination.addAppliance
+            )) { addApplianceStore in
+                NavigationStack {
+                    ApplianceFormView(store: addApplianceStore)
+                        .navigationTitle("New appliance")
+                        .toolbar {
+                            ToolbarItem {
+                                Button { store.send(.addApplianceSaveButtonTapped) } label: {
+                                    Text("Save")
                                 }
                             }
-                    }
-                }
-                #endif
-            }
-            .navigationTitle("Choose your appliance")
-            #if os(iOS) || os(macOS)
-            .toolbar {
-                ToolbarItem {
-                    Button { viewStore.send(.addApplianceButtonTapped) } label: {
-                        Label("Add appliance", systemImage: "plus.app")
-                    }
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button { store.send(.addApplianceCancelButtonTapped) } label: {
+                                    Text("Cancel")
+                                }
+                            }
+                        }
                 }
             }
             #endif
         }
+        .navigationTitle("Choose your appliance")
+        #if os(iOS) || os(macOS)
+        .toolbar {
+            ToolbarItem {
+                Button { store.send(.addApplianceButtonTapped) } label: {
+                    Label("Add appliance", systemImage: "plus.app")
+                }
+            }
+        }
+        #endif
     }
 }
 
