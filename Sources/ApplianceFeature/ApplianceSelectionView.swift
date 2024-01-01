@@ -2,7 +2,7 @@ import ComposableArchitecture
 import SwiftUI
 
 public struct ApplianceSelectionView: View {
-    let store: StoreOf<ApplianceSelection>
+    @Bindable var store: StoreOf<ApplianceSelection>
 
     public init(store: StoreOf<ApplianceSelection>) {
         self.store = store
@@ -20,10 +20,7 @@ public struct ApplianceSelectionView: View {
                 destination: ProgramSelectionView.init
             )
             #if os(iOS) || os(macOS)
-            .sheet(store: store.scope(
-                state: \.$destination.addAppliance,
-                action: \.destination.addAppliance
-            )) { addApplianceStore in
+            .sheet(item: $store.scope(state: \.destination?.addAppliance, action: \.destination.addAppliance)) { addApplianceStore in
                 NavigationStack {
                     ApplianceFormView(store: addApplianceStore)
                         .navigationTitle("New appliance")
