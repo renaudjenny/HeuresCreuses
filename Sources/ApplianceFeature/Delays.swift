@@ -4,6 +4,7 @@ import Models
 
 @Reducer
 public struct Delays {
+    @ObservableState
     public struct State: Equatable {
         var program: Program
         var appliance: Appliance

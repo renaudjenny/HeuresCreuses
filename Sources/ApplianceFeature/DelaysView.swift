@@ -19,71 +19,69 @@ public struct DelaysView: View {
     }
 
     public var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewStore in
-            ScrollView {
-                Text(viewStore.program.name)
-                    .font(.title)
-                    .padding(.bottom, 20)
+        ScrollView {
+            Text(store.program.name)
+                .font(.title)
+                .padding(.bottom, 20)
 
-                if viewStore.isOffPeakOnlyFilterOn && viewStore.operations.count < viewStore.delaysCount {
-                    Text("""
-                    ^[\(viewStore.delaysCount - viewStore.operations.count) operations](inflect: true) \
+            if store.isOffPeakOnlyFilterOn && store.operations.count < store.appliance.delays.count {
+                Text("""
+                    ^[\(store.appliance.delays.count - store.operations.count) operations](inflect: true) \
                     hidden as no off peak
                     """)
-                    .font(.caption)
-                }
+                .font(.caption)
+            }
 
-                ForEach(viewStore.operations) { operation in
-                    VStack(alignment: .leading) {
-                        HStack(alignment: .lastTextBaseline) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                if operation.delay == .zero {
-                                    Text("Starting immediately").font(.title2)
-                                } else {
-                                    Text(operation.delay.hourMinute).font(.title2)
-                                }
-                                Text("Finishing at \(operation.startEnd.upperBound.formatted(date: .omitted, time: .shortened))")
+            ForEach(store.operations) { operation in
+                VStack(alignment: .leading) {
+                    HStack(alignment: .lastTextBaseline) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            if operation.delay == .zero {
+                                Text("Starting immediately").font(.title2)
+                            } else {
+                                Text(operation.delay.hourMinute).font(.title2)
                             }
-                            Spacer()
-                            VStack(alignment: .trailing) {
-                                Text("\(operation.offPeakRatio.formatted(.percent.precision(.significantDigits(3)))) off peak")
-                            }
+                            Text("Finishing at \(operation.startEnd.upperBound.formatted(date: .omitted, time: .shortened))")
                         }
-                        ZStack {
-                            GeometryReader { proxy in
-                                Color.blue
-                                if operation.minutesOffPeak > 0 {
-                                    Color.green
-                                        .frame(width: proxy.size.width * operation.offPeakRangeRatio.upperBound)
-                                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                                        .offset(x: operation.offPeakRangeRatio.lowerBound * proxy.size.width)
-                                }
-                            }
-                            .accessibility(
-                                label: Text("\(operation.minutesInPeak.formatted()) minutes in peak and \(operation.minutesOffPeak.formatted()) minutes off peak")
-                            )
-                        }
-                        .frame(height: 12)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                    }
-                    .padding(.bottom, 12)
-                    .padding(.horizontal)
-                }
-            }
-            .navigationTitle("Delays")
-            .toolbar {
-                ToolbarItem {
-                    Button { viewStore.send(.onlyShowOffPeakTapped, animation: .easeInOut) } label: {
-                        if viewStore.isOffPeakOnlyFilterOn {
-                            Label("Show all", systemImage: "eye.slash")
-                        } else {
-                            Label("Only show off peak", systemImage: "eye")
+                        Spacer()
+                        VStack(alignment: .trailing) {
+                            Text("\(operation.offPeakRatio.formatted(.percent.precision(.significantDigits(3)))) off peak")
                         }
                     }
+                    ZStack {
+                        GeometryReader { proxy in
+                            Color.blue
+                            if operation.minutesOffPeak > 0 {
+                                Color.green
+                                    .frame(width: proxy.size.width * operation.offPeakRangeRatio.upperBound)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                    .offset(x: operation.offPeakRangeRatio.lowerBound * proxy.size.width)
+                            }
+                        }
+                        .accessibility(
+                            label: Text("\(operation.minutesInPeak.formatted()) minutes in peak and \(operation.minutesOffPeak.formatted()) minutes off peak")
+                        )
+                    }
+                    .frame(height: 12)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
+                .padding(.bottom, 12)
+                .padding(.horizontal)
             }
-            .task { @MainActor in viewStore.send(.task) }
         }
+        .navigationTitle("Delays")
+        .toolbar {
+            ToolbarItem {
+                Button { store.send(.onlyShowOffPeakTapped, animation: .easeInOut) } label: {
+                    if store.isOffPeakOnlyFilterOn {
+                        Label("Show all", systemImage: "eye.slash")
+                    } else {
+                        Label("Only show off peak", systemImage: "eye")
+                    }
+                }
+            }
+        }
+        .task { @MainActor in store.send(.task) }
     }
 }
 
