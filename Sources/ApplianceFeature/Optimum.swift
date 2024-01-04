@@ -4,6 +4,7 @@ import SendNotification
 
 @Reducer
 public struct Optimum {
+    @ObservableState
     public struct State: Equatable {
         let program: Program
         let appliance: Appliance

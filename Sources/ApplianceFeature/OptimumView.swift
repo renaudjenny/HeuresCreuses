@@ -5,59 +5,42 @@ import SwiftUI
 struct OptimumView: View {
     let store: StoreOf<Optimum>
 
-    struct ViewState: Equatable {
-        let program: Program
-        let delay: String
-        let shouldWaitBeforeStart: Bool
-        let durationBeforeStart: String
-        let ratio: String
-
-        init(_ state: Optimum.State) {
-            program = state.program
-            delay = state.delay.hourMinute
-            shouldWaitBeforeStart = state.durationBeforeStart > .zero
-            durationBeforeStart = state.durationBeforeStart.hourMinute
-            ratio = state.ratio.formatted(.percent.precision(.significantDigits(3)))
-        }
-    }
-
     var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewStore in
-            ScrollView {
-                VStack {
-                    Text("Optimum").font(.title).padding()
+        let ratio = store.ratio.formatted(.percent.precision(.significantDigits(3)))
+        ScrollView {
+            VStack {
+                Text("Optimum").font(.title).padding()
 
-                    Text("The **optimum** is the best time to start your appliance from now with the indicated delay")
-                        .font(.subheadline)
-                        .padding([.horizontal, .bottom])
+                Text("The **optimum** is the best time to start your appliance from now with the indicated delay")
+                    .font(.subheadline)
+                    .padding([.horizontal, .bottom])
 
-                    if viewStore.shouldWaitBeforeStart {
-                        Text("""
-                        Wait **\(viewStore.durationBeforeStart)** before starting your appliance \
-                        with the **\(viewStore.delay) delay** to be **\(viewStore.ratio)** off peak
+                if store.durationBeforeStart > .zero {
+                    Text("""
+                        Wait **\(store.durationBeforeStart.hourMinute)** before starting your appliance \
+                        with the **\(store.delay.hourMinute) delay** to be **\(ratio)** off peak
                         """)
-                        .padding(.horizontal)
+                    .padding(.horizontal)
 
-                        SendNotificationButtonView(
-                            store: store.scope(state: \.sendNotification, action: \.sendNotification)
-                        )
-                        .padding()
-                    } else {
-                        Text("""
-                        You can start your appliance with the **\(viewStore.delay) delay** now and have an off peak of \
-                        \(viewStore.ratio)
+                    SendNotificationButtonView(
+                        store: store.scope(state: \.sendNotification, action: \.sendNotification)
+                    )
+                    .padding()
+                } else {
+                    Text("""
+                        You can start your appliance with the **\(store.delay.hourMinute) delay** now and have an off peak of \
+                        \(ratio)
                         """)
-                    }
-
-                    Button { viewStore.send(.delaysTapped(viewStore.program)) } label: {
-                        Label("All delays", systemImage: "arrowshape.turn.up.backward.badge.clock.rtl")
-                    }
-                    .padding(.top)
                 }
-                .padding()
-                .presentationDetents([.medium])
-                .task { await viewStore.send(.task).finish() }
+
+                Button { store.send(.delaysTapped(store.program)) } label: {
+                    Label("All delays", systemImage: "arrowshape.turn.up.backward.badge.clock.rtl")
+                }
+                .padding(.top)
             }
+            .padding()
+            .presentationDetents([.medium])
+            .task { await store.send(.task).finish() }
         }
     }
 }
