@@ -2,9 +2,10 @@ import ComposableArchitecture
 
 @Reducer
 public struct ProgramSelection {
+    @ObservableState
     public struct State: Equatable {
         public var appliance: Appliance
-        @PresentationState public var destination: Destination.State?
+        @Presents public var destination: Destination.State?
 
         public init(appliance: Appliance, destination: Destination.State? = nil) {
             self.appliance = appliance
