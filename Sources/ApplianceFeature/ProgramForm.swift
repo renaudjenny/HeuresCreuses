@@ -2,9 +2,10 @@ import ComposableArchitecture
 
 @Reducer
 public struct ProgramForm {
+    @ObservableState
     public struct State: Equatable, Identifiable {
-        @BindingState var program: Program
-        @BindingState var isExtended: Bool
+        var program: Program
+        var isExtended: Bool
 
         public var id: Program.ID { program.id }
 
