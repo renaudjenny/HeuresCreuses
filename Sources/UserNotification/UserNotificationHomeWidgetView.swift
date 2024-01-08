@@ -6,9 +6,10 @@ import UserNotificationsClientDependency
 #if canImport(NotificationCenter)
 @Reducer
 public struct UserNotificationHomeWidget {
+    @ObservableState
     public struct State: Equatable {
         var notifications: [UserNotification] = []
-        @PresentationState var destination: UserNotificationsList.State?
+        @Presents var destination: UserNotificationsList.State?
 
         var nextNotification: UserNotification? {
             @Dependency(\.date) var date
@@ -98,39 +99,28 @@ public struct UserNotificationHomeWidget {
 public struct UserNotificationHomeWidgetView: View {
     let store: StoreOf<UserNotificationHomeWidget>
 
-    private struct ViewState: Equatable {
-        let notificationsCount: Int
-        let nextNotificationMessage: String?
-
-        init(_ state: UserNotificationHomeWidget.State) {
-            notificationsCount = state.notifications.count
-            nextNotificationMessage = state.nextNotification
-                .map { ["\($0.title)", $0.body].joined(separator: "\n") }
-        }
-    }
-
     public var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewStore in
-            Button { viewStore.send(.widgetTapped) } label: {
-                HomeWidgetView(title: "Notifications", icon: Image(systemName: "bell.badge")) {
-                    VStack(alignment: .leading) {
-                        Text("**Programmed notifications**: \(viewStore.notificationsCount)")
-                        if let nextNotificationMessage = viewStore.nextNotificationMessage {
-                            Text("**Next**: \(nextNotificationMessage)")
-                                .font(.footnote)
-                                .multilineTextAlignment(.leading)
-                        }
+        Button { store.send(.widgetTapped) } label: {
+            HomeWidgetView(title: "Notifications", icon: Image(systemName: "bell.badge")) {
+                VStack(alignment: .leading) {
+                    Text("**Programmed notifications**: \(store.notifications.count)")
+                    if let nextNotificationMessage = store.nextNotification.map({
+                        ["\($0.title)", $0.body].joined(separator: "\n")
+                    }) {
+                        Text("**Next**: \(nextNotificationMessage)")
+                            .font(.footnote)
+                            .multilineTextAlignment(.leading)
                     }
                 }
             }
-            .buttonStyle(.plain)
-            .sheet(store: store.scope(state: \.$destination, action: \.destination), content: { store in
-                NavigationStack {
-                    UserNotificationsListView(store: store)
-                }
-            })
-            .task { @MainActor in await viewStore.send(.task).finish() }
         }
+        .buttonStyle(.plain)
+        .sheet(store: store.scope(state: \.$destination, action: \.destination), content: { store in
+            NavigationStack {
+                UserNotificationsListView(store: store)
+            }
+        })
+        .task { @MainActor in await store.send(.task).finish() }
     }
 
     public init(store: StoreOf<UserNotificationHomeWidget>) {
