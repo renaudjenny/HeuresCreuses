@@ -20,7 +20,7 @@ struct ApplianceFormView: View {
             }
 
             Section("Programs") {
-                ForEachStore(store.scope(state: \.programs, action: \.programs)) { store in
+                ForEach(store.scope(state: \.programs, action: \.programs)) { store in
                     ProgramFormView(store: store)
                 }
                 .onDelete { store.send(.deletePrograms($0)) }
