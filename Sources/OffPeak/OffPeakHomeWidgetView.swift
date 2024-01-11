@@ -80,7 +80,7 @@ public struct OffPeakHomeWidget {
 }
 
 public struct OffPeakHomeWidgetView: View {
-    public let store: StoreOf<OffPeakHomeWidget>
+    var store: StoreOf<OffPeakHomeWidget>
 
     private struct ViewState: Equatable {
         let peakStatus: PeakStatus

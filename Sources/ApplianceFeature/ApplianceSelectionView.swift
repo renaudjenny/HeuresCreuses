@@ -16,7 +16,7 @@ public struct ApplianceSelectionView: View {
                 }
             }
             .navigationDestination(
-                store: store.scope(state: \.$destination.selection, action: \.destination.selection),
+                item: $store.scope(state: \.destination?.selection, action: \.destination.selection),
                 destination: ProgramSelectionView.init
             )
             #if os(iOS) || os(macOS)

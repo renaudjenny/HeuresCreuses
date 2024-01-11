@@ -2,7 +2,7 @@ import ComposableArchitecture
 import SwiftUI
 
 public struct ProgramSelectionView: View {
-    let store: StoreOf<ProgramSelection>
+    @Bindable var store: StoreOf<ProgramSelection>
 
     public var body: some View {
         ScrollView {
@@ -31,16 +31,16 @@ public struct ProgramSelectionView: View {
                     .padding(.horizontal)
                 }
                 .sheet(
-                    store: store.scope(state: \.$destination.optimum, action: \.destination.optimum),
+                    item: $store.scope(state: \.destination?.optimum, action: \.destination.optimum),
                     content: OptimumView.init
                 )
                 .navigationDestination(
-                    store: store.scope(state: \.$destination.delays, action: \.destination.delays),
+                    item: $store.scope(state: \.destination?.delays, action: \.destination.delays),
                     destination: DelaysView.init
                 )
                 #if os(iOS) || os(macOS)
                 .sheet(
-                    store: store.scope(state: \.$destination.edit, action: \.destination.edit),
+                    item: $store.scope(state: \.destination?.edit, action: \.destination.edit),
                     content: { formStore in
                         NavigationStack {
                             ApplianceFormView(store: formStore)
@@ -61,7 +61,7 @@ public struct ProgramSelectionView: View {
                     }
                 )
                 #endif
-                .alert(store: store.scope(state: \.$destination.alert, action: \.destination.alert))
+                .alert($store.scope(state: \.destination?.alert, action: \.destination.alert))
             }
             .toolbar {
                 #if os(iOS) || os(macOS)

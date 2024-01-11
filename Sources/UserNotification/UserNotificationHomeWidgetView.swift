@@ -97,7 +97,7 @@ public struct UserNotificationHomeWidget {
 }
 
 public struct UserNotificationHomeWidgetView: View {
-    let store: StoreOf<UserNotificationHomeWidget>
+    @Bindable var store: StoreOf<UserNotificationHomeWidget>
 
     public var body: some View {
         Button { store.send(.widgetTapped) } label: {
@@ -115,11 +115,11 @@ public struct UserNotificationHomeWidgetView: View {
             }
         }
         .buttonStyle(.plain)
-        .sheet(store: store.scope(state: \.$destination, action: \.destination), content: { store in
+        .sheet(item: $store.scope(state: \.destination, action: \.destination)) { store in
             NavigationStack {
                 UserNotificationsListView(store: store)
             }
-        })
+        }
         .task { @MainActor in await store.send(.task).finish() }
     }
 
