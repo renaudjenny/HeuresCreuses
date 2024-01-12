@@ -5,8 +5,9 @@ import SwiftUI
 
 @Reducer
 public struct OffPeakHomeWidget {
+    @ObservableState
     public struct State: Equatable {
-        @PresentationState public var destination: OffPeakSelection.State?
+        @Presents public var destination: OffPeakSelection.State?
         public var peakStatus = PeakStatus.unavailable
         public var offPeakRanges: [ClosedRange<Date>] = []
         public var periods: [Period] = .example
@@ -80,50 +81,40 @@ public struct OffPeakHomeWidget {
 }
 
 public struct OffPeakHomeWidgetView: View {
-    var store: StoreOf<OffPeakHomeWidget>
-
-    private struct ViewState: Equatable {
-        let peakStatus: PeakStatus
-
-        init(_ state: OffPeakHomeWidget.State) {
-            peakStatus = state.peakStatus
-        }
-    }
+    @Bindable var store: StoreOf<OffPeakHomeWidget>
 
     public init(store: StoreOf<OffPeakHomeWidget>) {
         self.store = store
     }
 
     public var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewStore in
-            Button { viewStore.send(.widgetTapped) } label: {
-                HomeWidgetView(title: "Off Peak hours", icon: Image(systemName: "arrow.up.circle.badge.clock")) {
-                    VStack {
-                        switch viewStore.peakStatus {
-                        case .unavailable:
-                            Text("Wait a sec...").font(.body)
-                        case let .offPeak(duration):
-                            VStack(alignment: .leading) {
-                                Text("Currently **off peak**")
-                                Text(relativeNextChange(duration)).font(.headline)
-                            }
-                        case let .peak(duration):
-                            VStack(alignment: .leading) {
-                                Text("Currently **peak** hour")
-                                Text(relativeNextChange(duration)).font(.headline)
-                            }
+        Button { store.send(.widgetTapped) } label: {
+            HomeWidgetView(title: "Off Peak hours", icon: Image(systemName: "arrow.up.circle.badge.clock")) {
+                VStack {
+                    switch store.peakStatus {
+                    case .unavailable:
+                        Text("Wait a sec...").font(.body)
+                    case let .offPeak(duration):
+                        VStack(alignment: .leading) {
+                            Text("Currently **off peak**")
+                            Text(relativeNextChange(duration)).font(.headline)
+                        }
+                    case let .peak(duration):
+                        VStack(alignment: .leading) {
+                            Text("Currently **peak** hour")
+                            Text(relativeNextChange(duration)).font(.headline)
                         }
                     }
                 }
             }
-            .buttonStyle(.plain)
-            .listRowBackground(color(for: viewStore.peakStatus))
-            .navigationDestination(
-                store: store.scope(state: \.$destination, action: \.destination),
-                destination: OffPeakSelectionView.init
-            )
-            .task { @MainActor in await viewStore.send(.task).finish() }
         }
+        .buttonStyle(.plain)
+        .navigationDestination(
+            item: $store.scope(state: \.destination, action: \.destination),
+            destination: OffPeakSelectionView.init
+        )
+        .listRowBackground(color(for: store.peakStatus))
+        .task { @MainActor in await store.send(.task).finish() }
     }
 
     private func relativeNextChange(_ duration: Duration) -> String {
