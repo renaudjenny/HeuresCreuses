@@ -15,10 +15,6 @@ public struct ApplianceSelectionView: View {
                     Label(appliance.name, systemImage: appliance.systemImage)
                 }
             }
-            .navigationDestination(
-                item: $store.scope(state: \.destination?.selection, action: \.destination.selection),
-                destination: ProgramSelectionView.init
-            )
             #if os(iOS) || os(macOS)
             .sheet(item: $store.scope(state: \.destination?.addAppliance, action: \.destination.addAppliance)) { addApplianceStore in
                 NavigationStack {
@@ -40,6 +36,10 @@ public struct ApplianceSelectionView: View {
             }
             #endif
         }
+        .navigationDestination(
+            item: $store.scope(state: \.destination?.selection, action: \.destination.selection),
+            destination: ProgramSelectionView.init
+        )
         .navigationTitle("Choose your appliance")
         #if os(iOS) || os(macOS)
         .toolbar {
