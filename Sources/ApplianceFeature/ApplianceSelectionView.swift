@@ -16,18 +16,18 @@ public struct ApplianceSelectionView: View {
                 }
             }
             #if os(iOS) || os(macOS)
-            .sheet(item: $store.scope(state: \.destination?.addAppliance, action: \.destination.addAppliance)) { addApplianceStore in
+            .sheet(item: $store.scope(state: \.destination?.addAppliance, action: \.destination.addAppliance)) { store in
                 NavigationStack {
-                    ApplianceFormView(store: addApplianceStore)
+                    ApplianceFormView(store: store)
                         .navigationTitle("New appliance")
                         .toolbar {
                             ToolbarItem {
-                                Button { store.send(.addApplianceSaveButtonTapped) } label: {
+                                Button { self.store.send(.addApplianceSaveButtonTapped) } label: {
                                     Text("Save")
                                 }
                             }
                             ToolbarItem(placement: .cancellationAction) {
-                                Button { store.send(.addApplianceCancelButtonTapped) } label: {
+                                Button { self.store.send(.addApplianceCancelButtonTapped) } label: {
                                     Text("Cancel")
                                 }
                             }
