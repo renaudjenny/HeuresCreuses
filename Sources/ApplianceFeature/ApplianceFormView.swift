@@ -61,8 +61,11 @@ private extension Duration {
 }
 
 #Preview {
-    ApplianceFormView(store: Store(initialState: ApplianceForm.State(appliance: Appliance(id: UUID()))) {
-        ApplianceForm()
-    })
+    VStack {
+        @Dependency(\.uuid) var uuid
+        ApplianceFormView(store: Store(initialState: ApplianceForm.State(appliance: Appliance(id: uuid()))) {
+            ApplianceForm()
+        })
+    }
 }
 #endif
