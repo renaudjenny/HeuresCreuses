@@ -60,14 +60,9 @@ private extension Duration {
     }
 }
 
-#if DEBUG
-struct ApplianceFormView_Previews: PreviewProvider {
-    static var previews: some View {
-        @Dependency(\.uuid) var uuid
-        ApplianceFormView(store: Store(initialState: ApplianceForm.State(appliance: Appliance(id: uuid()))) {
-            ApplianceForm()
-        })
-    }
+#Preview {
+    ApplianceFormView(store: Store(initialState: ApplianceForm.State(appliance: Appliance(id: UUID()))) {
+        ApplianceForm()
+    })
 }
-#endif
 #endif
