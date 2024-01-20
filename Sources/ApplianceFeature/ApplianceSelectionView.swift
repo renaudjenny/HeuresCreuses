@@ -62,16 +62,12 @@ extension Appliance {
     }
 }
 
-#if DEBUG
-struct ApplianceSelectionView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            ApplianceSelectionView(
-                store: Store(initialState: ApplianceSelection.State(appliances: [.dishwasher, .washingMachine])) {
-                    ApplianceSelection()
-                }
-            )
-        }
+#Preview {
+    NavigationStack {
+        ApplianceSelectionView(
+            store: Store(initialState: ApplianceSelection.State(appliances: [.dishwasher, .washingMachine])) {
+                ApplianceSelection()
+            }
+        )
     }
 }
-#endif
