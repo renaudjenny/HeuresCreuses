@@ -85,18 +85,14 @@ public struct DelaysView: View {
     }
 }
 
-#if DEBUG
-struct DelaysView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            let appliance: Appliance = .washingMachine
-            DelaysView(
-                store: Store(initialState: Delays.State(program: appliance.programs.first!, appliance: appliance)) {
-                    Delays()
-                        .dependency(\.date, .constant(try! Date("2023-07-21T19:50:00+02:00", strategy: .iso8601)))
-                }
-            )
-        }
+#Preview {
+    NavigationStack {
+        let appliance: Appliance = .washingMachine
+        DelaysView(
+            store: Store(initialState: Delays.State(program: appliance.programs.first!, appliance: appliance)) {
+                Delays()
+                    .dependency(\.date, .constant(try! Date("2023-07-21T19:50:00+02:00", strategy: .iso8601)))
+            }
+        )
     }
 }
-#endif
