@@ -45,19 +45,15 @@ struct OptimumView: View {
     }
 }
 
-#if DEBUG
-struct OptimumView_Preview: PreviewProvider {
-    static var previews: some View {
-        Color.blue
-            .sheet(isPresented: .constant(true)) {
-                OptimumView(
-                    store: Store(
-                        initialState: Optimum.State(program: Appliance.dishwasher.programs.first!, appliance: .dishwasher)
-                    ) {
-                        Optimum()
-                    }
-                )
-            }
-    }
+#Preview {
+    Color.blue
+        .sheet(isPresented: .constant(true)) {
+            OptimumView(
+                store: Store(
+                    initialState: Optimum.State(program: Appliance.dishwasher.programs.first!, appliance: .dishwasher)
+                ) {
+                    Optimum()
+                }
+            )
+        }
 }
-#endif
