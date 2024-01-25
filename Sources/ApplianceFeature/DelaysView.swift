@@ -45,6 +45,13 @@ public struct DelaysView: View {
                         }
                         Spacer()
                         VStack(alignment: .trailing) {
+                            #if os(iOS) || os(macOS)
+                            Menu("More") {
+                                Button { } label: {
+                                    Label("Notify me when it ends", systemImage: "bell.badge")
+                                }
+                            }
+                            #endif
                             Text("\(operation.offPeakRatio.formatted(.percent.precision(.significantDigits(3)))) off peak")
                         }
                     }
