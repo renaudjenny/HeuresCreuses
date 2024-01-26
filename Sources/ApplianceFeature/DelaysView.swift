@@ -6,7 +6,7 @@ public struct DelaysView: View {
 
     struct ViewState: Equatable {
         var program: Program
-        var operations: [Operation]
+        var operations: IdentifiedArrayOf<Operation>
         var isOffPeakOnlyFilterOn: Bool
         var delaysCount: Int
 
@@ -47,7 +47,7 @@ public struct DelaysView: View {
                         VStack(alignment: .trailing) {
                             #if os(iOS) || os(macOS)
                             Menu("More") {
-                                Button { } label: {
+                                Button { store.send(.sendOperationEndNotification(operationID: operation.id)) } label: {
                                     Label("Notify me when it ends", systemImage: "bell.badge")
                                 }
                             }
