@@ -35,15 +35,17 @@ public struct Delays {
                 guard let operation = state.operations[id: operationID] else { return .none }
                 let programName = state.program.name
                 let applianceName = state.appliance.name
+                let programEndFormatted = operation.startEnd.upperBound.formatted(date: .omitted, time: .shortened)
+                let duration = date.now.durationDistance(to: operation.startEnd.upperBound)
 
                 // TODO: check authorizations via the `userNotifications` dependency. Try to avoid code duplication with SendNotification
                 return .run { send in
                     try await userNotifications.add(UserNotification(
                         id: "com.renaudjenny.heures-creuses.notification.operation-end-\(operationID)",
-                        title: String(localized: "\(applianceName) - \(programName) operation", comment: "<Appliance name> - <Program name> operation"),
-                        body: String(localized: "Your operation is planned to end at TODO"), // TODO: find the end of the program
+                        title: String(localized: "\(applianceName) - \(programName)", comment: "<Appliance name> - <Program name> with <delay name>"),
+                        body: String(localized: "This program will finish at \(programEndFormatted)"),
                         creationDate: date.now,
-                        duration: .seconds(20) // TODO: compute the real duration
+                        duration: duration
                     ))
                 }
             case .onlyShowOffPeakTapped:
