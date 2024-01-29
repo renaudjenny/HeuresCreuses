@@ -5,9 +5,10 @@ import SwiftUI
 
 @Reducer
 public struct ApplianceHomeWidget {
+    @ObservableState
     public struct State: Equatable {
         public var appliances: IdentifiedArrayOf<Appliance>
-        @PresentationState public var destination: ApplianceSelection.State?
+        @Presents public var destination: ApplianceSelection.State?
 
         public init(
             appliances: IdentifiedArrayOf<Appliance> = [.washingMachine, .dishwasher],
@@ -76,35 +77,25 @@ public struct ApplianceHomeWidget {
 }
 
 public struct AppliancesHomeWidgetView: View {
-    let store: StoreOf<ApplianceHomeWidget>
-
-    private struct ViewState: Equatable {
-        let appliancesCount: Int
-
-        init(_ state: ApplianceHomeWidget.State) {
-            appliancesCount = state.appliances.count
-        }
-    }
+    @Bindable var store: StoreOf<ApplianceHomeWidget>
 
     public init(store: StoreOf<ApplianceHomeWidget>) {
         self.store = store
     }
 
     public var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewStore in
-            Button { viewStore.send(.widgetTapped) } label: {
-                HomeWidgetView(title: "Your appliances", icon: Image(systemName: "washer")) {
-                    Text("^[**\(viewStore.appliancesCount)** appliances](inflect: true)")
-                }
+        Button { store.send(.widgetTapped) } label: {
+            HomeWidgetView(title: "Your appliances", icon: Image(systemName: "washer")) {
+                Text("^[**\(store.appliances.count)** appliances](inflect: true)")
             }
-            .buttonStyle(.plain)
-            .sheet(store: store.scope(state: \.$destination, action: \.destination)) { store in
-                NavigationStack {
-                    ApplianceSelectionView(store: store)
-                }
-            }
-            .task { await viewStore.send(.task).finish() }
         }
+        .buttonStyle(.plain)
+        .sheet(item: $store.scope(state: \.destination, action: \.destination)) { store in
+            NavigationStack {
+                ApplianceSelectionView(store: store)
+            }
+        }
+        .task { await store.send(.task).finish() }
     }
 }
 

@@ -38,7 +38,7 @@ final class ApplianceSelectionTests: XCTestCase {
             ApplianceSelection()
         }
         appliance.name = "Test appliance"
-        await store.send(.destination(.presented(.addAppliance(.set(\.$appliance, appliance))))) {
+        await store.send(.destination(.presented(.addAppliance(.binding(.set(\.appliance, appliance)))))) {
             $0.destination = .addAppliance(ApplianceForm.State(appliance: appliance))
         }
 

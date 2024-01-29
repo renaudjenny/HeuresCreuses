@@ -5,6 +5,7 @@ import SwiftUI
 
 @Reducer
 public struct OffPeakSelection: Reducer {
+    @ObservableState
     public struct State: Equatable {
         public var peakStatus: PeakStatus = .unavailable
         public var periods = IdentifiedArrayOf<Period>(uniqueElements: [Period].example)
@@ -92,39 +93,37 @@ public struct OffPeakSelectionView: View {
     }
 
     public var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewStore in
-            Form {
-                Section("Periods") {
-                    clockWidgetView(periods: viewStore.periods.elements, minute: viewStore.minute)
-                    ForEach(viewStore.periods) { period in
-                        period.clockView
-                    }
+        Form {
+            Section("Periods") {
+                clockWidgetView(periods: store.periods.elements, minute: store.minute)
+                ForEach(store.periods) { period in
+                    period.clockView
                 }
+            }
 
-                Section("Peak status") {
-                    VStack(alignment: .leading) {
-                        switch viewStore.peakStatus {
-                        case .offPeak:
-                            Text("Currently off peak")
-                            SendNotificationButtonView(
-                                store: store.scope(state: \.sendNotification, action: \.sendNotification)
-                            )
-                            .padding(.vertical)
-                        case .peak:
-                            Text("Currently peak hours")
-                            SendNotificationButtonView(
-                                store: store.scope(state: \.sendNotification, action: \.sendNotification)
-                            )
-                            .padding(.vertical)
-                        case .unavailable:
-                            Text("Calculating status...").redacted(reason: .placeholder)
-                        }
+            Section("Peak status") {
+                VStack(alignment: .leading) {
+                    switch store.peakStatus {
+                    case .offPeak:
+                        Text("Currently off peak")
+                        SendNotificationButtonView(
+                            store: store.scope(state: \.sendNotification, action: \.sendNotification)
+                        )
+                        .padding(.vertical)
+                    case .peak:
+                        Text("Currently peak hours")
+                        SendNotificationButtonView(
+                            store: store.scope(state: \.sendNotification, action: \.sendNotification)
+                        )
+                        .padding(.vertical)
+                    case .unavailable:
+                        Text("Calculating status...").redacted(reason: .placeholder)
                     }
                 }
             }
-            .navigationTitle("Off peak periods")
-            .task { await viewStore.send(.task).finish() }
         }
+        .navigationTitle("Off peak periods")
+        .task { await store.send(.task).finish() }
     }
 
     private func clockWidgetView(periods: [Period], minute: Double) -> some View {

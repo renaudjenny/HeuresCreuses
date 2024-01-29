@@ -5,8 +5,8 @@
 ## Features
 
 * ⏰ Time remaining before the next **peak hour** or **off peak**
-* ⚙️  Add your electric consuming devices, their programs and possibility of delays (WIP)
-* 🤖 This app will do the math for you and will show you when it's best to start your device program with the type of delay you might choose (WIP)
+* ⚙️  Add your electric consuming devices, their programs and possibility of delays
+* 🤖 This app will do the math for you and will show you when it's best to start your device program with the type of delay you might choose
 
 ## Icons and illustrations
 
@@ -14,7 +14,7 @@ All artistic work has been made by [Mathilde Seyller](https://instagram.com/myob
 
 ## Minimum required to build the project
 
-Works with **Xcode 14.3**.
+Works with **Xcode 15.1**.
 
 ## Libraries used
 

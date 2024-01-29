@@ -4,6 +4,7 @@ import UserNotificationsClientDependency
 
 @Reducer
 public struct UserNotificationsList {
+    @ObservableState
     public struct State: Equatable {
         var notifications: IdentifiedArrayOf<UserNotification> = []
 
@@ -83,23 +84,13 @@ public struct UserNotificationsList {
 struct UserNotificationsListView: View {
     let store: StoreOf<UserNotificationsList>
 
-    private struct ViewState: Equatable {
-        let notifications: IdentifiedArrayOf<UserNotification>
-
-        init(_ state: UserNotificationsList.State) {
-            notifications = state.notifications
-        }
-    }
-
     var body: some View {
-        WithViewStore(store, observe: ViewState.init) { viewStore in
-            List {
-                ForEach(viewStore.notifications, content: notificationView)
-                    .onDelete(perform: { viewStore.send(.delete($0)) })
-            }
-            .navigationTitle("^[\(viewStore.notifications.count) pending notifications](inflect: true)")
-            .task { @MainActor in await viewStore.send(.task).finish() }
+        List {
+            ForEach(store.notifications, content: notificationView)
+                .onDelete(perform: { store.send(.delete($0)) })
         }
+        .navigationTitle("^[\(store.notifications.count) pending notifications](inflect: true)")
+        .task { @MainActor in await store.send(.task).finish() }
     }
 
     private func notificationView(_ notification: UserNotification) -> some View {

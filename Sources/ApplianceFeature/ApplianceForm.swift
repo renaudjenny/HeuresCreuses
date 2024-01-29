@@ -3,8 +3,9 @@ import Foundation
 
 @Reducer
 public struct ApplianceForm {
+    @ObservableState
     public struct State: Equatable {
-        @BindingState public var appliance: Appliance
+        public var appliance: Appliance
         public var programs: IdentifiedArrayOf<ProgramForm.State>
 
         public init(appliance: Appliance) {
@@ -20,7 +21,7 @@ public struct ApplianceForm {
         case binding(BindingAction<State>)
         case deleteDelays(IndexSet)
         case deletePrograms(IndexSet)
-        case programs(id: ProgramForm.State.ID, action: ProgramForm.Action)
+        case programs(IdentifiedActionOf<ProgramForm>)
     }
 
     @Dependency(\.uuid) var uuid
@@ -49,7 +50,7 @@ public struct ApplianceForm {
                 return .none
             }
         }
-        .forEach(\.programs, action: /Action.programs) {
+        .forEach(\.programs, action: \.programs) {
             ProgramForm()
         }
         .onChange(of: \.appliance.programs) { _, newValue in

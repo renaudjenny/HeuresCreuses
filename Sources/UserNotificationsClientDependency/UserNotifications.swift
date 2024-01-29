@@ -28,6 +28,7 @@ private final class UserNotificationCombine {
     }
 
     func add(notification: UserNotification) async throws {
+        try await remove(ids: [notification.id])
         notifications.append(notification)
 
         #if canImport(NotificationCenter) && os(iOS)

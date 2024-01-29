@@ -7,6 +7,7 @@ import UserNotificationsClientDependency
 
 @Reducer
 public struct SendNotification {
+    @ObservableState
     public struct State: Equatable {
         public var intent: Intent?
         var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
