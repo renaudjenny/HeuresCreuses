@@ -13,6 +13,8 @@ public struct UserNotificationsClient {
     public var stream: () -> AsyncStream<[UserNotification]>
     public var add: (UserNotification) async throws -> Void
     public var remove: ([UserNotification.ID]) async throws -> Void
+    public var authorizationStatus: () async throws -> UserNotificationAuthorizationStatus
+    public var checkAuthorization: () async throws -> UserNotificationAuthorizationStatus
 }
 
 private final class UserNotificationCombine {
@@ -56,6 +58,28 @@ private final class UserNotificationCombine {
             try saveData(try JSONEncoder().encode(notifications), .userNotifications)
         }
     }
+
+    func checkAuthorization() async throws -> UserNotificationAuthorizationStatus {
+        let notificationSettings = await userNotificationCenter.notificationSettings()
+        if notificationSettings.authorizationStatus == .notDetermined {
+            guard try await self.userNotificationCenter.requestAuthorization(options: [.alert])
+            else { return .unavailable }
+            return await authorizationStatus(userNotificationCenter.notificationSettings().authorizationStatus)
+        } else {
+            return authorizationStatus(notificationSettings.authorizationStatus)
+        }
+    }
+
+    private func authorizationStatus(_ authorizationStatus: UNAuthorizationStatus) -> UserNotificationAuthorizationStatus {
+        switch authorizationStatus {
+        case .authorized: .authorized
+        case .denied: .denied
+        case .ephemeral: .ephemeral
+        case .provisional: .provisional
+        case .notDetermined: .notDetermined
+        @unknown default: .unavailable
+        }
+    }
 }
 
 extension UserNotificationsClient: DependencyKey {
@@ -65,7 +89,9 @@ extension UserNotificationsClient: DependencyKey {
             notifications: { combine.notifications },
             stream: { combine.$notifications.values.eraseToStream() },
             add: combine.add(notification:),
-            remove: combine.remove(ids:)
+            remove: combine.remove(ids:),
+            authorizationStatus: unimplemented("UserNotificationClient.authorizationStatus"),
+            checkAuthorization: unimplemented("UserNotificationClient.checkAuthorization")
         )
     }()
 
@@ -74,7 +100,9 @@ extension UserNotificationsClient: DependencyKey {
             notifications: unimplemented("UserNotificationClient.notifications"),
             stream: unimplemented("UserNotificationClient.stream"),
             add: unimplemented("UserNotificationClient.add"),
-            remove: unimplemented("UserNotificationClient.remove")
+            remove: unimplemented("UserNotificationClient.remove"),
+            authorizationStatus: unimplemented("UserNotificationClient.authorizationStatus"),
+            checkAuthorization: unimplemented("UserNotificationClient.checkAuthorization")
         )
     }
 
