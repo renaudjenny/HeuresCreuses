@@ -13,7 +13,6 @@ public struct UserNotificationsClient {
     public var stream: () -> AsyncStream<[UserNotification]>
     public var add: (UserNotification) async throws -> Void
     public var remove: ([UserNotification.ID]) async throws -> Void
-    public var authorizationStatus: () async throws -> UserNotificationAuthorizationStatus
     public var checkAuthorization: () async throws -> UserNotificationAuthorizationStatus
 }
 
@@ -90,8 +89,7 @@ extension UserNotificationsClient: DependencyKey {
             stream: { combine.$notifications.values.eraseToStream() },
             add: combine.add(notification:),
             remove: combine.remove(ids:),
-            authorizationStatus: unimplemented("UserNotificationClient.authorizationStatus"),
-            checkAuthorization: unimplemented("UserNotificationClient.checkAuthorization")
+            checkAuthorization: combine.checkAuthorization
         )
     }()
 
@@ -101,7 +99,6 @@ extension UserNotificationsClient: DependencyKey {
             stream: unimplemented("UserNotificationClient.stream"),
             add: unimplemented("UserNotificationClient.add"),
             remove: unimplemented("UserNotificationClient.remove"),
-            authorizationStatus: unimplemented("UserNotificationClient.authorizationStatus"),
             checkAuthorization: unimplemented("UserNotificationClient.checkAuthorization")
         )
     }

@@ -11,6 +11,7 @@ public struct Delays {
         var appliance: Appliance
         var operations: IdentifiedArrayOf<Operation> = []
         var isOffPeakOnlyFilterOn = false
+        // TODO: add alert to confirm that the notification will be sent or failed to be setup
 
         public init(program: Program, appliance: Appliance) {
             self.program = program
@@ -38,8 +39,10 @@ public struct Delays {
                 let programEndFormatted = operation.startEnd.upperBound.formatted(date: .omitted, time: .shortened)
                 let duration = date.now.durationDistance(to: operation.startEnd.upperBound)
 
-                // TODO: check authorizations via the `userNotifications` dependency. Try to avoid code duplication with SendNotification
                 return .run { send in
+                    let status = try await userNotifications.checkAuthorization()
+                    // TODO: provide an error if it's not authorized in the alert
+                    guard status == .authorized else { return }
                     try await userNotifications.add(UserNotification(
                         id: "com.renaudjenny.heures-creuses.notification.operation-end-\(operationID)",
                         title: String(localized: "\(applianceName) - \(programName)", comment: "<Appliance name> - <Program name> with <delay name>"),
