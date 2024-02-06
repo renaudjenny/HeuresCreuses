@@ -1,6 +1,5 @@
 #if canImport(NotificationCenter) && os(iOS)
 import ComposableArchitecture
-import NotificationCenter
 import Models
 import UserNotificationsDependency
 import UserNotificationsClientDependency
@@ -10,7 +9,7 @@ public struct SendNotification {
     @ObservableState
     public struct State: Equatable {
         public var intent: Intent?
-        var notificationAuthorizationStatus: UNAuthorizationStatus = .notDetermined
+        var notificationAuthorizationStatus: UserNotificationAuthorizationStatus = .notDetermined
         var userNotificationStatus: UserNotificationStatus = .loading
 
         public init(intent: Intent? = nil) {
@@ -20,8 +19,11 @@ public struct SendNotification {
 
     public enum Action: Equatable {
         case buttonTapped(Intent?)
-        case notificationStatusChanged(UNAuthorizationStatus)
-        case updateUserNotificationStatus(UserNotificationStatus, authorizationStatus: UNAuthorizationStatus)
+        case notificationStatusChanged(UserNotificationAuthorizationStatus)
+        case updateUserNotificationStatus(
+            UserNotificationStatus,
+            authorizationStatus: UserNotificationAuthorizationStatus
+        )
         case task
     }
 
@@ -49,7 +51,10 @@ public struct SendNotification {
             switch action {
             case let .buttonTapped(intent):
                 state.intent = intent
-                return checkAuthorization()
+                return .run { send in
+                    let authorization = try await userNotifications.checkAuthorization()
+                    await send(.notificationStatusChanged(authorization))
+                }
 
             case let .notificationStatusChanged(status):
                 state.notificationAuthorizationStatus = status
@@ -78,9 +83,6 @@ public struct SendNotification {
 
             case .task:
                 return .run { [state] send in
-                    let notificationSettings = await userNotificationCenter.notificationSettings()
-                    let authorizationStatus = notificationSettings.authorizationStatus
-
                     let status: UserNotificationStatus
                     switch state.intent {
                     case .applianceToProgram:
@@ -99,22 +101,9 @@ public struct SendNotification {
                         status = .notSent
                     }
 
+                    let authorizationStatus = await userNotifications.authorizationStatus()
                     await send(.updateUserNotificationStatus(status, authorizationStatus: authorizationStatus))
                 }
-            }
-        }
-    }
-
-    private func checkAuthorization() -> Effect<Action> {
-        .run { send in
-            let notificationSettings = await userNotificationCenter.notificationSettings()
-            let status = notificationSettings.authorizationStatus
-            await send(.notificationStatusChanged(status))
-
-            if status == .notDetermined {
-                guard try await self.userNotificationCenter.requestAuthorization(options: [.alert])
-                else { return }
-                await send(.notificationStatusChanged(userNotificationCenter.notificationSettings().authorizationStatus))
             }
         }
     }

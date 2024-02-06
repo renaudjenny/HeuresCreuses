@@ -1,4 +1,4 @@
-public enum UserNotificationAuthorizationStatus {
+public enum UserNotificationAuthorizationStatus: Equatable {
     case notDetermined
     case denied
     case authorized
