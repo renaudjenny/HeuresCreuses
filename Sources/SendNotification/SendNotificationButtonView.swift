@@ -1,7 +1,6 @@
 #if canImport(NotificationCenter) && os(iOS)
 import ComposableArchitecture
 import Models
-import NotificationCenter
 import SwiftUI
 
 public struct SendNotificationButtonView: View {

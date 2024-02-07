@@ -1,7 +1,6 @@
 #if canImport(NotificationCenter) && os(iOS)
 import ComposableArchitecture
 import Models
-import UserNotificationsDependency
 import UserNotificationsClientDependency
 
 @Reducer
