@@ -2,21 +2,7 @@ import ComposableArchitecture
 import SwiftUI
 
 public struct DelaysView: View {
-    let store: StoreOf<Delays>
-
-    struct ViewState: Equatable {
-        var program: Program
-        var operations: IdentifiedArrayOf<Operation>
-        var isOffPeakOnlyFilterOn: Bool
-        var delaysCount: Int
-
-        init(_ state: Delays.State) {
-            program = state.program
-            operations = state.operations
-            isOffPeakOnlyFilterOn = state.isOffPeakOnlyFilterOn
-            delaysCount = state.appliance.delays.count + 1
-        }
-    }
+    @Bindable var store: StoreOf<Delays>
 
     public var body: some View {
         ScrollView {
@@ -55,6 +41,8 @@ public struct DelaysView: View {
                             Text("\(operation.offPeakRatio.formatted(.percent.precision(.significantDigits(3)))) off peak")
                         }
                     }
+                    .alert($store.scope(state: \.notificationAlert, action: \.notificationAlert))
+
                     ZStack {
                         GeometryReader { proxy in
                             Color.blue

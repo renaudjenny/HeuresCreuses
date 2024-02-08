@@ -11,7 +11,7 @@ public struct Delays {
         var appliance: Appliance
         var operations: IdentifiedArrayOf<Operation> = []
         var isOffPeakOnlyFilterOn = false
-        // TODO: add alert to confirm that the notification will be sent or failed to be setup
+        @Presents var notificationAlert: AlertState<Action.Alert>?
 
         public init(program: Program, appliance: Appliance) {
             self.program = program
@@ -19,9 +19,13 @@ public struct Delays {
         }
     }
     public enum Action: Equatable {
+        case authorizationDenied
+        case notificationAlert(PresentationAction<Alert>)
         case sendOperationEndNotification(operationID: Int)
         case onlyShowOffPeakTapped
         case task
+
+        public enum Alert: Equatable { }
     }
 
     @Dependency(\.date) var date
@@ -32,6 +36,14 @@ public struct Delays {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .authorizationDenied:
+                state.notificationAlert = AlertState(
+                    title: TextState("Notification authorization denied"),
+                    message: TextState("You can modify the notification settings of the app to allow sending you notifications")
+                )
+                return .none
+            case .notificationAlert:
+                return .none
             case let .sendOperationEndNotification(operationID):
                 guard let operation = state.operations[id: operationID] else { return .none }
                 let programName = state.program.name
@@ -41,8 +53,9 @@ public struct Delays {
 
                 return .run { send in
                     let status = try await userNotifications.checkAuthorization()
-                    // TODO: provide an error if it's not authorized in the alert
-                    guard status == .authorized else { return }
+                    if status == .denied {
+                        await send(.authorizationDenied)
+                    }
                     try await userNotifications.add(UserNotification(
                         id: "com.renaudjenny.heures-creuses.notification.operation-end-\(operationID)",
                         title: String(localized: "\(applianceName) - \(programName)", comment: "<Appliance name> - <Program name> with <delay name>"),
