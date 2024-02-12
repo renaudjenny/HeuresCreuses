@@ -11,6 +11,7 @@ public struct Delays {
         var appliance: Appliance
         var operations: IdentifiedArrayOf<Operation> = []
         var isOffPeakOnlyFilterOn = false
+        var notificationOperationsIds: [Operation.ID: Bool] = [:]
         @Presents var notificationAlert: AlertState<Action.Alert>?
 
         public init(program: Program, appliance: Appliance) {
@@ -21,6 +22,7 @@ public struct Delays {
     public enum Action: Equatable {
         case authorizationDenied
         case notificationAlert(PresentationAction<Alert>)
+        case notificationOperationIdsUpdated([Int: Bool])
         case sendOperationEndNotification(operationID: Int)
         case onlyShowOffPeakTapped
         case task
@@ -43,6 +45,9 @@ public struct Delays {
                 )
                 return .none
             case .notificationAlert:
+                return .none
+            case let .notificationOperationIdsUpdated(notificationOperationsIds):
+                state.notificationOperationsIds = notificationOperationsIds
                 return .none
             case let .sendOperationEndNotification(operationID):
                 guard let operation = state.operations[id: operationID] else { return .none }
@@ -86,5 +91,12 @@ public struct Delays {
             return $0.minutesOffPeak > 0
         })
         return .none
+    }
+
+    private func refreshNotificationOperationIds(_ state: inout State) -> Effect<Action> {
+        .run { send in
+            // TODO: populate the operation Ids
+            await send(.notificationOperationIdsUpdated([:]))
+        }
     }
 }

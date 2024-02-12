@@ -34,7 +34,11 @@ public struct DelaysView: View {
                             #if os(iOS) || os(macOS)
                             Menu("More") {
                                 Button { store.send(.sendOperationEndNotification(operationID: operation.id)) } label: {
-                                    Label("Notify me when it ends", systemImage: "bell.badge")
+                                    if store.notificationOperationsIds[operation.id] == nil {
+                                        Label("Notify me when it ends", systemImage: "bell.badge")
+                                    } else {
+                                        Label("Notification already programmed", systemImage: "bell.badge.fill")
+                                    }
                                 }
                             }
                             #endif
