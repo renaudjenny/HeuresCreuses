@@ -28,36 +28,51 @@ public struct ProgramSelection {
     }
 
     @Reducer
-    public struct Destination {
-        public enum State: Equatable {
-            case alert(AlertState<Action.Alert>)
-            case delays(Delays.State)
-            case edit(ApplianceForm.State)
-            case optimum(Optimum.State)
-        }
-        public enum Action: Equatable {
-            case alert(Alert)
-            case delays(Delays.Action)
-            case edit(ApplianceForm.Action)
-            case optimum(Optimum.Action)
+    public struct Alert {
+        public typealias State = AlertState<Action>
 
-            public enum Alert: Equatable {
-                case confirmDeletion
-            }
-        }
-
-        public var body: some ReducerOf<Self> {
-            Scope(state: \.delays, action: \.delays) {
-                Delays()
-            }
-            Scope(state: \.edit, action: \.edit) {
-                ApplianceForm()
-            }
-            Scope(state: \.optimum, action: \.optimum) {
-                Optimum()
-            }
+        public enum Action {
+            case confirmDeletion
         }
     }
+
+    @Reducer(state: .equatable, action: .equatable)
+    public enum Destination {
+        case alert(Alert)
+        case delays(Delays)
+        case edit(ApplianceForm)
+        case optimum(Optimum)
+    }
+//    public struct Destination {
+//        public enum State: Equatable {
+//            case alert(AlertState<Action.Alert>)
+//            case delays(Delays.State)
+//            case edit(ApplianceForm.State)
+//            case optimum(Optimum.State)
+//        }
+//        public enum Action: Equatable {
+//            case alert(Alert)
+//            case delays(Delays.Action)
+//            case edit(ApplianceForm.Action)
+//            case optimum(Optimum.Action)
+//
+//            public enum Alert: Equatable {
+//                case confirmDeletion
+//            }
+//        }
+//
+//        public var body: some ReducerOf<Self> {
+//            Scope(state: \.delays, action: \.delays) {
+//                Delays()
+//            }
+//            Scope(state: \.edit, action: \.edit) {
+//                ApplianceForm()
+//            }
+//            Scope(state: \.optimum, action: \.optimum) {
+//                Optimum()
+//            }
+//        }
+//    }
 
     @Dependency(\.dismiss) var dismiss
 
@@ -106,9 +121,7 @@ public struct ProgramSelection {
                 return .none
             }
         }
-        .ifLet(\.$destination, action: \.destination) {
-            Destination()
-        }
+        .ifLet(\.$destination, action: \.destination)
         .onChange(of: \.appliance) { oldValue, newValue in
             Reduce { state, action in
                 return .send(.delegate(.applianceUpdated(newValue)))
