@@ -11,7 +11,7 @@ public struct Delays {
         var appliance: Appliance
         var operations: IdentifiedArrayOf<Operation> = []
         var isOffPeakOnlyFilterOn = false
-        var notificationOperationsIds: [Operation.ID: Bool] = [:]
+        var notificationOperationsIds: [Operation.ID] = []
         @Presents var notificationAlert: AlertState<Action.Alert>?
 
         public init(program: Program, appliance: Appliance) {
@@ -22,7 +22,6 @@ public struct Delays {
     public enum Action: Equatable {
         case authorizationDenied
         case notificationAlert(PresentationAction<Alert>)
-        case notificationOperationIdsUpdated([Int: Bool])
         case sendOperationEndNotification(operationID: Int)
         case onlyShowOffPeakTapped
         case task
@@ -35,6 +34,8 @@ public struct Delays {
     @Dependency(\.periodProvider) var periodProvider
     @Dependency(\.userNotifications) var userNotifications
 
+    private static let notificationIdPrefix = "com.renaudjenny.heures-creuses.notification.operation-end"
+
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
@@ -45,9 +46,6 @@ public struct Delays {
                 )
                 return .none
             case .notificationAlert:
-                return .none
-            case let .notificationOperationIdsUpdated(notificationOperationsIds):
-                state.notificationOperationsIds = notificationOperationsIds
                 return .none
             case let .sendOperationEndNotification(operationID):
                 guard let operation = state.operations[id: operationID] else { return .none }
@@ -62,7 +60,7 @@ public struct Delays {
                         await send(.authorizationDenied)
                     }
                     try await userNotifications.add(UserNotification(
-                        id: "com.renaudjenny.heures-creuses.notification.operation-end-\(operationID)",
+                        id: "\(Self.notificationIdPrefix)-\(operationID)",
                         title: String(localized: "\(applianceName) - \(programName)", comment: "<Appliance name> - <Program name> with <delay name>"),
                         body: String(localized: "This program will finish at \(programEndFormatted)"),
                         creationDate: date.now,
@@ -73,7 +71,7 @@ public struct Delays {
                 state.isOffPeakOnlyFilterOn.toggle()
                 return refreshItems(&state)
             case .task:
-                return refreshItems(&state)
+                return .merge(refreshItems(&state), refreshNotificationOperationIds(&state))
             }
         }
     }
@@ -94,9 +92,10 @@ public struct Delays {
     }
 
     private func refreshNotificationOperationIds(_ state: inout State) -> Effect<Action> {
-        .run { send in
-            // TODO: populate the operation Ids
-            await send(.notificationOperationIdsUpdated([:]))
-        }
+        state.notificationOperationsIds = userNotifications.notifications()
+            .filter { $0.id.hasPrefix(Self.notificationIdPrefix) }
+            .map { $0.id.replacingOccurrences(of: "\(Self.notificationIdPrefix)-", with: "") }
+            .compactMap(Int.init)
+        return .none
     }
 }

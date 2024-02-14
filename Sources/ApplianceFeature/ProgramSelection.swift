@@ -43,36 +43,6 @@ public struct ProgramSelection {
         case edit(ApplianceForm)
         case optimum(Optimum)
     }
-//    public struct Destination {
-//        public enum State: Equatable {
-//            case alert(AlertState<Action.Alert>)
-//            case delays(Delays.State)
-//            case edit(ApplianceForm.State)
-//            case optimum(Optimum.State)
-//        }
-//        public enum Action: Equatable {
-//            case alert(Alert)
-//            case delays(Delays.Action)
-//            case edit(ApplianceForm.Action)
-//            case optimum(Optimum.Action)
-//
-//            public enum Alert: Equatable {
-//                case confirmDeletion
-//            }
-//        }
-//
-//        public var body: some ReducerOf<Self> {
-//            Scope(state: \.delays, action: \.delays) {
-//                Delays()
-//            }
-//            Scope(state: \.edit, action: \.edit) {
-//                ApplianceForm()
-//            }
-//            Scope(state: \.optimum, action: \.optimum) {
-//                Optimum()
-//            }
-//        }
-//    }
 
     @Dependency(\.dismiss) var dismiss
 
