@@ -28,7 +28,8 @@ struct Operation: Identifiable, Equatable {
         return startRatio...endRatio
     }
 
-    var id: Int { delay.hashValue }
+    // FIXME: ID is not good, it should take the program ID in account to make the hash correct
+    var id: Int { Int(delay.components.seconds) }
 }
 
 extension [Operation] {

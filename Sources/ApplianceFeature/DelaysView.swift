@@ -32,12 +32,18 @@ public struct DelaysView: View {
                         Spacer()
                         VStack(alignment: .trailing) {
                             #if os(iOS) || os(macOS)
-                            Menu("More") {
-                                Button { store.send(.sendOperationEndNotification(operationID: operation.id)) } label: {
-                                    if !store.notificationOperationsIds.contains(operation.id) {
-                                        Label("Notify me when it ends", systemImage: "bell.badge")
-                                    } else {
-                                        Label("Notification already programmed", systemImage: "bell.badge.fill")
+                            HStack {
+                                if store.notificationOperationsIds.contains(operation.id) {
+                                    Label("Notification programmed", systemImage: "bell.badge.fill")
+                                        .labelStyle(.iconOnly)
+                                }
+                                Menu("More") {
+                                    Button { store.send(.sendOperationEndNotification(operationID: operation.id)) } label: {
+                                        if !store.notificationOperationsIds.contains(operation.id) {
+                                            Label("Notify me when it ends", systemImage: "bell.badge")
+                                        } else {
+                                            Label("Notification already programmed", systemImage: "bell.badge.fill")
+                                        }
                                     }
                                 }
                             }
@@ -83,15 +89,28 @@ public struct DelaysView: View {
         .task { @MainActor in store.send(.task) }
     }
 }
+#if DEBUG
+import UserNotificationsClientDependency
 
 #Preview {
     NavigationStack {
         let appliance: Appliance = .washingMachine
+        let date = try! Date("2023-07-21T19:50:00+02:00", strategy: .iso8601)
         DelaysView(
             store: Store(initialState: Delays.State(program: appliance.programs.first!, appliance: appliance)) {
                 Delays()
-                    .dependency(\.date, .constant(try! Date("2023-07-21T19:50:00+02:00", strategy: .iso8601)))
+                    .dependency(\.date, .constant(date))
+                    .dependency(\.userNotifications.notifications, { [
+                        UserNotification(
+                            id: "com.renaudjenny.heures-creuses.notification.operation-end-21600",
+                            title: "",
+                            body: "",
+                            creationDate: date,
+                            duration: .seconds(6 * 60 * 60)
+                        )
+                    ] })
             }
         )
     }
 }
+#endif
