@@ -36,13 +36,17 @@ public struct DelaysView: View {
                                 if store.notificationOperationsIds.contains(operation.id) {
                                     Label("Notification programmed", systemImage: "bell.badge.fill")
                                         .labelStyle(.iconOnly)
-                                }
-                                Menu("More") {
-                                    Button { store.send(.sendOperationEndNotification(operationID: operation.id)) } label: {
-                                        if !store.notificationOperationsIds.contains(operation.id) {
-                                            Label("Notify me when it ends", systemImage: "bell.badge")
-                                        } else {
-                                            Label("Notification already programmed", systemImage: "bell.badge.fill")
+                                } 
+                                if store.loadingNotificationOperationsIds.contains(operation.id) {
+                                    ProgressView("Programming your notification")
+                                } else {
+                                    Menu("More") {
+                                        Button { store.send(.sendOperationEndNotification(operationID: operation.id), animation: .snappy) } label: {
+                                            if !store.notificationOperationsIds.contains(operation.id) {
+                                                Label("Notify me when it ends", systemImage: "bell.badge")
+                                            } else {
+                                                Label("Notification already programmed", systemImage: "bell.badge.fill")
+                                            }
                                         }
                                     }
                                 }

@@ -12,6 +12,7 @@ public struct Delays {
         var operations: IdentifiedArrayOf<Operation> = []
         var isOffPeakOnlyFilterOn = false
         var notificationOperationsIds: [Operation.ID] = []
+        var loadingNotificationOperationsIds: Set<Operation.ID> = []
         @Presents var notificationAlert: AlertState<Action.Alert>?
 
         public init(program: Program, appliance: Appliance) {
@@ -24,7 +25,9 @@ public struct Delays {
         case notificationAlert(PresentationAction<Alert>)
         case sendOperationEndNotification(operationID: Int)
         case onlyShowOffPeakTapped
+        case stopLoadingNotificationOperationId(operationID: Int)
         case task
+        case updateNotificationOperationIds
 
         public enum Alert: Equatable { }
     }
@@ -53,6 +56,7 @@ public struct Delays {
                 let applianceName = state.appliance.name
                 let programEndFormatted = operation.startEnd.upperBound.formatted(date: .omitted, time: .shortened)
                 let duration = date.now.durationDistance(to: operation.startEnd.upperBound)
+                state.loadingNotificationOperationsIds.insert(operationID)
 
                 return .run { send in
                     let status = try await userNotifications.checkAuthorization()
@@ -66,12 +70,19 @@ public struct Delays {
                         creationDate: date.now,
                         duration: duration
                     ))
+                    await send(.stopLoadingNotificationOperationId(operationID: operationID), animation: .snappy)
+                    await send(.updateNotificationOperationIds, animation: .snappy)
                 }
             case .onlyShowOffPeakTapped:
                 state.isOffPeakOnlyFilterOn.toggle()
                 return refreshItems(&state)
+            case let .stopLoadingNotificationOperationId(operationID):
+                state.loadingNotificationOperationsIds.remove(operationID)
+                return .none
             case .task:
                 return .merge(refreshItems(&state), refreshNotificationOperationIds(&state))
+            case .updateNotificationOperationIds:
+                return refreshNotificationOperationIds(&state)
             }
         }
     }
