@@ -23,6 +23,12 @@ public struct ApplianceSelection {
         case destination(PresentationAction<Destination.Action>)
     }
 
+    @Reducer(state: .equatable, action: .equatable)
+    public enum Destination {
+        case selection(ProgramSelection)
+        case addAppliance(ApplianceForm)
+    }
+
     public init() {}
 
     @Dependency(\.uuid) var uuid
@@ -58,30 +64,6 @@ public struct ApplianceSelection {
                 return .none
             }
         }
-        .ifLet(\.$destination, action: \.destination) {
-            Destination()
-        }
-    }
-}
-
-extension ApplianceSelection {
-    @Reducer
-    public struct Destination {
-        public enum State: Equatable {
-            case selection(ProgramSelection.State)
-            case addAppliance(ApplianceForm.State)
-        }
-        public enum Action: Equatable {
-            case selection(ProgramSelection.Action)
-            case addAppliance(ApplianceForm.Action)
-        }
-        public var body: some ReducerOf<Self> {
-            Scope(state: \.selection, action: \.selection) {
-                ProgramSelection()
-            }
-            Scope(state: \.addAppliance, action: \.addAppliance) {
-                ApplianceForm()
-            }
-        }
+        .ifLet(\.$destination, action: \.destination)
     }
 }
