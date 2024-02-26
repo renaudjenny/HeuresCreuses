@@ -97,7 +97,10 @@ public struct OffPeakSelectionView: View {
             Section("Periods") {
                 clockWidgetView(periods: store.periods.elements, minute: store.minute)
                 ForEach(store.periods) { period in
-                    period.clockView
+                    ClockView(period: period, editTapped: { })
+                }
+                Button { } label: {
+                    Label("Add off peak period", systemImage: "plus.circle")
                 }
             }
 
@@ -256,26 +259,33 @@ private extension Date {
     }
 }
 
-private extension Period {
-    var clockView: some View {
-        HStack {
-            ZStack {
-                Circle()
-                    .stroke(Color.primary.opacity(25/100), lineWidth: 5)
-                    .frame(width: 40, height: 40)
-                Circle()
-                    .rotation(.radians(-.pi/2))
-                    .trim(from: relativeClockPosition.start, to: relativeClockPosition.end)
-                    .stroke(Color.green, lineWidth: 5)
-                    .frame(width: 40, height: 40)
+private struct ClockView: View {
+    let period: Period
+    let editTapped: () -> Void
+
+    var body: some View {
+        Button { editTapped() } label: {
+            HStack {
+                ZStack {
+                    Circle()
+                        .stroke(Color.primary.opacity(25/100), lineWidth: 5)
+                        .frame(width: 40, height: 40)
+                    Circle()
+                        .rotation(.radians(-.pi/2))
+                        .trim(from: period.relativeClockPosition.start, to: period.relativeClockPosition.end)
+                        .stroke(Color.green, lineWidth: 5)
+                        .frame(width: 40, height: 40)
+                }
+                Text(period.dateFormatted.start).monospacedDigit()
+                Image(systemName: "arrowshape.forward")
+                Text(period.dateFormatted.end).monospacedDigit()
+                Spacer()
+                Label("Edit", systemImage: "pencil").labelStyle(.iconOnly)
             }
-            Text(dateFormatted.start).monospacedDigit()
-            Image(systemName: "arrowshape.forward")
-            Text(dateFormatted.end).monospacedDigit()
+            .accessibilityLabel(
+                Text("\(period.dateFormatted.start) to \(period.dateFormatted.end)", comment: "<Hour:Minutes> to <Hour:Minutes>")
+            )
         }
-        .accessibilityLabel(
-            Text("\(dateFormatted.start) to \(dateFormatted.end)", comment: "<Hour:Minutes> to <Hour:Minutes>")
-        )
     }
 }
 
