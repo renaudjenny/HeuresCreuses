@@ -2,6 +2,10 @@ import Foundation
 import Dependencies
 
 public struct Period: Equatable, Hashable, Identifiable, CustomDebugStringConvertible {
+    public let startHour: Int
+    public let startMinute: Int
+    public let endHour: Int
+    public let endMinute: Int
     private let minuteRanges: [ClosedRange<Int>]
 
     public var debugDescription: String {
@@ -11,6 +15,11 @@ public struct Period: Equatable, Hashable, Identifiable, CustomDebugStringConver
     public var id: Int { hashValue }
 
     public init(start: (hour: Int, minute: Int), end: (hour: Int, minute: Int)) {
+        self.startHour = start.hour
+        self.startMinute = start.minute
+        self.endHour = end.hour
+        self.endMinute = end.minute
+
         let start = start.hour * 60 + start.minute
         let end = end.hour * 60 + end.minute
 

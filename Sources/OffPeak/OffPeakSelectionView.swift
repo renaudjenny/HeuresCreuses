@@ -11,9 +11,12 @@ public struct OffPeakSelection: Reducer {
         public var periods = IdentifiedArrayOf<Period>(uniqueElements: [Period].example)
         public var minute: Double = .zero
         public var sendNotification = SendNotification.State()
+        @Presents public var offPeakForm: OffPeakForm.State?
     }
     public enum Action: Equatable {
+        case editPeriod(Period)
         case updateMinute(Double)
+        case offPeakForm(PresentationAction<OffPeakForm.Action>)
         case sendNotification(SendNotification.Action)
         case task
     }
@@ -29,9 +32,21 @@ public struct OffPeakSelection: Reducer {
 
         Reduce { state, action in
             switch action {
+            case let .editPeriod(period):
+                state.offPeakForm = OffPeakForm.State(period: period)
+                return .none
+
             case let .updateMinute(minute):
                 state.minute = minute
                 return .concatenate(updatePeakStatus(&state), updateSendNotification(&state))
+
+            case .offPeakForm(.presented(.save)):
+               // state.periods.update(state.offPeakForm.period)
+                state.offPeakForm = nil
+                return .none
+
+            case .offPeakForm:
+                return .none
 
             case .sendNotification:
                 return .none
@@ -47,6 +62,9 @@ public struct OffPeakSelection: Reducer {
                     }
                 }
             }
+        }
+        .ifLet(\.$offPeakForm, action: \.offPeakForm) {
+            OffPeakForm()
         }
     }
 
@@ -77,7 +95,7 @@ public struct OffPeakSelection: Reducer {
 }
 
 public struct OffPeakSelectionView: View {
-    let store: StoreOf<OffPeakSelection>
+    @Bindable var store: StoreOf<OffPeakSelection>
     @Environment(\.colorScheme) private var colorScheme
 
     private struct ViewState: Equatable {
@@ -97,7 +115,7 @@ public struct OffPeakSelectionView: View {
             Section("Periods") {
                 clockWidgetView(periods: store.periods.elements, minute: store.minute)
                 ForEach(store.periods) { period in
-                    Button { } label: {
+                    Button { store.send(.editPeriod(period)) } label: {
                         HStack {
                             PeriodView(period: period)
                             Spacer()
@@ -129,6 +147,11 @@ public struct OffPeakSelectionView: View {
                         Text("Calculating status...").redacted(reason: .placeholder)
                     }
                 }
+            }
+        }
+        .sheet(item: $store.scope(state: \.offPeakForm, action: \.offPeakForm)) { store in
+            NavigationStack {
+                OffPeakFormView(store: store)
             }
         }
         .navigationTitle("Off peak periods")
