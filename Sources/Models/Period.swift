@@ -2,16 +2,19 @@ import Foundation
 import Dependencies
 
 public struct Period: Equatable, Hashable, Identifiable, CustomDebugStringConvertible {
+    // TODO: should be vars
     public let startHour: Int
     public let startMinute: Int
     public let endHour: Int
     public let endMinute: Int
+    // TODO: minuteRanges should be a computed var
     private let minuteRanges: [ClosedRange<Int>]
 
     public var debugDescription: String {
         ranges(from: .now, calendar: .autoupdatingCurrent).debugDescription
     }
 
+    // TODO: should be a UUID
     public var id: Int { hashValue }
 
     public init(start: (hour: Int, minute: Int), end: (hour: Int, minute: Int)) {
@@ -114,6 +117,7 @@ public extension [Period] {
     ]
 }
 
+// TODO: could be a shared state when available
 public struct PeriodProvider {
     public var get: () -> [Period]
 

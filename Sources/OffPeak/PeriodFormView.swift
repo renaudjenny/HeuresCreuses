@@ -3,7 +3,7 @@ import ComposableArchitecture
 import SwiftUI
 
 @Reducer
-public struct OffPeakForm {
+public struct PeriodForm {
     @ObservableState
     public struct State: Equatable {
         public var startHour = 0
@@ -33,8 +33,8 @@ public struct OffPeakForm {
     }
 }
 
-struct OffPeakFormView: View {
-    @Bindable var store: StoreOf<OffPeakForm>
+struct PeriodFormView: View {
+    @Bindable var store: StoreOf<PeriodForm>
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -82,8 +82,8 @@ struct OffPeakFormView: View {
 
 #Preview {
     NavigationStack {
-        OffPeakFormView(store: Store(initialState: OffPeakForm.State(period: Period(start: (0,0), end: (0,0)))) {
-            OffPeakForm()
+        PeriodFormView(store: Store(initialState: PeriodForm.State(period: Period(start: (0,0), end: (0,0)))) {
+            PeriodForm()
         })
     }
 }

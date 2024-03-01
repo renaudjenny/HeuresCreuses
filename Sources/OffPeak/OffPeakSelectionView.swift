@@ -11,12 +11,12 @@ public struct OffPeakSelection: Reducer {
         public var periods = IdentifiedArrayOf<Period>(uniqueElements: [Period].example)
         public var minute: Double = .zero
         public var sendNotification = SendNotification.State()
-        @Presents public var offPeakForm: OffPeakForm.State?
+        @Presents public var periodForm: PeriodForm.State?
     }
     public enum Action: Equatable {
         case editPeriod(Period)
         case updateMinute(Double)
-        case offPeakForm(PresentationAction<OffPeakForm.Action>)
+        case periodForm(PresentationAction<PeriodForm.Action>)
         case sendNotification(SendNotification.Action)
         case task
     }
@@ -33,19 +33,19 @@ public struct OffPeakSelection: Reducer {
         Reduce { state, action in
             switch action {
             case let .editPeriod(period):
-                state.offPeakForm = OffPeakForm.State(period: period)
+                state.periodForm = PeriodForm.State(period: period)
                 return .none
 
             case let .updateMinute(minute):
                 state.minute = minute
                 return .concatenate(updatePeakStatus(&state), updateSendNotification(&state))
 
-            case .offPeakForm(.presented(.save)):
+            case .periodForm(.presented(.save)):
                // state.periods.update(state.offPeakForm.period)
-                state.offPeakForm = nil
+                state.periodForm = nil
                 return .none
 
-            case .offPeakForm:
+            case .periodForm:
                 return .none
 
             case .sendNotification:
@@ -63,8 +63,8 @@ public struct OffPeakSelection: Reducer {
                 }
             }
         }
-        .ifLet(\.$offPeakForm, action: \.offPeakForm) {
-            OffPeakForm()
+        .ifLet(\.$periodForm, action: \.periodForm) {
+            PeriodForm()
         }
     }
 
@@ -149,9 +149,9 @@ public struct OffPeakSelectionView: View {
                 }
             }
         }
-        .sheet(item: $store.scope(state: \.offPeakForm, action: \.offPeakForm)) { store in
+        .sheet(item: $store.scope(state: \.periodForm, action: \.periodForm)) { store in
             NavigationStack {
-                OffPeakFormView(store: store)
+                PeriodFormView(store: store)
             }
         }
         .navigationTitle("Off peak periods")
