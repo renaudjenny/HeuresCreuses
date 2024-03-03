@@ -40,7 +40,7 @@ final class ClosedRangeDateOffPeakRangesTests: XCTestCase {
     }
 
     func testOffPeakRangesIgnoringMorning() throws {
-        let period = Period(start: (hour: 23 , minute: 2), end: (hour: 6, minute: 2))
+        let period = Period(id: UUID(), startHour: 23, startMinute: 2, endHour: 6, endMinute: 2)
         let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-14T09:00:00+02:00"))
         var calendar = Calendar.current
         calendar.timeZone = try XCTUnwrap(TimeZone(abbreviation: "CEST"))
@@ -54,7 +54,7 @@ final class ClosedRangeDateOffPeakRangesTests: XCTestCase {
     }
 
     func testOffPeakRangesStartInEveAndCurrentOne() throws {
-        let period = Period(start: (hour: 23 , minute: 2), end: (hour: 6, minute: 2))
+        let period = Period(id: UUID(), startHour: 23, startMinute: 2, endHour: 6, endMinute: 2)
         let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-14T01:00:00+02:00"))
         var calendar = Calendar.current
         calendar.timeZone = try XCTUnwrap(TimeZone(abbreviation: "CEST"))

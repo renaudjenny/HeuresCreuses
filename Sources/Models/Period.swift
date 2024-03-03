@@ -2,36 +2,32 @@ import Foundation
 import Dependencies
 
 public struct Period: Equatable, Hashable, Identifiable, CustomDebugStringConvertible {
-    // TODO: should be vars
-    public let startHour: Int
-    public let startMinute: Int
-    public let endHour: Int
-    public let endMinute: Int
-    // TODO: minuteRanges should be a computed var
-    private let minuteRanges: [ClosedRange<Int>]
+    public var id: UUID
+    public var startHour: Int
+    public var startMinute: Int
+    public var endHour: Int
+    public var endMinute: Int
+
+    private var minuteRanges: [ClosedRange<Int>] {
+        let start = startHour * 60 + startMinute
+        let end = endHour * 60 + endMinute
+
+        return start < end
+        ? [start...end]
+        : [-(60 * 24 - start)...end, start...(end + 60 * 24)]
+
+    }
 
     public var debugDescription: String {
         ranges(from: .now, calendar: .autoupdatingCurrent).debugDescription
     }
 
-    // TODO: should be a UUID
-    public var id: Int { hashValue }
-
-    public init(start: (hour: Int, minute: Int), end: (hour: Int, minute: Int)) {
-        self.startHour = start.hour
-        self.startMinute = start.minute
-        self.endHour = end.hour
-        self.endMinute = end.minute
-
-        let start = start.hour * 60 + start.minute
-        let end = end.hour * 60 + end.minute
-
-        guard start < end else {
-            minuteRanges = [-(60 * 24 - start)...end, start...(end + 60 * 24)]
-            return
-        }
-
-        minuteRanges = [start...end]
+    public init(id: UUID, startHour: Int, startMinute: Int, endHour: Int, endMinute: Int) {
+        self.id = id
+        self.startHour = startHour
+        self.startMinute = startMinute
+        self.endHour = endHour
+        self.endMinute = endMinute
     }
 
     public func ranges(
@@ -112,8 +108,8 @@ public struct Period: Equatable, Hashable, Identifiable, CustomDebugStringConver
 
 public extension [Period] {
     static let example: Self = [
-        Period(start: (hour: 2, minute: 2), end: (hour: 8, minute: 2)),
-        Period(start: (hour: 15, minute: 2), end: (hour: 17, minute: 2)),
+        Period(id: UUID(uuidString: "8706623F-0215-4706-94F0-FD363533CBEC") ?? UUID(), startHour: 2, startMinute: 2, endHour: 8, endMinute: 2),
+        Period(id: UUID(uuidString: "93335C31-0ACF-46B7-98FD-F564B8E15B54") ?? UUID(), startHour: 15, startMinute: 2, endHour: 17, endMinute: 2),
     ]
 }
 

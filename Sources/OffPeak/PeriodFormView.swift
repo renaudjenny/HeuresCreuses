@@ -6,20 +6,10 @@ import SwiftUI
 public struct PeriodForm {
     @ObservableState
     public struct State: Equatable {
-        public var startHour = 0
-        public var startMinute = 0
-        public var endHour = 0
-        public var endMinute = 0
-
-        public var period: Period {
-            Period(start: (startHour, startMinute), end: (endHour, endMinute))
-        }
+        public var period: Period
 
         init(period: Period) {
-            startHour = period.startHour
-            startMinute = period.startMinute
-            endHour = period.endHour
-            endMinute = period.endMinute
+            self.period = period
         }
     }
 
@@ -44,12 +34,12 @@ struct PeriodFormView: View {
             }
 
             Section("Start") {
-                Picker("Hour", selection: $store.startHour.animation()) {
+                Picker("Hour", selection: $store.period.startHour.animation()) {
                     ForEach(0..<24) {
                         Text($0.formatted())
                     }
                 }
-                Picker("Minute", selection: $store.startMinute.animation()) {
+                Picker("Minute", selection: $store.period.startMinute.animation()) {
                     ForEach(0..<59) {
                         Text($0.formatted())
                     }
@@ -57,12 +47,12 @@ struct PeriodFormView: View {
             }
 
             Section("End") {
-                Picker("Hour", selection: $store.endHour.animation()) {
+                Picker("Hour", selection: $store.period.endHour.animation()) {
                     ForEach(0..<24) {
                         Text($0.formatted())
                     }
                 }
-                Picker("Minute", selection: $store.endMinute.animation()) {
+                Picker("Minute", selection: $store.period.endMinute.animation()) {
                     ForEach(0..<59) {
                         Text($0.formatted())
                     }
@@ -82,7 +72,13 @@ struct PeriodFormView: View {
 
 #Preview {
     NavigationStack {
-        PeriodFormView(store: Store(initialState: PeriodForm.State(period: Period(start: (0,0), end: (0,0)))) {
+        PeriodFormView(store: Store(initialState: PeriodForm.State(period: Period(
+            id: UUID(),
+            startHour: 0,
+            startMinute: 0,
+            endHour: 0,
+            endMinute: 0
+        ))) {
             PeriodForm()
         })
     }
