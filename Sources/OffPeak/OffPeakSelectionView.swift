@@ -14,6 +14,7 @@ public struct OffPeakSelection: Reducer {
         @Presents public var periodForm: PeriodForm.State?
     }
     public enum Action: Equatable {
+        case addPeriodButtonTapped
         case editPeriod(Period)
         case updateMinute(Double)
         case periodForm(PresentationAction<PeriodForm.Action>)
@@ -24,14 +25,28 @@ public struct OffPeakSelection: Reducer {
     @Dependency(\.calendar) var calendar
     @Dependency(\.continuousClock) var clock
     @Dependency(\.date.now) var now
+    @Dependency(\.uuid) var uuid
 
     public var body: some ReducerOf<Self> {
         Scope(state: \.sendNotification, action: \.sendNotification) {
             SendNotification()
         }
 
-        Reduce { state, action in
+        Reduce {
+            state,
+            action in
             switch action {
+            case .addPeriodButtonTapped:
+                state.periodForm = PeriodForm.State(
+                    period: Period(
+                        id: uuid(),
+                        startHour: 0,
+                        startMinute: 0,
+                        endHour: 0,
+                        endMinute: 0
+                    )
+                )
+                return .none
             case let .editPeriod(period):
                 state.periodForm = PeriodForm.State(period: period)
                 return .none
@@ -41,7 +56,8 @@ public struct OffPeakSelection: Reducer {
                 return .concatenate(updatePeakStatus(&state), updateSendNotification(&state))
 
             case .periodForm(.presented(.save)):
-               // state.periods.update(state.offPeakForm.period)
+                guard let period = state.periodForm?.period else { return .none }
+                state.periods.updateOrAppend(period)
                 state.periodForm = nil
                 return .none
 
@@ -123,7 +139,7 @@ public struct OffPeakSelectionView: View {
                         }
                     }
                 }
-                Button { } label: {
+                Button { store.send(.addPeriodButtonTapped) } label: {
                     Label("Add off peak period", systemImage: "plus.circle")
                 }
             }
