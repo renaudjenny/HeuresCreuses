@@ -59,7 +59,7 @@ public struct OffPeakSelection: Reducer {
                 guard let period = state.periodForm?.period else { return .none }
                 state.periods.updateOrAppend(period)
                 state.periodForm = nil
-                return .none
+                return .concatenate(updatePeakStatus(&state), updateSendNotification(&state))
 
             case .periodForm:
                 return .none
