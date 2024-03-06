@@ -7,14 +7,19 @@ public struct UserNotificationsList {
     @ObservableState
     public struct State: Equatable {
         var notifications: IdentifiedArrayOf<UserNotification> = []
+        var passedNotifications: IdentifiedArrayOf<UserNotification> = []
 
-        init(notifications: IdentifiedArrayOf<UserNotification> = []) {
+        init(
+            notifications: IdentifiedArrayOf<UserNotification> = [],
+            passedNotifications: IdentifiedArrayOf<UserNotification> = []
+        ) {
             guard notifications.isEmpty else {
                 self.notifications = notifications
                 return
             }
             @Dependency(\.userNotifications) var userNotifications
             self.notifications = IdentifiedArrayOf(uniqueElements: userNotifications.notifications())
+            self.passedNotifications = passedNotifications
         }
     }
 
@@ -86,10 +91,16 @@ struct UserNotificationsListView: View {
 
     var body: some View {
         List {
-            ForEach(store.notifications, content: notificationView)
-                .onDelete(perform: { store.send(.delete($0)) })
+            Section("^[\(store.notifications.count) pending notifications](inflect: true)") {
+                ForEach(store.notifications, content: notificationView)
+                    .onDelete(perform: { store.send(.delete($0)) })
+            }
+
+            Section("Passed notifications") {
+                ForEach(store.passedNotifications, content: passedNotificationView)
+            }
         }
-        .navigationTitle("^[\(store.notifications.count) pending notifications](inflect: true)")
+        .navigationTitle("Notifications")
         .task { @MainActor in await store.send(.task).finish() }
     }
 
@@ -114,6 +125,18 @@ struct UserNotificationsListView: View {
             }
         }
     }
+
+    private func passedNotificationView(_ notification: UserNotification) -> some View {
+        VStack(alignment: .leading) {
+            Label("\(notification.triggerDate.formatted())", systemImage: "calendar.badge.clock")
+                .font(.body)
+                .foregroundStyle(.secondary)
+            Text(notification.title)
+                .font(.headline)
+            Text(notification.body)
+                .font(.body)
+        }
+    }
 }
 
 private extension UserNotification {
@@ -129,7 +152,16 @@ private extension UserNotification {
 
 #Preview {
     NavigationStack {
-        UserNotificationsListView(store: Store(initialState: UserNotificationsList.State()) {
+        let passedNotifications: IdentifiedArrayOf<UserNotification> = [
+            UserNotification(
+                id: "123456",
+                title: "White Dishwasher",
+                body: "White Dishwasher\nProgram Quick\nDelay 8 hour",
+                creationDate: try! Date("2024-03-05T02:00:00+02:00", strategy: .iso8601),
+                duration: .seconds(2 * 60 * 60)
+            )
+        ]
+        UserNotificationsListView(store: Store(initialState: UserNotificationsList.State(passedNotifications: passedNotifications)) {
             UserNotificationsList()
                 .transformDependency(\.userNotifications) { dependency in
                     dependency.stream = { .example }
