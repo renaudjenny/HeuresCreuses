@@ -2,8 +2,8 @@ import ApplianceFeature
 import ComposableArchitecture
 import XCTest
 
-@MainActor
 final class ApplianceHomeWidgetTests: XCTestCase {
+    @MainActor
     func testNavigationToSelection() async throws {
         let appliances: IdentifiedArrayOf<Appliance> = [.dishwasher, .washingMachine]
 
@@ -20,6 +20,7 @@ final class ApplianceHomeWidgetTests: XCTestCase {
         await store.finish()
     }
 
+    @MainActor
     func testSaveOnApplianceModification() async throws {
         let saveExpectation = expectation(description: "Save to be called")
         var appliance = Appliance(id: UUID(0))
@@ -50,6 +51,7 @@ final class ApplianceHomeWidgetTests: XCTestCase {
         await store.finish()
     }
 
+    @MainActor
     func testTask() async throws {
         let savedAppliances: IdentifiedArrayOf<Appliance> = [
             .dishwasher,

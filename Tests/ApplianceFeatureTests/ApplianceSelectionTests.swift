@@ -2,8 +2,8 @@ import ApplianceFeature
 import ComposableArchitecture
 import XCTest
 
-@MainActor
 final class ApplianceSelectionTests: XCTestCase {
+    @MainActor
     func testAddAppliance() async throws {
         let store = TestStore(initialState: ApplianceSelection.State()) {
             ApplianceSelection()
@@ -15,6 +15,7 @@ final class ApplianceSelectionTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testAddApplianceCancel() async throws {
         let store = TestStore(
             initialState: ApplianceSelection.State(
@@ -28,6 +29,7 @@ final class ApplianceSelectionTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testAddApplianceSave() async throws {
         var appliance = Appliance(id: UUID(0))
         let store = TestStore(
@@ -48,6 +50,7 @@ final class ApplianceSelectionTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testApplianceNavigation() async throws {
         let appliance = Appliance(id: UUID(0))
         func testAddApplianceCancel() async throws {
@@ -64,6 +67,7 @@ final class ApplianceSelectionTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testUpdateAppliance() async throws {
         var appliance = Appliance(id: UUID(0))
         let store = TestStore(
@@ -85,6 +89,7 @@ final class ApplianceSelectionTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testDeletateAppliance() async throws {
         let appliance = Appliance(id: UUID(0))
         let store = TestStore(

@@ -2,6 +2,7 @@
 import XCTest
 
 final class ClosedRangeDateOffPeakRangesTests: XCTestCase {
+    @MainActor
     func testOffPeakRanges() throws {
         let periods = [Period].example
         let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-14T09:00:00+02:00"))
@@ -19,6 +20,7 @@ final class ClosedRangeDateOffPeakRangesTests: XCTestCase {
         XCTAssertEqual(ranges[1], secondDateStart...secondDateEnd)
     }
 
+    @MainActor
     func testOffPeakRangesIncludingCurrentOne() throws {
         let periods = [Period].example
         let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-14T07:00:00+02:00"))
@@ -39,6 +41,7 @@ final class ClosedRangeDateOffPeakRangesTests: XCTestCase {
         XCTAssertEqual(ranges[2], thirdDateStart...thirdDateEnd)
     }
 
+    @MainActor
     func testOffPeakRangesIgnoringMorning() throws {
         let period = Period(id: UUID(), startHour: 23, startMinute: 2, endHour: 6, endMinute: 2)
         let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-14T09:00:00+02:00"))
@@ -53,6 +56,7 @@ final class ClosedRangeDateOffPeakRangesTests: XCTestCase {
         XCTAssertEqual(ranges[0], dateStart...dateEnd)
     }
 
+    @MainActor
     func testOffPeakRangesStartInEveAndCurrentOne() throws {
         let period = Period(id: UUID(), startHour: 23, startMinute: 2, endHour: 6, endMinute: 2)
         let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2023-07-14T01:00:00+02:00"))

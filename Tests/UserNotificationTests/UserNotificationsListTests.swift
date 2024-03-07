@@ -3,8 +3,8 @@ import ComposableArchitecture
 import UserNotificationsClientDependency
 import XCTest
 
-@MainActor
 final class UserNotificationsListTests: XCTestCase {
+    @MainActor
     func testOutdatedNotifications() async throws {
         let dateInThePast = Date().addingTimeInterval(-60 * 60 * 20)
         let notifications: [UserNotification] = [

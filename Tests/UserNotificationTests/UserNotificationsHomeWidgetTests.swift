@@ -3,8 +3,8 @@ import ComposableArchitecture
 import UserNotificationsClientDependency
 import XCTest
 
-@MainActor
 final class UserNotificationsHomeWidgetTests: XCTestCase {
+    @MainActor
     func testTask() async throws {
         let notification = UserNotification(
             id: "1234",
@@ -31,6 +31,7 @@ final class UserNotificationsHomeWidgetTests: XCTestCase {
         await store.finish()
     }
 
+    @MainActor
     func testTaskWithOutdatedNotifications() async throws {
         let dateInThePast = Date().addingTimeInterval(-60 * 60 * 20)
         let notifications = [
@@ -81,6 +82,7 @@ final class UserNotificationsHomeWidgetTests: XCTestCase {
         await store.finish()
     }
 
+    @MainActor
     func testNavigatingToList() async throws {
         let notifications: IdentifiedArrayOf<UserNotification> = [
             UserNotification(id: "1234", title: "Test", body: "Test", creationDate: Date(), duration: .zero),

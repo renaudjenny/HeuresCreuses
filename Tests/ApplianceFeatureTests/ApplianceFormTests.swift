@@ -2,8 +2,8 @@ import ApplianceFeature
 import ComposableArchitecture
 import XCTest
 
-@MainActor
 final class ApplianceFormTests: XCTestCase {
+    @MainActor
     func testAddDelayButtonTapped() async throws {
         let store = TestStore(initialState: ApplianceForm.State(appliance: .dishwasher)) {
             ApplianceForm()
@@ -13,6 +13,7 @@ final class ApplianceFormTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testAddProgramButtonTapped() async throws {
         let store = TestStore(initialState: ApplianceForm.State(appliance: .dishwasher)) {
             ApplianceForm()
@@ -26,6 +27,7 @@ final class ApplianceFormTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testDeleteDelays() async throws {
         let store = TestStore(initialState: ApplianceForm.State(appliance: .dishwasher)) {
             ApplianceForm()
@@ -35,6 +37,7 @@ final class ApplianceFormTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testDeletePrograms() async throws {
         let store = TestStore(initialState: ApplianceForm.State(appliance: .dishwasher)) {
             ApplianceForm()

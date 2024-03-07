@@ -2,8 +2,8 @@ import ComposableArchitecture
 import OffPeak
 import XCTest
 
-@MainActor
 final class OffPeakTests: XCTestCase {
+    @MainActor
     func testTimeChangedAndItIsPeakHour() async throws {
         let calendar = Calendar(identifier: .iso8601)
         let date = Date(timeIntervalSince1970: 12345689)
@@ -27,6 +27,7 @@ final class OffPeakTests: XCTestCase {
         await store.finish()
     }
 
+    @MainActor
     func testTimeChangedAndItOffPeakHour() async throws {
         let calendar = Calendar(identifier: .iso8601)
         let date = Date(timeIntervalSince1970: 12345689 + 4 * 60 * 60)
