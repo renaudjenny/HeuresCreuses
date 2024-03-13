@@ -24,6 +24,7 @@ public struct UserNotificationsList {
     }
 
     public enum Action: Equatable {
+        case addTestNotification
         case cancel
         case delete(IndexSet)
         case notificationsUpdated([UserNotification])
@@ -42,6 +43,15 @@ public struct UserNotificationsList {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .addTestNotification:
+                let notification = UserNotification(
+                    id: "12345",
+                    title: "Test",
+                    body: "Here is what a notification is looking like",
+                    creationDate: .now,
+                    duration: .seconds(3)
+                )
+                return .run { _ in try await userNotifications.add(notification) }
             case .cancel:
                 return .merge(
                     .cancel(id: CancelID.notificationsUpdate),
@@ -98,6 +108,12 @@ struct UserNotificationsListView: View {
 
             Section("Passed notifications") {
                 ForEach(store.passedNotifications, content: passedNotificationView)
+            }
+
+            Section("Test") {
+                Button { store.send(.addTestNotification) } label: {
+                    Text("Add a test notification")
+                }
             }
         }
         .navigationTitle("Notifications")
