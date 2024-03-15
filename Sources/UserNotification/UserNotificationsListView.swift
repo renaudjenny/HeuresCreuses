@@ -27,6 +27,7 @@ public struct UserNotificationsList {
         case addTestNotification
         case cancel
         case delete(IndexSet)
+        case moveOutdated(ids: [String])
         case notificationsUpdated([UserNotification])
         case task
     }
@@ -37,7 +38,7 @@ public struct UserNotificationsList {
 
     private enum CancelID {
         case notificationsUpdate
-        case removeOutdated
+        case moveOutdated
     }
 
     public var body: some ReducerOf<Self> {
@@ -55,20 +56,31 @@ public struct UserNotificationsList {
             case .cancel:
                 return .merge(
                     .cancel(id: CancelID.notificationsUpdate),
-                    .cancel(id: CancelID.removeOutdated)
+                    .cancel(id: CancelID.moveOutdated)
                 )
             case let .delete(indexSet):
                 return .run { [notifications = state.notifications] _ in
                     try? await userNotifications.remove(indexSet.map { notifications[$0].id })
                 }
+            case let .moveOutdated(ids):
+                state.passedNotifications = state.passedNotifications + state.notifications.filter { ids.contains($0.id) }
+                state.notifications.removeAll { ids.contains($0.id) }
+                return .none
             case let .notificationsUpdated(notifications):
                 state.notifications = IdentifiedArrayOf(uniqueElements: notifications)
                 return .none
             case .task:
                 return .merge(
-                    removeOutdated(),
+                    .run { send in
+                        await moveOutdatedNotifications(send)
+                        for await _ in clock.timer(interval: .seconds(1)) {
+                            await moveOutdatedNotifications(send)
+                        }
+                    }
+                    .cancellable(id: CancelID.moveOutdated),
                     .run { send in
                         for await notifications in userNotifications.stream() {
+                            print(notifications.count)
                             await send(.notificationsUpdated(notifications))
                         }
                     }.cancellable(id: CancelID.notificationsUpdate)
@@ -77,22 +89,12 @@ public struct UserNotificationsList {
         }
     }
 
-    private func removeOutdated() -> Effect<Action> {
-        let removeOutdatedNotifications = {
-            let ids = userNotifications.notifications()
-                .filter { $0.creationDate.addingTimeInterval(Double($0.duration.components.seconds)) < now }
-                .map(\.id)
-            guard !ids.isEmpty else { return }
-            try await userNotifications.remove(ids)
-        }
-
-        return .run { _ in
-            try await removeOutdatedNotifications()
-            for await _ in clock.timer(interval: .seconds(1)) {
-                try await removeOutdatedNotifications()
-            }
-        }
-        .cancellable(id: CancelID.removeOutdated)
+    private func moveOutdatedNotifications(_ send: Send<Action>) async {
+        let ids = userNotifications.notifications()
+            .filter { $0.creationDate.addingTimeInterval(Double($0.duration.components.seconds)) < now }
+            .map(\.id)
+        guard !ids.isEmpty else { return }
+        await send(.moveOutdated(ids: ids))
     }
 }
 

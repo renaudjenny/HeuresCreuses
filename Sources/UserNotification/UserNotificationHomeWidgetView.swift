@@ -83,7 +83,7 @@ public struct UserNotificationHomeWidget {
                 .filter { $0.creationDate.addingTimeInterval(Double($0.duration.components.seconds)) < now }
                 .map(\.id)
             guard !ids.isEmpty else { return }
-            try await userNotifications.remove(ids)
+            // FIXME: send an action to update the remaining notifications count
         }
 
         return .run { _ in
