@@ -36,7 +36,7 @@ public struct UserNotificationHomeWidget {
     }
 
     enum CancelID {
-        case removeOutdated
+        case updateNotifications
         case task
     }
 
@@ -50,7 +50,7 @@ public struct UserNotificationHomeWidget {
         Reduce { state, action in
             switch action {
             case .cancel:
-                return .merge(.cancel(id: CancelID.task), .cancel(id: CancelID.removeOutdated))
+                return .merge(.cancel(id: CancelID.task), .cancel(id: CancelID.updateNotifications))
             case .destination:
                 return .none
             case let .notificationsUpdated(notifications):
@@ -58,7 +58,13 @@ public struct UserNotificationHomeWidget {
                 return .none
             case .task:
                 return .merge(
-                    removeOutdated(),
+                    .run { send in
+                        await updateNotifications(send)
+                        for await _ in clock.timer(interval: .seconds(1)) {
+                            await updateNotifications(send)
+                        }
+                    }
+                    .cancellable(id: CancelID.updateNotifications),
                     .run { send in
                         for await notifications in userNotifications.stream() {
                             await send(.notificationsUpdated(notifications))
@@ -77,22 +83,10 @@ public struct UserNotificationHomeWidget {
         }
     }
 
-    private func removeOutdated() -> Effect<Action> {
-        let removeOutdatedNotifications = {
-            let ids = userNotifications.notifications()
-                .filter { $0.creationDate.addingTimeInterval(Double($0.duration.components.seconds)) < now }
-                .map(\.id)
-            guard !ids.isEmpty else { return }
-            // FIXME: send an action to update the remaining notifications count
-        }
-
-        return .run { _ in
-            try await removeOutdatedNotifications()
-            for await _ in clock.timer(interval: .seconds(1)) {
-                try await removeOutdatedNotifications()
-            }
-        }
-        .cancellable(id: CancelID.removeOutdated)
+    private func updateNotifications(_ send: Send<Action>) async {
+        let notifications = userNotifications.notifications()
+            .filter { $0.creationDate.addingTimeInterval(Double($0.duration.components.seconds)) < now }
+        await send(.notificationsUpdated(notifications))
     }
 }
 

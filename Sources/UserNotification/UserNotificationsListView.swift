@@ -7,11 +7,11 @@ public struct UserNotificationsList {
     @ObservableState
     public struct State: Equatable {
         var notifications: IdentifiedArrayOf<UserNotification> = []
-        var passedNotifications: IdentifiedArrayOf<UserNotification> = []
+        var outdatedNotifications: IdentifiedArrayOf<UserNotification> = []
 
         init(
             notifications: IdentifiedArrayOf<UserNotification> = [],
-            passedNotifications: IdentifiedArrayOf<UserNotification> = []
+            outdatedNotifications: IdentifiedArrayOf<UserNotification> = []
         ) {
             guard notifications.isEmpty else {
                 self.notifications = notifications
@@ -19,14 +19,15 @@ public struct UserNotificationsList {
             }
             @Dependency(\.userNotifications) var userNotifications
             self.notifications = IdentifiedArrayOf(uniqueElements: userNotifications.notifications())
-            self.passedNotifications = passedNotifications
+            self.outdatedNotifications = outdatedNotifications
         }
     }
 
     public enum Action: Equatable {
         case addTestNotification
         case cancel
-        case delete(IndexSet)
+        case deleteNotifications(IndexSet)
+        case deleteOutdatedNotifications(IndexSet)
         case moveOutdated(ids: [String])
         case notificationsUpdated([UserNotification])
         case task
@@ -58,12 +59,16 @@ public struct UserNotificationsList {
                     .cancel(id: CancelID.notificationsUpdate),
                     .cancel(id: CancelID.moveOutdated)
                 )
-            case let .delete(indexSet):
+            case let .deleteNotifications(indexSet):
                 return .run { [notifications = state.notifications] _ in
                     try? await userNotifications.remove(indexSet.map { notifications[$0].id })
                 }
+            case let .deleteOutdatedNotifications(indexSet):
+                return .run { [outdatedNotifications = state.outdatedNotifications] _ in
+                    try? await userNotifications.remove(indexSet.map { outdatedNotifications[$0].id })
+                }
             case let .moveOutdated(ids):
-                state.passedNotifications = state.passedNotifications + state.notifications.filter { ids.contains($0.id) }
+                state.outdatedNotifications = state.outdatedNotifications + state.notifications.filter { ids.contains($0.id) }
                 state.notifications.removeAll { ids.contains($0.id) }
                 return .none
             case let .notificationsUpdated(notifications):
@@ -105,11 +110,12 @@ struct UserNotificationsListView: View {
         List {
             Section("^[\(store.notifications.count) pending notifications](inflect: true)") {
                 ForEach(store.notifications, content: notificationView)
-                    .onDelete(perform: { store.send(.delete($0)) })
+                    .onDelete(perform: { store.send(.deleteNotifications($0)) })
             }
 
-            Section("Passed notifications") {
-                ForEach(store.passedNotifications, content: passedNotificationView)
+            Section("Outdated notifications") {
+                ForEach(store.outdatedNotifications, content: outdatedNotificationView)
+                    .onDelete(perform: { store.send(.deleteOutdatedNotifications($0)) })
             }
 
             Section("Test") {
@@ -144,7 +150,7 @@ struct UserNotificationsListView: View {
         }
     }
 
-    private func passedNotificationView(_ notification: UserNotification) -> some View {
+    private func outdatedNotificationView(_ notification: UserNotification) -> some View {
         VStack(alignment: .leading) {
             Label("\(notification.triggerDate.formatted())", systemImage: "calendar.badge.clock")
                 .font(.body)
@@ -170,7 +176,7 @@ private extension UserNotification {
 
 #Preview {
     NavigationStack {
-        let passedNotifications: IdentifiedArrayOf<UserNotification> = [
+        let outdatedNotifications: IdentifiedArrayOf<UserNotification> = [
             UserNotification(
                 id: "123456",
                 title: "White Dishwasher",
@@ -179,7 +185,9 @@ private extension UserNotification {
                 duration: .seconds(2 * 60 * 60)
             )
         ]
-        UserNotificationsListView(store: Store(initialState: UserNotificationsList.State(passedNotifications: passedNotifications)) {
+        UserNotificationsListView(store: Store(
+            initialState: UserNotificationsList.State(outdatedNotifications: outdatedNotifications)
+        ) {
             UserNotificationsList()
                 .transformDependency(\.userNotifications) { dependency in
                     dependency.stream = { .example }
