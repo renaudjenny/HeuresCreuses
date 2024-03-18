@@ -28,8 +28,7 @@ public struct UserNotificationsList {
         case cancel
         case deleteNotifications(IndexSet)
         case deleteOutdatedNotifications(IndexSet)
-        case moveOutdated(ids: [String])
-        case notificationsUpdated([UserNotification])
+        case notificationsUpdated(ongoing: [UserNotification], outdated: [UserNotification])
         case task
     }
 
@@ -67,39 +66,45 @@ public struct UserNotificationsList {
                 return .run { [outdatedNotifications = state.outdatedNotifications] _ in
                     try? await userNotifications.remove(indexSet.map { outdatedNotifications[$0].id })
                 }
-            case let .moveOutdated(ids):
-                state.outdatedNotifications = state.outdatedNotifications + state.notifications.filter { ids.contains($0.id) }
-                state.notifications.removeAll { ids.contains($0.id) }
-                return .none
-            case let .notificationsUpdated(notifications):
-                state.notifications = IdentifiedArrayOf(uniqueElements: notifications)
+            case let .notificationsUpdated(ongoing, outdated):
+                state.notifications = IdentifiedArrayOf(uniqueElements: ongoing)
+                state.outdatedNotifications = IdentifiedArrayOf(uniqueElements: outdated)
                 return .none
             case .task:
                 return .merge(
                     .run { send in
-                        await moveOutdatedNotifications(send)
                         for await _ in clock.timer(interval: .seconds(1)) {
-                            await moveOutdatedNotifications(send)
+                            let (ongoing, outdated) = userNotifications.notifications().splitOutdated(now: now)
+                            await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated))
                         }
                     }
                     .cancellable(id: CancelID.moveOutdated),
                     .run { send in
                         for await notifications in userNotifications.stream() {
-                            print(notifications.count)
-                            await send(.notificationsUpdated(notifications))
+                            let (ongoing, outdated) = notifications.splitOutdated(now: now)
+                            await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated))
                         }
-                    }.cancellable(id: CancelID.notificationsUpdate)
+                    }
+                    .cancellable(id: CancelID.notificationsUpdate)
                 )
             }
         }
     }
 
-    private func moveOutdatedNotifications(_ send: Send<Action>) async {
-        let ids = userNotifications.notifications()
-            .filter { $0.creationDate.addingTimeInterval(Double($0.duration.components.seconds)) < now }
-            .map(\.id)
-        guard !ids.isEmpty else { return }
-        await send(.moveOutdated(ids: ids))
+    private func withoutOutdatedNotifications(_ notification: UserNotification) -> Bool {
+        notification.creationDate.addingTimeInterval(Double(notification.duration.components.seconds)) < now
+    }
+}
+
+private extension [UserNotification] {
+    func splitOutdated(now: Date) -> (ongoing: Self, outdated: Self) {
+        return reduce(into: ([], []), { partialResult, notification in
+            if notification.creationDate.addingTimeInterval(Double(notification.duration.components.seconds)) < now {
+                partialResult.outdated.append(notification)
+            } else {
+                partialResult.ongoing.append(notification)
+            }
+        })
     }
 }
 
