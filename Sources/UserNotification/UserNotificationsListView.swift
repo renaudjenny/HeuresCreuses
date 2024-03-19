@@ -35,6 +35,7 @@ public struct UserNotificationsList {
     @Dependency(\.continuousClock) var clock
     @Dependency(\.date.now) var now
     @Dependency(\.userNotifications) var userNotifications
+    @Dependency(\.uuid) var uuid
 
     private enum CancelID {
         case notificationsUpdate
@@ -45,10 +46,11 @@ public struct UserNotificationsList {
         Reduce { state, action in
             switch action {
             case .addTestNotification:
+                let id = uuid().uuidString
                 let notification = UserNotification(
-                    id: "12345",
+                    id: id,
                     title: "Test",
-                    body: "Here is what a notification is looking like",
+                    body: "It's a test notification with the id: \(id)",
                     creationDate: .now,
                     duration: .seconds(3)
                 )
@@ -75,7 +77,7 @@ public struct UserNotificationsList {
                     .run { send in
                         for await _ in clock.timer(interval: .seconds(1)) {
                             let (ongoing, outdated) = userNotifications.notifications().splitOutdated(now: now)
-                            await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated))
+                            await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated), animation: .smooth)
                         }
                     }
                     .cancellable(id: CancelID.moveOutdated),
@@ -90,13 +92,9 @@ public struct UserNotificationsList {
             }
         }
     }
-
-    private func withoutOutdatedNotifications(_ notification: UserNotification) -> Bool {
-        notification.creationDate.addingTimeInterval(Double(notification.duration.components.seconds)) < now
-    }
 }
 
-private extension [UserNotification] {
+extension [UserNotification] {
     func splitOutdated(now: Date) -> (ongoing: Self, outdated: Self) {
         return reduce(into: ([], []), { partialResult, notification in
             if notification.creationDate.addingTimeInterval(Double(notification.duration.components.seconds)) < now {

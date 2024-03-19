@@ -59,14 +59,15 @@ public struct UserNotificationHomeWidget {
             case .task:
                 return .merge(
                     .run { send in
-                        await updateNotifications(send)
                         for await _ in clock.timer(interval: .seconds(1)) {
-                            await updateNotifications(send)
+                            let (notifications, _) = userNotifications.notifications().splitOutdated(now: now)
+                            await send(.notificationsUpdated(notifications))
                         }
                     }
                     .cancellable(id: CancelID.updateNotifications),
                     .run { send in
                         for await notifications in userNotifications.stream() {
+                            let (notifications, _) = notifications.splitOutdated(now: now)
                             await send(.notificationsUpdated(notifications))
                         }
                     }.cancellable(id: CancelID.task)
@@ -81,12 +82,6 @@ public struct UserNotificationHomeWidget {
         .ifLet(\.$destination, action: \.destination) {
             UserNotificationsList()
         }
-    }
-
-    private func updateNotifications(_ send: Send<Action>) async {
-        let notifications = userNotifications.notifications()
-            .filter { $0.creationDate.addingTimeInterval(Double($0.duration.components.seconds)) < now }
-        await send(.notificationsUpdated(notifications))
     }
 }
 
