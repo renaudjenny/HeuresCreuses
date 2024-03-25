@@ -1,12 +1,21 @@
+import Models
 import SwiftUI
 
 struct ClockView: View {
     let minute: Int
+    let periods: [Period]
 
     var body: some View {
         ZStack {
             ClockShape().fill(Color.primary.opacity(15/100))
             IndicatorsShape().fill(Color.primary.opacity(50/100))
+            ForEach(periods) { period in
+                PeriodShape(
+                    startMinute: period.startHour * 60 + period.startMinute,
+                    endMinute: period.endHour * 60 + period.endMinute
+                )
+                .fill(Color.green)
+            }
             CurrentTimeShape(minute: minute).fill(Color.accentColor)
         }
     }
@@ -96,8 +105,56 @@ private struct CurrentTimeShape: Shape {
     }
 }
 
+private struct PeriodShape: Shape {
+    let startMinute: Int
+    let endMinute: Int
+
+    func path(in rect: CGRect) -> Path {
+        let width = min(rect.width, rect.height)
+        let center = CGPoint(x: width/2, y: width/2)
+
+        var path = Path()
+
+        let startAngle: Double = (2.0 * .pi)/1440 * Double(startMinute) - .pi/2.0
+        let endAngle: Double = (2.0 * .pi)/1440 * Double(endMinute) - .pi/2.0
+        let radius1: Double = 49/100.0 * width
+        let radius2: Double = 41/100.0 * width
+        
+        path.addArc(
+            center: center,
+            radius: radius1,
+            startAngle: .radians(startAngle),
+            endAngle: .radians(endAngle),
+            clockwise: true
+        )
+
+        path.addArc(
+            center: center,
+            radius: radius2,
+            startAngle: .radians(endAngle),
+            endAngle: .radians(startAngle),
+            clockwise: false
+        )
+
+        let point1 = CGPoint(
+            x: cos(startAngle) * radius1 + width/2,
+            y: sin(startAngle) * radius1 + width/2
+        )
+
+        let point2 = CGPoint(
+            x: cos(startAngle) * radius1 + width/2,
+            y: sin(startAngle) * radius1 + width/2
+        )
+
+        path.move(to: point1)
+
+
+        return path
+    }
+}
+
 #Preview("ClockView") {
-    ClockView(minute: 2 * 60)
+    ClockView(minute: 2 * 60, periods: .example)
 }
 
 #Preview("ClockShape") {
