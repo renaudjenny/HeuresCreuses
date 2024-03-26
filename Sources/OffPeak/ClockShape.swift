@@ -17,6 +17,11 @@ struct ClockView: View {
                 .fill(Color.green)
             }
             CurrentTimeShape(minute: minute).fill(Color.accentColor)
+            ViewThatFits {
+                ClockHoursView(isHoursLimited: false)
+                ClockHoursView(isHoursLimited: true)
+                EmptyView()
+            }
         }
     }
 }
@@ -119,13 +124,13 @@ private struct PeriodShape: Shape {
         let endAngle: Double = (2.0 * .pi)/1440 * Double(endMinute) - .pi/2.0
         let radius1: Double = 49/100.0 * width
         let radius2: Double = 41/100.0 * width
-        
+
         path.addArc(
             center: center,
             radius: radius1,
             startAngle: .radians(startAngle),
             endAngle: .radians(endAngle),
-            clockwise: true
+            clockwise: false
         )
 
         path.addArc(
@@ -133,23 +138,68 @@ private struct PeriodShape: Shape {
             radius: radius2,
             startAngle: .radians(endAngle),
             endAngle: .radians(startAngle),
-            clockwise: false
+            clockwise: true
         )
 
-        let point1 = CGPoint(
-            x: cos(startAngle) * radius1 + width/2,
-            y: sin(startAngle) * radius1 + width/2
+        let radius3 = (radius1 + radius2)/2
+        let radius4 = 4/100.0 * width
+
+        let startRoundCenter = CGPoint(
+            x: cos(startAngle) * radius3 + width/2,
+            y: sin(startAngle) * radius3 + width/2
         )
 
-        let point2 = CGPoint(
-            x: cos(startAngle) * radius1 + width/2,
-            y: sin(startAngle) * radius1 + width/2
+        path.addRelativeArc(
+            center: startRoundCenter,
+            radius: radius4,
+            startAngle: .radians(startAngle + .pi),
+            delta: .radians(.pi)
         )
 
-        path.move(to: point1)
+        let endRoundCenter = CGPoint(
+            x: cos(endAngle) * radius3 + width/2,
+            y: sin(endAngle) * radius3 + width/2
+        )
 
+        path.move(to: endRoundCenter)
+
+        path.addRelativeArc(
+            center: endRoundCenter,
+            radius: radius4,
+            startAngle: .radians(endAngle + .pi),
+            delta: .radians(-.pi)
+        )
 
         return path
+    }
+}
+
+struct ClockHoursView: View {
+    let isHoursLimited: Bool
+
+    private var hours: [Int] { isHoursLimited ? [0, 6, 12, 18] : (0..<23).map { $0 } }
+
+    var body: some View {
+        GeometryReader { geometryProxy in
+            ForEach(hours, id: \.self) { hour in
+                if hour % 2 == 0 {
+                    let angle: Double = (2.0 * .pi)/24.0 * Double(hour) - .pi/2.0
+                    let radius = min(geometryProxy.size.width, geometryProxy.size.height)/2
+
+                    Text("\(hour)")
+                        #if os(watchOS)
+                        .font(.caption2)
+                        #else
+                        .font(.body)
+                        #endif
+                        .position(
+                            x: cos(angle) * radius * 0.65 + radius,
+                            y: sin(angle) * radius * 0.65 + radius
+                        )
+                        .foregroundStyle(hour % 6 == 0 ? Color.primary : Color.secondary)
+                }
+            }
+        }
     }
 }
 
@@ -173,4 +223,8 @@ private struct PeriodShape: Shape {
         CurrentTimeShape(minute: 12 * 60)
         CurrentTimeShape(minute: 20 * 60)
     }
+}
+
+#Preview("ClockHoursView") {
+    ClockHoursView(isHoursLimited: false)
 }
