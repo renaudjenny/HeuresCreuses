@@ -17,10 +17,13 @@ struct ClockView: View {
                 .fill(Color.green)
             }
             CurrentTimeShape(minute: minute).fill(Color.accentColor)
-            ViewThatFits {
-                ClockHoursView(isHoursLimited: false)
-                ClockHoursView(isHoursLimited: true)
-                EmptyView()
+            GeometryReader { geometryProxy in
+                let width = min(geometryProxy.size.width, geometryProxy.size.height)
+                if width > 200 {
+                    ClockHoursView(isHoursLimited: false)
+                } else if width > 100 {
+                    ClockHoursView(isHoursLimited: true)
+                }
             }
         }
     }
@@ -190,11 +193,11 @@ struct ClockHoursView: View {
                         #if os(watchOS)
                         .font(.caption2)
                         #else
-                        .font(.body)
+                        .font(isHoursLimited ? .caption2 : .body)
                         #endif
                         .position(
-                            x: cos(angle) * radius * 0.65 + radius,
-                            y: sin(angle) * radius * 0.65 + radius
+                            x: cos(angle) * radius * 0.60 + radius,
+                            y: sin(angle) * radius * 0.60 + radius
                         )
                         .foregroundStyle(hour % 6 == 0 ? Color.primary : Color.secondary)
                 }
