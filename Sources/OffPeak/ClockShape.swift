@@ -2,7 +2,7 @@ import Models
 import SwiftUI
 
 struct ClockView: View {
-    let minute: Int
+    let minute: Double
     let periods: [Period]
 
     var body: some View {
@@ -78,14 +78,14 @@ private struct IndicatorsShape: Shape {
 }
 
 private struct CurrentTimeShape: Shape {
-    let minute: Int
+    let minute: Double
 
     func path(in rect: CGRect) -> Path {
         let width = min(rect.width, rect.height)
 
         var path = Path()
 
-        let angle: Double = (2.0 * .pi)/1440 * Double(minute) - .pi/2.0
+        let angle: Double = (2.0 * .pi)/1440 * minute - .pi/2.0
         let radius1: Double = 48/100.0 * width
         let radius2: Double = 42/100.0 * width
         let addAngle: Double = .pi/300
