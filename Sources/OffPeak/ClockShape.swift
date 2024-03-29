@@ -164,13 +164,13 @@ private struct PeriodShape: Shape {
             y: sin(endAngle) * radius3 + width/2
         )
 
-        path.move(to: endRoundCenter)
+        path.move(to: center)
 
         path.addRelativeArc(
             center: endRoundCenter,
             radius: radius4,
-            startAngle: .radians(endAngle + .pi),
-            delta: .radians(-.pi)
+            startAngle: .radians(endAngle),
+            delta: .radians(.pi)
         )
 
         return path
@@ -225,6 +225,14 @@ struct ClockHoursView: View {
         CurrentTimeShape(minute: 3 * 60)
         CurrentTimeShape(minute: 12 * 60)
         CurrentTimeShape(minute: 20 * 60)
+    }
+}
+
+#Preview("PeriodShape") {
+    ZStack {
+        PeriodShape(startMinute: 1 * 60, endMinute: 2 * 60)
+        PeriodShape(startMinute: 21 * 60, endMinute: 22 * 60)
+        PeriodShape(startMinute: 7 * 60, endMinute: 17 * 60)
     }
 }
 
