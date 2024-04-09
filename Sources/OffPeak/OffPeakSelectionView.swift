@@ -133,7 +133,7 @@ public struct OffPeakSelectionView: View {
                 HStack {
                     Spacer()
                     ClockView(minute: store.minute, periods: store.periods.elements)
-                        .frame(width: 250, height: 250, alignment: .center)
+                        .frame(width: 250, height: 250)
                     Spacer()
                 }
 

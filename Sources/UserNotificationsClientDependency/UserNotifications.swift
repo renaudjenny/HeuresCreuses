@@ -60,6 +60,7 @@ private final class UserNotificationCombine {
     }
 
     func checkAuthorization() async throws -> UserNotificationAuthorizationStatus {
+        #if canImport(NotificationCenter)
         let notificationSettings = await userNotificationCenter.notificationSettings()
         if notificationSettings.authorizationStatus == .notDetermined {
             guard try await self.userNotificationCenter.requestAuthorization(options: [.alert])
@@ -69,10 +70,17 @@ private final class UserNotificationCombine {
         } else {
             return notificationSettings.authorizationStatus.userNotificationAuthorizationStatus
         }
+        #else
+        return .unavailable
+        #endif
     }
 
     func authorizationStatus() async -> UserNotificationAuthorizationStatus {
+        #if canImport(NotificationCenter)
         await userNotificationCenter.notificationSettings().authorizationStatus.userNotificationAuthorizationStatus
+        #else
+        return .unavailable
+        #endif
     }
 }
 
@@ -116,6 +124,7 @@ private extension URL {
     static let userNotifications = Self.documentsDirectory.appending(component: "userNotifications.json")
 }
 
+#if canImport(NotificationCenter)
 private extension UNAuthorizationStatus {
     var userNotificationAuthorizationStatus: UserNotificationAuthorizationStatus {
         switch self {
@@ -128,3 +137,4 @@ private extension UNAuthorizationStatus {
         }
     }
 }
+#endif
