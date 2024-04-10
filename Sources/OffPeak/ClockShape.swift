@@ -208,6 +208,7 @@ struct ClockHoursView: View {
 
 #Preview("ClockView") {
     ClockView(minute: 2 * 60, periods: .example)
+        .frame(minWidth: 50, maxWidth: 250, minHeight: 50, maxHeight: 250)
 }
 
 #Preview("ClockShape") {

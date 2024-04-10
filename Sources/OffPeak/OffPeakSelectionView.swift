@@ -129,13 +129,13 @@ public struct OffPeakSelectionView: View {
     public var body: some View {
         Form {
             Section("Periods") {
-
-                HStack {
-                    Spacer()
-                    ClockView(minute: store.minute, periods: store.periods.elements)
-                        .frame(width: 250, height: 250)
-                    Spacer()
-                }
+                ClockView(minute: store.minute, periods: store.periods.elements)
+                    #if os(watchOS)
+                    .frame(width: 150, height: 150)
+                    .padding()
+                    #else
+                    .frame(width: 250, height: 250)
+                    #endif
 
                 ForEach(store.periods) { period in
                     Button { store.send(.editPeriod(period)) } label: {
