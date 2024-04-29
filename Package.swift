@@ -20,6 +20,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.8.2"),
         .package(url: "https://github.com/tgrapperon/swift-dependencies-additions", from: "1.0.1"),
+        .package(url: "https://github.com/pointfreeco/swift-perception", exact: "1.1.5")
     ],
     targets: [
         .target(
