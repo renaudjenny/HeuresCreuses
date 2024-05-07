@@ -1,6 +1,7 @@
 import Dependencies
 import Foundation
 
+/// TODO: remove this dependency and start using `@Shared`
 public struct DataManager: Sendable {
     public var load: @Sendable (URL) throws -> Data
     public var save: @Sendable (Data, URL) throws -> Void

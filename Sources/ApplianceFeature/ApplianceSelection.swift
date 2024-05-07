@@ -4,14 +4,14 @@ import ComposableArchitecture
 public struct ApplianceSelection {
     @ObservableState
     public struct State: Equatable {
-        public var appliances: IdentifiedArrayOf<Appliance>
+        @Shared public var appliances: IdentifiedArrayOf<Appliance>
         @Presents public var destination: Destination.State?
 
         public init(
             appliances: IdentifiedArrayOf<Appliance> = [.washingMachine, .dishwasher],
             destination: Destination.State? = nil
         ) {
-            self.appliances = appliances
+            self._appliances = Shared(wrappedValue: appliances, .appliances)
             self.destination = destination
         }
     }

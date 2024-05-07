@@ -1,5 +1,4 @@
 import ComposableArchitecture
-import DataManagerDependency
 import HomeWidget
 import SwiftUI
 
@@ -7,26 +6,23 @@ import SwiftUI
 public struct ApplianceHomeWidget {
     @ObservableState
     public struct State: Equatable {
-        public var appliances: IdentifiedArrayOf<Appliance>
+        @Shared public var appliances: IdentifiedArrayOf<Appliance>
         @Presents public var destination: ApplianceSelection.State?
 
         public init(
-            appliances: IdentifiedArrayOf<Appliance> = [.washingMachine, .dishwasher],
+            appliances: IdentifiedArrayOf<Appliance> = [.dishwasher, .washingMachine],
             destination: ApplianceSelection.State? = nil
         ) {
-            self.appliances = appliances
+            self._appliances = Shared(wrappedValue: appliances, .appliances)
             self.destination = destination
         }
     }
     public enum Action: Equatable {
         case destination(PresentationAction<ApplianceSelection.Action>)
-        case task
         case widgetTapped
     }
 
     @Dependency(\.continuousClock) var clock
-    @Dependency(\.dataManager.load) var loadData
-    @Dependency(\.dataManager.save) var saveData
 
     public init() {}
 
@@ -40,14 +36,6 @@ public struct ApplianceHomeWidget {
             case .destination:
                 return .none
 
-            case .task:
-                // TODO: add logs and error screen if it fails?
-                state.appliances = (try? JSONDecoder().decode(
-                    IdentifiedArrayOf<Appliance>.self,
-                    from: loadData(.appliances)
-                )) ?? state.appliances
-                return .none
-
             case .widgetTapped:
                 state.destination = ApplianceSelection.State(appliances: state.appliances)
                 return .none
@@ -55,23 +43,6 @@ public struct ApplianceHomeWidget {
         }
         .ifLet(\.$destination, action: \.destination) {
             ApplianceSelection()
-        }
-        .onChange(of: \.destination?.appliances) { oldValue, newValue in
-            Reduce { state, _ in
-                guard let newValue else { return .none }
-                state.appliances = newValue
-                return .none
-            }
-        }
-
-        Reduce { state, _ in
-                .run { [appliances = state.appliances] _ in
-                    enum CancelID { case saveDebounce }
-                    try await withTaskCancellation(id: CancelID.saveDebounce, cancelInFlight: true) {
-                        try await self.clock.sleep(for: .seconds(1))
-                        try self.saveData(try JSONEncoder().encode(appliances), .appliances)
-                    }
-                }
         }
     }
 }
@@ -95,7 +66,6 @@ public struct AppliancesHomeWidgetView: View {
                 ApplianceSelectionView(store: store)
             }
         }
-        .task { await store.send(.task).finish() }
     }
 }
 
