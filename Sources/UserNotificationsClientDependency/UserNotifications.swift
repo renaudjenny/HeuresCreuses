@@ -1,6 +1,5 @@
 import Combine
 import ComposableArchitecture
-import DataManagerDependency
 import Dependencies
 import Foundation
 #if canImport(NotificationCenter)
@@ -17,17 +16,12 @@ public struct UserNotificationsClient {
     public var authorizationStatus: () async -> UserNotificationAuthorizationStatus
 }
 
+// TODO: clean up useless `async` and/or `throws`
 private final class UserNotificationCombine {
-    @Published var notifications: [UserNotification] = []
+    @Shared(.userNotifications) var notifications: [UserNotification] = []
 
     @Dependency(\.continuousClock) var clock
-    @Dependency(\.dataManager.load) private var loadData
     @Dependency(\.userNotificationCenter) private var userNotificationCenter
-    @Dependency(\.dataManager.save) private var saveData
-
-    init() {
-        notifications = (try? JSONDecoder().decode([UserNotification].self, from: loadData(.userNotifications))) ?? []
-    }
 
     func add(notification: UserNotification) async throws {
         try await remove(ids: [notification.id])
@@ -41,22 +35,11 @@ private final class UserNotificationCombine {
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: timeInterval, repeats: false)
         try await userNotificationCenter.add(.init(identifier: notification.id, content: content, trigger: trigger))
         #endif
-
-        try await save()
     }
 
     func remove(ids: [UserNotification.ID]) async throws {
         notifications.removeAll { ids.contains($0.id) }
         userNotificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
-        try await save()
-    }
-
-    private func save() async throws {
-        enum CancelID { case saveDebounce }
-        try await withTaskCancellation(id: CancelID.saveDebounce, cancelInFlight: true) { [self] in
-            try await clock.sleep(for: .seconds(1))
-            try saveData(try JSONEncoder().encode(notifications), .userNotifications)
-        }
     }
 
     func checkAuthorization() async throws -> UserNotificationAuthorizationStatus {
@@ -89,7 +72,8 @@ extension UserNotificationsClient: DependencyKey {
         let combine = UserNotificationCombine()
         return UserNotificationsClient(
             notifications: { combine.notifications },
-            stream: { combine.$notifications.values.eraseToStream() },
+            // TODO: stream is certainly not needed anymore
+            stream: { combine.$notifications.publisher.values.eraseToStream() },
             add: combine.add(notification:),
             remove: combine.remove(ids:),
             checkAuthorization: combine.checkAuthorization,
@@ -118,10 +102,6 @@ public extension DependencyValues {
         get { self[UserNotificationsClient.self] }
         set { self[UserNotificationsClient.self] = newValue }
     }
-}
-
-private extension URL {
-    static let userNotifications = Self.documentsDirectory.appending(component: "userNotifications.json")
 }
 
 #if canImport(NotificationCenter)
