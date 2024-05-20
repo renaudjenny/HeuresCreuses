@@ -9,7 +9,6 @@ let package = Package(
     products: [
         .library(name: "ApplianceFeature", targets: ["ApplianceFeature"]),
         .library(name: "AppFeature", targets: ["AppFeature"]),
-        .library(name: "DataManagerDependency", targets: ["DataManagerDependency"]),
         .library(name: "HomeWidget", targets: ["HomeWidget"]),
         .library(name: "OffPeak", targets: ["OffPeak"]),
         .library(name: "Models", targets: ["Models"]),
@@ -26,7 +25,6 @@ let package = Package(
             name: "ApplianceFeature",
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                "DataManagerDependency",
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
                 "HomeWidget",
                 "Models",
@@ -50,10 +48,6 @@ let package = Package(
         .testTarget(
             name: "AppFeatureTests",
             dependencies: ["AppFeature"]
-        ),
-        .target(
-            name: "DataManagerDependency",
-            dependencies: [.product(name: "ComposableArchitecture", package: "swift-composable-architecture")]
         ),
         .target(name: "HomeWidget"),
         .target(
@@ -101,7 +95,6 @@ let package = Package(
             name: "UserNotificationsClientDependency",
             dependencies: [
                 .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
-                "DataManagerDependency",
                 .product(name: "DependenciesAdditions", package: "swift-dependencies-additions"),
             ]
         )
