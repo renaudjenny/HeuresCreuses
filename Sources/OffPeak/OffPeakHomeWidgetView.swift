@@ -10,16 +10,16 @@ public struct OffPeakHomeWidget {
         @Presents public var destination: OffPeakSelection.State?
         public var peakStatus = PeakStatus.unavailable
         public var offPeakRanges: [ClosedRange<Date>] = []
-        public var periods: [Period] = .example
+        @Shared(.periods) public var periods: IdentifiedArrayOf<Period>
 
         public init(
             peakStatus: PeakStatus = PeakStatus.unavailable,
             offPeakRanges: [ClosedRange<Date>] = [],
-            periods: [Period] = .example
+            periods: IdentifiedArrayOf<Period> = IdentifiedArray(uniqueElements: [Period].example)
         ) {
             self.peakStatus = peakStatus
             self.offPeakRanges = offPeakRanges
-            self.periods = periods
+            self._periods = Shared(wrappedValue: periods, .periods)
         }
     }
     
@@ -49,7 +49,7 @@ public struct OffPeakHomeWidget {
                 return .none
 
             case .task:
-                state.offPeakRanges = .nextOffPeakRanges(state.periods, now: date(), calendar: calendar)
+                state.offPeakRanges = .nextOffPeakRanges(state.periods.elements, now: date(), calendar: calendar)
                 return .run { send in
                     for await _ in clock.timer(interval: .seconds(1)) {
                         await send(.timeChanged(date()), animation: .default)

@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import Foundation
+import Models
 import SendNotification
 
 @Reducer
@@ -8,14 +9,20 @@ public struct Optimum {
     public struct State: Equatable {
         let program: Program
         let appliance: Appliance
+        @Shared(.periods) var periods: IdentifiedArrayOf<Period>
         var delay = Duration.zero
         var ratio: Double = 0
         var durationBeforeStart: Duration = .zero
         var sendNotification = SendNotification.State()
 
-        public init(program: Program, appliance: Appliance) {
+        public init(
+            program: Program,
+            appliance: Appliance,
+            periods: IdentifiedArrayOf<Period> = IdentifiedArray(uniqueElements: [Period].example)
+        ) {
             self.program = program
             self.appliance = appliance
+            self._periods = Shared(wrappedValue: periods, .periods)
         }
     }
     public enum Action: Equatable {
@@ -27,7 +34,6 @@ public struct Optimum {
 
     @Dependency(\.calendar) var calendar
     @Dependency(\.date) var date
-    @Dependency(\.periodProvider) var periodProvider
     @Dependency(\.uuid) var uuid
 
     public var body: some ReducerOf<Self> {
@@ -58,7 +64,7 @@ public struct Optimum {
             case .task:
                 return .run { [state] send in
                     let operations = [Operation].nextOperations(
-                        periods: periodProvider(),
+                        periods: state.periods.elements,
                         program: state.program,
                         delays: state.appliance.delays,
                         now: date(),
@@ -76,7 +82,7 @@ public struct Optimum {
                     let bestOperation: Operation
                     if durationBeforeStart > .zero,
                        let operation = [Operation].nextOperations(
-                        periods: periodProvider(),
+                        periods: state.periods.elements,
                         program: state.program,
                         delays: state.appliance.delays,
                         now: date().addingTimeInterval(TimeInterval(durationBeforeStart.components.seconds)),

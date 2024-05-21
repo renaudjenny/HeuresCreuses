@@ -1,7 +1,7 @@
 import Foundation
 import Dependencies
 
-public struct Period: Equatable, Hashable, Identifiable, CustomDebugStringConvertible {
+public struct Period: Equatable, Hashable, Identifiable, CustomDebugStringConvertible, Codable {
     public var id: UUID
     public var startHour: Int
     public var startMinute: Int
@@ -111,24 +111,4 @@ public extension [Period] {
         Period(id: UUID(uuidString: "8706623F-0215-4706-94F0-FD363533CBEC") ?? UUID(), startHour: 2, startMinute: 2, endHour: 8, endMinute: 2),
         Period(id: UUID(uuidString: "93335C31-0ACF-46B7-98FD-F564B8E15B54") ?? UUID(), startHour: 15, startMinute: 2, endHour: 17, endMinute: 2),
     ]
-}
-
-// TODO: could be a shared state when available
-public struct PeriodProvider {
-    public var get: () -> [Period]
-
-    public func callAsFunction() -> [Period] {
-        return get()
-    }
-}
-
-extension PeriodProvider: DependencyKey {
-    static public var liveValue = PeriodProvider { .example }
-}
-
-public extension DependencyValues {
-    var periodProvider: PeriodProvider {
-        get { self[PeriodProvider.self] }
-        set { self[PeriodProvider.self] = newValue }
-    }
 }

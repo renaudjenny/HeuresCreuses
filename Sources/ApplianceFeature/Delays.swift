@@ -9,6 +9,7 @@ public struct Delays {
     public struct State: Equatable {
         var program: Program
         var appliance: Appliance
+        @Shared(.periods) var periods: IdentifiedArrayOf<Period>
         var operations: IdentifiedArrayOf<Operation> = []
         var isOffPeakOnlyFilterOn = false
         var notificationOperationsIds: [Operation.ID] = []
@@ -34,7 +35,6 @@ public struct Delays {
 
     @Dependency(\.date) var date
     @Dependency(\.calendar) var calendar
-    @Dependency(\.periodProvider) var periodProvider
     @Dependency(\.userNotifications) var userNotifications
 
     private static let notificationIdPrefix = "com.renaudjenny.heures-creuses.notification.operation-end"
@@ -89,7 +89,7 @@ public struct Delays {
 
     private func refreshItems(_ state: inout State) -> Effect<Action> {
         state.operations = IdentifiedArray(uniqueElements: [Operation].nextOperations(
-            periods: periodProvider.get(),
+            periods: state.periods.elements,
             program: state.program,
             delays: [Duration.zero] + state.appliance.delays,
             now: date(),

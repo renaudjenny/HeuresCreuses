@@ -8,7 +8,7 @@ public struct OffPeakSelection: Reducer {
     @ObservableState
     public struct State: Equatable {
         public var peakStatus: PeakStatus = .unavailable
-        public var periods = IdentifiedArrayOf<Period>(uniqueElements: [Period].example)
+        @Shared(.periods) public var periods = IdentifiedArrayOf<Period>(uniqueElements: [Period].example)
         public var minute: Double = .zero
         public var sendNotification = SendNotification.State()
         @Presents public var periodForm: PeriodForm.State?
