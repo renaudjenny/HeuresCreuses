@@ -8,11 +8,13 @@ public struct SendNotification {
     @ObservableState
     public struct State: Equatable {
         public var intent: Intent?
+        @Shared(.userNotifications) var userNotifications: IdentifiedArrayOf<UserNotification>
         var notificationAuthorizationStatus: UserNotificationAuthorizationStatus = .notDetermined
         var userNotificationStatus: UserNotificationStatus = .loading
 
-        public init(intent: Intent? = nil) {
+        public init(intent: Intent? = nil, userNotifications: IdentifiedArrayOf<UserNotification> = []) {
             self.intent = intent
+            self._userNotifications = Shared(wrappedValue: userNotifications, .userNotifications)
         }
     }
 
@@ -89,11 +91,11 @@ public struct SendNotification {
                         status = .notSent
 
                     case .offPeakStart:
-                        status = userNotifications.notifications()
+                        status = state.userNotifications
                             .contains { $0.id == .nextOffPeakIdentifier } ? .alreadySent : .notSent
 
                     case .offPeakEnd:
-                        status = userNotifications.notifications()
+                        status = state.userNotifications
                             .contains { $0.id == .offPeakEndIdentifier } ? .alreadySent : .notSent
 
                     case .none:

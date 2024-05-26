@@ -103,10 +103,11 @@ public struct Delays {
     }
 
     private func refreshNotificationOperationIds(_ state: inout State) -> Effect<Action> {
-        state.notificationOperationsIds = userNotifications.notifications()
-            .filter { $0.id.hasPrefix(Self.notificationIdPrefix) }
-            .map { $0.id.replacingOccurrences(of: "\(Self.notificationIdPrefix)-", with: "") }
-            .compactMap(Int.init)
+        // TODO: fix that
+//        state.notificationOperationsIds = userNotifications.notifications()
+//            .filter { $0.id.hasPrefix(Self.notificationIdPrefix) }
+//            .map { $0.id.replacingOccurrences(of: "\(Self.notificationIdPrefix)-", with: "") }
+//            .compactMap(Int.init)
         return .none
     }
 }

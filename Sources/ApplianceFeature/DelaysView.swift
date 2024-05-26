@@ -104,15 +104,16 @@ import UserNotificationsClientDependency
             store: Store(initialState: Delays.State(program: appliance.programs.first!, appliance: appliance)) {
                 Delays()
                     .dependency(\.date, .constant(date))
-                    .dependency(\.userNotifications.notifications, { [
-                        UserNotification(
-                            id: "com.renaudjenny.heures-creuses.notification.operation-end-21600",
-                            title: "",
-                            body: "",
-                            creationDate: date,
-                            duration: .seconds(6 * 60 * 60)
-                        )
-                    ] })
+                // TODO: complete
+//                    .dependency(\.userNotifications.notifications, { [
+//                        UserNotification(
+//                            id: "com.renaudjenny.heures-creuses.notification.operation-end-21600",
+//                            title: "",
+//                            body: "",
+//                            creationDate: date,
+//                            duration: .seconds(6 * 60 * 60)
+//                        )
+//                    ] })
             }
         )
     }

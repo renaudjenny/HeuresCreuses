@@ -70,8 +70,10 @@ public struct AppView: View {
 
 #Preview("With Notifications") {
     AppView(store: Store(initialState: App.State()) {
-        App().transformDependency(\.userNotifications) {
-            $0.stream = { .example }
-        }
+        App()
+        // TODO: check that
+//            .transformDependency(\.userNotifications) {
+//            $0.stream = { .example }
+//        }
     })
 }

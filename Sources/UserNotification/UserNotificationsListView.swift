@@ -6,7 +6,7 @@ import UserNotificationsClientDependency
 public struct UserNotificationsList {
     @ObservableState
     public struct State: Equatable {
-        var notifications: IdentifiedArrayOf<UserNotification> = []
+        @Shared(.userNotifications) var notifications: IdentifiedArrayOf<UserNotification> = []
         var outdatedNotifications: IdentifiedArrayOf<UserNotification> = []
 
         init(
@@ -17,8 +17,7 @@ public struct UserNotificationsList {
                 self.notifications = notifications
                 return
             }
-            @Dependency(\.userNotifications) var userNotifications
-            self.notifications = IdentifiedArrayOf(uniqueElements: userNotifications.notifications())
+            self._notifications = Shared(wrappedValue: notifications, .userNotifications)
             self.outdatedNotifications = outdatedNotifications
         }
     }
@@ -54,7 +53,8 @@ public struct UserNotificationsList {
                     creationDate: .now,
                     duration: .seconds(3)
                 )
-                return .run { _ in try await userNotifications.add(notification) }
+                state.notifications.append(notification)
+                return .none
             case .cancel:
                 return .merge(
                     .cancel(id: CancelID.notificationsUpdate),
@@ -73,22 +73,24 @@ public struct UserNotificationsList {
                 state.outdatedNotifications = IdentifiedArrayOf(uniqueElements: outdated)
                 return .none
             case .task:
-                return .merge(
-                    .run { send in
-                        for await _ in clock.timer(interval: .seconds(1)) {
-                            let (ongoing, outdated) = userNotifications.notifications().splitOutdated(now: now)
-                            await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated), animation: .smooth)
-                        }
-                    }
-                    .cancellable(id: CancelID.moveOutdated),
-                    .run { send in
-                        for await notifications in userNotifications.stream() {
-                            let (ongoing, outdated) = notifications.splitOutdated(now: now)
-                            await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated))
-                        }
-                    }
-                    .cancellable(id: CancelID.notificationsUpdate)
-                )
+                // TODO: split outdated notifications
+                return .none
+//                return .merge(
+//                    .run { send in
+//                        for await _ in clock.timer(interval: .seconds(1)) {
+//                            let (ongoing, outdated) = userNotifications.notifications().splitOutdated(now: now)
+//                            await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated), animation: .smooth)
+//                        }
+//                    }
+//                    .cancellable(id: CancelID.moveOutdated),
+//                    .run { send in
+//                        for await notifications in userNotifications.stream() {
+//                            let (ongoing, outdated) = notifications.splitOutdated(now: now)
+//                            await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated))
+//                        }
+//                    }
+//                    .cancellable(id: CancelID.notificationsUpdate)
+//                )
             }
         }
     }
@@ -192,9 +194,6 @@ private extension UserNotification {
             initialState: UserNotificationsList.State(outdatedNotifications: outdatedNotifications)
         ) {
             UserNotificationsList()
-                .transformDependency(\.userNotifications) { dependency in
-                    dependency.stream = { .example }
-                }
         })
     }
 }

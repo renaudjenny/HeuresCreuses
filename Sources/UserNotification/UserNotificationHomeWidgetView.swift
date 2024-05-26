@@ -8,7 +8,7 @@ import UserNotificationsClientDependency
 public struct UserNotificationHomeWidget {
     @ObservableState
     public struct State: Equatable {
-        var notifications: [UserNotification] = []
+        @Shared(.userNotifications) var notifications: IdentifiedArrayOf<UserNotification> = []
         @Presents var destination: UserNotificationsList.State?
 
         var nextNotification: UserNotification? {
@@ -16,13 +16,11 @@ public struct UserNotificationHomeWidget {
             return notifications.sorted { $0.triggerDate < $1.triggerDate }.first { $0.triggerDate > date() }
         }
 
-        public init(notifications: [UserNotification] = [], destination: UserNotificationsList.State? = nil) {
-            if !notifications.isEmpty {
-                self.notifications = notifications
-            } else {
-                @Dependency(\.userNotifications) var userNotifications
-                self.notifications = userNotifications.notifications()
-            }
+        public init(
+            notifications: IdentifiedArrayOf<UserNotification> = [],
+            destination: UserNotificationsList.State? = nil
+        ) {
+            self._notifications = Shared(wrappedValue: notifications, .userNotifications)
             self.destination = destination
         }
     }
@@ -54,24 +52,26 @@ public struct UserNotificationHomeWidget {
             case .destination:
                 return .none
             case let .notificationsUpdated(notifications):
-                state.notifications = notifications
+                state.notifications = IdentifiedArray(uniqueElements: notifications)
                 return .none
             case .task:
-                return .merge(
-                    .run { send in
-                        for await _ in clock.timer(interval: .seconds(1)) {
-                            let (notifications, _) = userNotifications.notifications().splitOutdated(now: now)
-                            await send(.notificationsUpdated(notifications))
-                        }
-                    }
-                    .cancellable(id: CancelID.updateNotifications),
-                    .run { send in
-                        for await notifications in userNotifications.stream() {
-                            let (notifications, _) = notifications.splitOutdated(now: now)
-                            await send(.notificationsUpdated(notifications))
-                        }
-                    }.cancellable(id: CancelID.task)
-                )
+                // TODO: split outdated notifications
+                return .none
+//                return .merge(
+//                    .run { send in
+//                        for await _ in clock.timer(interval: .seconds(1)) {
+//                            let (notifications, _) = userNotifications.notifications().splitOutdated(now: now)
+//                            await send(.notificationsUpdated(notifications))
+//                        }
+//                    }
+//                    .cancellable(id: CancelID.updateNotifications),
+//                    .run { send in
+//                        for await notifications in userNotifications.stream() {
+//                            let (notifications, _) = notifications.splitOutdated(now: now)
+//                            await send(.notificationsUpdated(notifications))
+//                        }
+//                    }.cancellable(id: CancelID.task)
+//                )
             case .widgetTapped:
                 state.destination = UserNotificationsList.State(
                     notifications: IdentifiedArray(uniqueElements: state.notifications)
@@ -123,9 +123,6 @@ public struct UserNotificationHomeWidgetView: View {
             UserNotificationHomeWidgetView(
                 store: Store(initialState: UserNotificationHomeWidget.State()) {
                     UserNotificationHomeWidget()
-                        .transformDependency(\.userNotifications) { dependency in
-                            dependency.stream = { .example }
-                        }
                 }
             )
         }

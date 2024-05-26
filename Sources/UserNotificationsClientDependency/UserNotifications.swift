@@ -1,4 +1,3 @@
-import Combine
 import ComposableArchitecture
 import Dependencies
 import Foundation
@@ -8,24 +7,20 @@ import NotificationCenter
 import UserNotificationsDependency
 
 public struct UserNotificationsClient {
-    public var notifications: () -> [UserNotification]
-    public var stream: () -> AsyncStream<[UserNotification]>
     public var add: (UserNotification) async throws -> Void
     public var remove: ([UserNotification.ID]) async throws -> Void
     public var checkAuthorization: () async throws -> UserNotificationAuthorizationStatus
     public var authorizationStatus: () async -> UserNotificationAuthorizationStatus
 }
 
-// TODO: clean up useless `async` and/or `throws`
-private final class UserNotificationCombine {
-    @Shared(.userNotifications) var notifications: [UserNotification] = []
+private final class SharedUserNotifications {
+    @Shared(.userNotifications) var notifications: IdentifiedArrayOf<UserNotification> = []
 
     @Dependency(\.continuousClock) var clock
     @Dependency(\.userNotificationCenter) private var userNotificationCenter
 
     func add(notification: UserNotification) async throws {
         try await remove(ids: [notification.id])
-        notifications.append(notification)
 
         #if canImport(NotificationCenter) && os(iOS)
         let content = UNMutableNotificationContent()
@@ -38,7 +33,6 @@ private final class UserNotificationCombine {
     }
 
     func remove(ids: [UserNotification.ID]) async throws {
-        notifications.removeAll { ids.contains($0.id) }
         userNotificationCenter.removePendingNotificationRequests(withIdentifiers: ids)
     }
 
@@ -69,22 +63,17 @@ private final class UserNotificationCombine {
 
 extension UserNotificationsClient: DependencyKey {
     public static let liveValue: UserNotificationsClient = {
-        let combine = UserNotificationCombine()
+        let shared = SharedUserNotifications()
         return UserNotificationsClient(
-            notifications: { combine.notifications },
-            // TODO: stream is certainly not needed anymore
-            stream: { combine.$notifications.publisher.values.eraseToStream() },
-            add: combine.add(notification:),
-            remove: combine.remove(ids:),
-            checkAuthorization: combine.checkAuthorization,
-            authorizationStatus: combine.authorizationStatus
+            add: shared.add(notification:),
+            remove: shared.remove(ids:),
+            checkAuthorization: shared.checkAuthorization,
+            authorizationStatus: shared.authorizationStatus
         )
     }()
 
     public static var testValue: UserNotificationsClient {
         UserNotificationsClient(
-            notifications: unimplemented("UserNotificationClient.notifications"),
-            stream: unimplemented("UserNotificationClient.stream"),
             add: unimplemented("UserNotificationClient.add"),
             remove: unimplemented("UserNotificationClient.remove"),
             checkAuthorization: unimplemented("UserNotificationClient.checkAuthorization"),
