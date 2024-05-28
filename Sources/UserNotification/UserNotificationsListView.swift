@@ -73,24 +73,14 @@ public struct UserNotificationsList {
                 state.outdatedNotifications = IdentifiedArrayOf(uniqueElements: outdated)
                 return .none
             case .task:
-                // TODO: split outdated notifications
-                return .none
-//                return .merge(
-//                    .run { send in
-//                        for await _ in clock.timer(interval: .seconds(1)) {
-//                            let (ongoing, outdated) = userNotifications.notifications().splitOutdated(now: now)
-//                            await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated), animation: .smooth)
-//                        }
-//                    }
-//                    .cancellable(id: CancelID.moveOutdated),
-//                    .run { send in
-//                        for await notifications in userNotifications.stream() {
-//                            let (ongoing, outdated) = notifications.splitOutdated(now: now)
-//                            await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated))
-//                        }
-//                    }
-//                    .cancellable(id: CancelID.notificationsUpdate)
-//                )
+                return .run { send in
+                    for await _ in clock.timer(interval: .seconds(1)) {
+                        @Shared(.userNotifications) var notifications
+                        let (ongoing, outdated) = notifications.elements.splitOutdated(now: now)
+                        await send(.notificationsUpdated(ongoing: ongoing, outdated: outdated), animation: .smooth)
+                    }
+                }
+                .cancellable(id: CancelID.moveOutdated)
             }
         }
     }
